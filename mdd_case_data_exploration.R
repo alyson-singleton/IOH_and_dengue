@@ -16,13 +16,15 @@ showtext_auto()
 
 #set the working directory from which the files will be read from
 setwd("~/Desktop/doctorate/ch2 mdd highway/data/diresa_case_data/")
+# Load combined case data
+dataset <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_case_data.csv")
 
+
+## Combine all yearly datasets  
 #create a list of the files from your target directory
 file_list <- list.files(path="~/Desktop/doctorate/ch2 mdd highway/data/diresa_case_data/")
-
 #initiate a blank data frame, each iteration of the loop will append the data from the given file to this variable
 dataset <- data.frame()
-
 #had to specify columns to get rid of the total column
 for (i in 1:length(file_list)){
   temp_data <- read_excel(file_list[i], range = cell_cols("A:AQ")) #each file will be read in, specify which columns you need read in to avoid any errors
@@ -30,12 +32,10 @@ for (i in 1:length(file_list)){
   dataset <- rbind(dataset, temp_data) #for each iteration, bind the new data to the building dataset
 }
 
-head(dataset)
+## Dengue
 dengue_data <- dataset[which(dataset$DIAGNOSTIC=="A97.0"),]
 mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
 dengue_data <- dengue_data[which(dengue_data$UBIGEO %in% mdd_districts),]
-
-
 dengue_data$FECHA_INI <- as.Date(dengue_data$FECHA_INI)
 monthly_dengue_data <- dengue_data %>% 
   group_by(month = lubridate::floor_date(FECHA_INI, 'month')) %>%
@@ -45,12 +45,11 @@ monthly_dengue_data_district <- dengue_data %>%
   group_by(month = lubridate::floor_date(FECHA_INI, 'month'),
            UBIGEO) %>%
   summarize(sum = n())
-monthly_dengue_data$Disease <- c("Dengue")
+monthly_dengue_data_district$Disease <- c("Dengue")
 
+## Leish
 leish_data <- dataset[which(dataset$DIAGNOSTIC=="B55.1"),]
 leish_data <- leish_data[which(leish_data$UBIGEO %in% mdd_districts),]
-
-#view(leish_data)
 leish_data$FECHA_INI <- as.Date(leish_data$FECHA_INI)
 monthly_leish_data <- leish_data %>% 
   group_by(month = lubridate::floor_date(FECHA_INI, 'month'),
@@ -58,7 +57,7 @@ monthly_leish_data <- leish_data %>%
   summarize(sum = n())
 monthly_leish_data$Disease <- c("Leish")
 
-
+## Lepto
 lepto_data <- dataset[which(dataset$DIAGNOSTIC=="A27"),]
 lepto_data <- lepto_data[which(lepto_data$UBIGEO %in% mdd_districts),]
 write_csv(lepto_data, "~/Desktop/doctorate/mordecai_lab/ch2 mdd highway/data/mdd_lepto_data.csv")
@@ -280,3 +279,29 @@ fig1a <- ggplot() +
   guides(fill=guide_legend(override.aes=list(shape=21)))
 fig1a
 legend <- get_legend(fig1a)
+
+## ____________________________________________________________________________________
+## ____________________________________________________________________________________
+## Temporal idea check
+
+monthly_case_data <- rbind(monthly_dengue_data,monthly_leish_data)
+ggplot(monthly_case_data) +
+  geom_line(aes(month,sum, color=Disease)) +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Month") + ylab("Incident\ncase\ncounts") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
