@@ -46,6 +46,10 @@ monthly_dengue_data_district <- dengue_data %>%
            UBIGEO) %>%
   summarize(sum = n())
 monthly_dengue_data_district$Disease <- c("Dengue")
+yearly_dengue_data <- dengue_data %>% 
+  group_by(month = lubridate::floor_date(FECHA_INI, 'year')) %>%
+  summarize(sum = n())
+yearly_dengue_data$Disease <- c("Dengue")
 
 ## Leish
 leish_data <- dataset[which(dataset$DIAGNOSTIC=="B55.1"),]
@@ -56,6 +60,24 @@ monthly_leish_data <- leish_data %>%
            ) %>%
   summarize(sum = n())
 monthly_leish_data$Disease <- c("Leish")
+yearly_leish_data <- leish_data %>% 
+  group_by(month = lubridate::floor_date(FECHA_INI, 'year')) %>%
+  summarize(sum = n())
+yearly_leish_data$Disease <- c("Leish")
+
+## Double Leish
+leish_double_data <- dataset[which(dataset$DIAGNOSTIC=="B55.1" | dataset$DIAGNOSTIC=="B55.2"),]
+leish_double_data <- leish_double_data[which(leish_double_data$UBIGEO %in% mdd_districts),]
+leish_double_data$FECHA_INI <- as.Date(leish_double_data$FECHA_INI)
+monthly_leish_double_data <- leish_double_data %>% 
+  group_by(month = lubridate::floor_date(FECHA_INI, 'month'),
+  ) %>%
+  summarize(sum = n())
+monthly_leish_double_data$Disease <- c("Leish (all)")
+yearly_leish_double_data <- leish_double_data %>% 
+  group_by(month = lubridate::floor_date(FECHA_INI, 'year')) %>%
+  summarize(sum = n())
+yearly_leish_double_data$Disease <- c("Leish (all)")
 
 ## Lepto
 lepto_data <- dataset[which(dataset$DIAGNOSTIC=="A27"),]
@@ -71,6 +93,20 @@ monthly_lepto_data_district <- lepto_data %>%
            UBIGEO) %>%
   summarize(sum = n())
 monthly_lepto_data$Disease <- c("Lepto")
+
+## Malaria
+malaria_data <- dataset[which(dataset$DIAGNOSTIC=="B51"),]
+malaria_data <- malaria_data[which(malaria_data$UBIGEO %in% mdd_districts),]
+malaria_data$FECHA_INI <- as.Date(malaria_data$FECHA_INI)
+monthly_malaria_data <- malaria_data %>% 
+  group_by(month = lubridate::floor_date(FECHA_INI, 'month'),
+  ) %>%
+  summarize(sum = n())
+monthly_malaria_data$Disease <- c("Malaria")
+yearly_malaria_data <- malaria_data %>% 
+  group_by(month = lubridate::floor_date(FECHA_INI, 'year')) %>%
+  summarize(sum = n())
+yearly_malaria_data$Disease <- c("Malaria")
 
 ## ____________________________________________________________________________________
 ## ____________________________________________________________________________________
@@ -284,13 +320,13 @@ legend <- get_legend(fig1a)
 ## ____________________________________________________________________________________
 ## Temporal idea check
 
-monthly_case_data <- rbind(monthly_dengue_data,monthly_leish_data)
-ggplot(monthly_case_data) +
+yearly_case_data <- rbind(yearly_dengue_data,yearly_leish_data, yearly_leish_double_data, yearly_malaria_data)
+ggplot(yearly_case_data) +
   geom_line(aes(month,sum, color=Disease)) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
-  xlab("Month") + ylab("Incident\ncase\ncounts") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42')) + 
+  xlab("Year") + ylab("Incident\ncase\ncounts") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42', 'green', 'red')) + 
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
