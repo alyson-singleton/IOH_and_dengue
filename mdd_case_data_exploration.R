@@ -63,7 +63,7 @@ monthly_leish_data$Disease <- c("Leish")
 yearly_leish_data <- leish_data %>% 
   group_by(month = lubridate::floor_date(FECHA_INI, 'year')) %>%
   summarize(sum = n())
-yearly_leish_data$Disease <- c("Leish")
+yearly_leish_data$Disease <- c("Leish (CL)")
 
 ## Double Leish
 leish_double_data <- dataset[which(dataset$DIAGNOSTIC=="B55.1" | dataset$DIAGNOSTIC=="B55.2"),]
@@ -326,7 +326,7 @@ ggplot(yearly_case_data) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Incident\ncase\ncounts") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42', 'green', 'red')) + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42', 'forestgreen', 'darkred')) + 
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),

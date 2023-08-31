@@ -5,7 +5,7 @@ library(sf)
 library(astsa)
 setwd("~/Desktop/doctorate/ch2 mdd highway/code/")
 # load data
-time_series_data <- read.csv("~/Desktop/doctorate/mordecai_lab/ch2 mdd highway/data/mdd_areas_lulc_reduced_classes.csv")
+time_series_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_areas_lulc_reduced_classes.csv")
 time_series_data <- as.data.frame(time_series_data)
 # time_series_data$Feature <-c(substring(time_series_data$system.index[1:363], first = 22,last = 22),
 #                              substring(time_series_data$system.index[364:1359], first = 23,last = 23))
@@ -49,7 +49,7 @@ ggplot(data = time_series_data,aes(x = year, y = log_area, group=class)) +
   facet_grid(. ~ row_code, scales="free_x", space="free_x") +
   ggtitle("LULC Areas MdD (1985 - 2020) by District") + ylab("log(area) (log(m^2))") +
   labs(x="Year") +
-  scale_colour_manual(values=colors,
+  scale_colour_manual(values=class_colors,
                       labels=c("Unclassified", "Forest", "Agriculture",
                                "Urban", "Mining", "Water"),
                       name="Land Use /\nLand Cover\nClass") +   
