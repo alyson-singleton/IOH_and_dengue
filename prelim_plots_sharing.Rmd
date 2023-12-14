@@ -1,0 +1,587 @@
+---
+title: "IOH and dengue updates"
+author: "Alyson Singleton"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r setup, include=FALSE}
+# install packages, load libraries, set themes, knit formatting
+pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster)
+theme_set(theme_bw())
+knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=T,
+                      fig.height=5, fig.width=10)
+
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+library(showtext)
+font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
+showtext_auto()
+```
+
+## Yearly incidence
+
+#### Including all spatial units, varying near/far cut point (1km, 5km, 10km). Vertical line at the end of 2009.
+
+```{r}
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+incidence_data$year <- as.Date(incidence_data$year)
+incidence_data$onekm <- as.character(incidence_data$onekm)
+incidence_data$fivekm <- as.character(incidence_data$fivekm)
+incidence_data$tenkm <- as.character(incidence_data$tenkm)
+incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
+
+vert_line_date <- as.Date('2009-12-01')
+#plots
+#onekm
+onekm_plotting <- incidence_data %>%
+  group_by(onekm, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+ggplot(onekm_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=onekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#fivekm
+fivekm_plotting <- incidence_data %>%
+  group_by(fivekm, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+ggplot(fivekm_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#tenkm
+tenkm_plotting <- incidence_data %>%
+  group_by(tenkm, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+ggplot(tenkm_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=tenkm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+``` 
+
+#### Removing Puerto Maldonado spatial unit, varying near/far cut point (1km, 5km, 10km). Vertical line at the end of 2009.
+
+```{r}
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+incidence_data$year <- as.Date(incidence_data$year)
+incidence_data$onekm <- as.character(incidence_data$onekm)
+incidence_data$fivekm <- as.character(incidence_data$fivekm)
+incidence_data$tenkm <- as.character(incidence_data$tenkm)
+incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
+
+#plots
+#onekm
+onekm_plotting <- incidence_data_nopm %>%
+  group_by(onekm, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+ggplot(onekm_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=onekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#fivekm
+fivekm_plotting <- incidence_data_nopm %>%
+  group_by(fivekm, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+ggplot(fivekm_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#tenkm
+tenkm_plotting <- incidence_data_nopm %>%
+  group_by(tenkm, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+ggplot(tenkm_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=tenkm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+``` 
+
+
+## Quarterly incidence
+
+#### Including all spatial units, varying near/far cut point (1km, 5km, 10km). Vertical line at the end of 2009.
+
+```{r}
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data.csv")
+incidence_data$month <- as.Date(incidence_data$month)
+incidence_data$onekm <- as.character(incidence_data$onekm)
+incidence_data$fivekm <- as.character(incidence_data$fivekm)
+incidence_data$tenkm <- as.character(incidence_data$tenkm)
+incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
+
+incidence_data_quarterly <- incidence_data %>% 
+  group_by(quarter = lubridate::quarter(month, type = "date_last"), cluster)
+incidence_data_quarterly <- incidence_data_quarterly  %>%
+  group_by(quarter,cluster) %>%
+  summarize(quarterly_cases = sum(monthly_cases),
+            onekm=max(onekm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            population=mean(population)) 
+  
+#plots
+#onekm
+onekm_plotting <- incidence_data_quarterly %>%
+  group_by(onekm, quarter) %>%
+  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+
+ggplot(onekm_plotting) +
+  geom_line(aes(x=quarter, y=new_incidence, colour=onekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Quarterly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#fivekm
+fivekm_plotting <- incidence_data_quarterly %>%
+  group_by(fivekm, quarter) %>%
+  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+
+ggplot(fivekm_plotting) +
+  geom_line(aes(x=quarter, y=new_incidence, colour=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Quarterly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#tenkm
+tenkm_plotting <- incidence_data_quarterly %>%
+  group_by(tenkm, quarter) %>%
+  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+
+ggplot(tenkm_plotting) +
+  geom_line(aes(x=quarter, y=new_incidence, colour=tenkm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Quarterly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+``` 
+
+## Removing Puerto Maldonado spatial unit, varying near/far cut point (1km, 5km, 10km). Vertical line at the end of 2009.
+
+```{r}
+incidence_data_nopm <- incidence_data_quarterly[!(incidence_data_quarterly$cluster %in% 1),]
+
+#plots
+#onekm
+onekm_plotting <- incidence_data_quarterly %>%
+  group_by(onekm, quarter) %>%
+  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+
+ggplot(onekm_plotting) +
+  geom_line(aes(x=quarter, y=new_incidence, colour=onekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Quarterly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#fivekm
+fivekm_plotting <- incidence_data_quarterly %>%
+  group_by(fivekm, quarter) %>%
+  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+
+ggplot(fivekm_plotting) +
+  geom_line(aes(x=quarter, y=new_incidence, colour=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Quarterly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#tenkm
+tenkm_plotting <- incidence_data_quarterly %>%
+  group_by(tenkm, quarter) %>%
+  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+
+ggplot(tenkm_plotting) +
+  geom_line(aes(x=quarter, y=new_incidence, colour=tenkm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Quarterly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+``` 
+
+
+```{r, Monthly incidence, eval=F}
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data.csv")
+incidence_data$month <- as.Date(incidence_data$month)
+incidence_data$onekm <- as.character(incidence_data$onekm)
+incidence_data$fivekm <- as.character(incidence_data$fivekm)
+incidence_data$tenkm <- as.character(incidence_data$tenkm)
+incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
+
+incidence_data_quarterly <- incidence_data %>% 
+  group_by(quarter = lubridate::quarter(month, type = "date_last"), cluster)
+incidence_data_quarterly <- incidence_data_quarterly  %>%
+  group_by(quarter,cluster) %>%
+  summarize(quarterly_cases = sum(monthly_cases),
+            onekm=max(onekm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            population=mean(population)) 
+  
+#plots
+#onekm
+onekm_plotting <- incidence_data %>%
+  group_by(onekm, month) %>%
+  summarize(new_incidence = sum(monthly_cases)/sum(population))
+
+ggplot(onekm_plotting) +
+  geom_line(aes(x=month, y=new_incidence, colour=onekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Monthly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#fivekm
+fivekm_plotting <- incidence_data %>%
+  group_by(fivekm, month) %>%
+  summarize(new_incidence = sum(monthly_cases)/sum(population))
+
+ggplot(fivekm_plotting) +
+  geom_line(aes(x=month, y=new_incidence, colour=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Monthly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#tenkm
+tenkm_plotting <- incidence_data %>%
+  group_by(tenkm, month) %>%
+  summarize(new_incidence = sum(monthly_cases)/sum(population))
+
+ggplot(tenkm_plotting) +
+  geom_line(aes(x=month, y=new_incidence, colour=tenkm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Monthly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+``` 
+
+## Removing Puerto Maldonado spatial unit, varying near/far cut point (1km, 5km, 10km). Vertical line at the end of 2009.
+
+```{r, Monthly incidence no PM, eval=F}
+incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
+
+#plots
+#onekm
+onekm_plotting <- incidence_data_nopm %>%
+  group_by(onekm, month) %>%
+  summarize(new_incidence = sum(monthly_cases)/sum(population))
+
+ggplot(onekm_plotting) +
+  geom_line(aes(x=month, y=new_incidence, colour=onekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Monthly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#fivekm
+fivekm_plotting <- incidence_data_nopm %>%
+  group_by(fivekm, month) %>%
+  summarize(new_incidence = sum(monthly_cases)/sum(population))
+
+ggplot(fivekm_plotting) +
+  geom_line(aes(x=month, y=new_incidence, colour=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Monthly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+#tenkm
+tenkm_plotting <- incidence_data_nopm %>%
+  group_by(tenkm, month) %>%
+  summarize(new_incidence = sum(monthly_cases)/sum(population))
+
+ggplot(tenkm_plotting) +
+  geom_line(aes(x=month, y=new_incidence, colour=tenkm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Monthly\nincidence") + 
+  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+
+``` 

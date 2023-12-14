@@ -3,7 +3,6 @@
 #read in required packages
 require(readxl)
 require(tidyverse)
-library(tidyverse)
 library(sf)
 library(mapview)
 library(ggplot2)
