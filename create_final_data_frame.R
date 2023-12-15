@@ -2,6 +2,7 @@
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(plm)
 
 #add back in arial font
 library(showtext)
@@ -165,18 +166,42 @@ model <- plm(incidence ~ time_09 + fivekm + time_09:fivekm,
                     effect = "twoways")
 coeftest(model, vcovHC(model, type = 'HC0', cluster = 'group'))
 
-install.packages("fixest")
-library(fixest)
+### yearly model
+
 incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
-test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
+incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
+
+test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, cluster=cluster, data = incidence_data_yearly)
 summary(test)
+df <- as.data.frame(test$coeftable)
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
+             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+df$upper <- df$estimate+df$std_error
+df$lower <- df$estimate-df$std_error
+ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.2) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.4) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.2) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), shape=21, fill='white') +
+  geom_point(aes(year, estimate), shape=21, fill='white') 
+
+### quarterly model
 
 incidence_data_quarterly$incidence <- incidence_data_quarterly$quarterly_cases/incidence_data_quarterly$population
 incidence_data_quarterly$quarter <- as.factor(incidence_data_quarterly$quarter)
 incidence_data_quarterly$tenkm <- as.factor(incidence_data_quarterly$tenkm)
 incidence_data_quarterly$cluster <- as.factor(incidence_data_quarterly$cluster)
-test <- feols(incidence ~ i(quarter, fivekm, ref = '2009-06-30') | cluster + quarter, data = incidence_data_quarterly)
+incidence_data_quarterly$year <- format(as.Date(incidence_data_quarterly$quarter, format="%Y-%m-%d"),"%Y")
+incidence_data_quarterly$year <- format(as.Date(incidence_data_quarterly$year, format="%Y"),"%Y-01-01")
+incidence_data_quarterly_small <- incidence_data_quarterly[(incidence_data_quarterly$year %in% as.factor(c(seq(as.Date("2006-01-01"), as.Date("2015-01-01"), by="year")))),]
+
+test <- feols(incidence ~ i(quarter, tenkm, ref = '2009-06-30') | cluster + quarter, data = incidence_data_quarterly_small)
 summary(test)
+df <- as.data.frame(test$coeftable)
+df$quarter <- seq(as.Date("2006-03-31"), as.Date("2015-12-01"), by="quarter")
+ggplot(df) +
+  geom_point(aes(quarter, Estimate))
 
 ################################
 #############Leish##############
@@ -250,22 +275,6 @@ incidence_data_quarterly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/q
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
 
 ##yearly model
-## create yearly dummies
-incidence_data_yearly$time_05 <- ifelse(incidence_data_yearly$year >= as.Date("2005-01-01"), 1, 0)
-incidence_data_yearly$time_06 <- ifelse(incidence_data_yearly$year >= as.Date("2006-01-01"), 1, 0)
-incidence_data_yearly$time_07 <- ifelse(incidence_data_yearly$year >= as.Date("2007-01-01"), 1, 0)
-incidence_data_yearly$time_08 <- ifelse(incidence_data_yearly$year >= as.Date("2008-01-01"), 1, 0)
-incidence_data_yearly$time_09 <- ifelse(incidence_data_yearly$year >= as.Date("2009-01-01"), 1, 0)
-incidence_data_yearly$time_10 <- ifelse(incidence_data_yearly$year >= as.Date("2010-01-01"), 1, 0)
-incidence_data_yearly$time_11 <- ifelse(incidence_data_yearly$year >= as.Date("2011-01-01"), 1, 0)
-incidence_data_yearly$time_12 <- ifelse(incidence_data_yearly$year >= as.Date("2012-01-01"), 1, 0)
-incidence_data_yearly$time_13 <- ifelse(incidence_data_yearly$year >= as.Date("2013-01-01"), 1, 0)
-incidence_data_yearly$time_14 <- ifelse(incidence_data_yearly$year >= as.Date("2014-01-01"), 1, 0)
-incidence_data_yearly$time_15 <- ifelse(incidence_data_yearly$year >= as.Date("2015-01-01"), 1, 0)
-incidence_data_yearly$time_16 <- ifelse(incidence_data_yearly$year >= as.Date("2016-01-01"), 1, 0)
-incidence_data_yearly$time_17 <- ifelse(incidence_data_yearly$year >= as.Date("2017-01-01"), 1, 0)
-incidence_data_yearly$time_18 <- ifelse(incidence_data_yearly$year >= as.Date("2018-01-01"), 1, 0)
-incidence_data_yearly$time_19 <- ifelse(incidence_data_yearly$year >= as.Date("2019-01-01"), 1, 0)
 
 #baby model
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
@@ -278,8 +287,7 @@ summary(baby2)
 baby3 <- lm(formula = incidence ~ as.factor(cluster) + as.factor(year) + time_10 + fivekm + time_10:fivekm, data = incidence_data_yearly)
 summary(baby3)
 
-install.packages("plm")
-library(plm)
+
 
 incidence_data_yearly <- incidence_data_yearly[complete.cases(incidence_data_yearly), ]
 incidence_data_yearly$cluster <- as.factor(incidence_data_yearly$cluster)
