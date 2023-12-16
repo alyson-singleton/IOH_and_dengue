@@ -39,7 +39,7 @@ incidence_data$fivekm <- as.character(incidence_data$fivekm)
 incidence_data$tenkm <- as.character(incidence_data$tenkm)
 incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
 
-vert_line_date <- as.Date('2009-12-01')
+vert_line_date <- as.Date('2009-01-01')
 #plots
 #onekm
 onekm_plotting <- incidence_data %>%

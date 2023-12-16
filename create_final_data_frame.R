@@ -171,9 +171,10 @@ coeftest(model, vcovHC(model, type = 'HC0', cluster = 'group'))
 incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, cluster=cluster, data = incidence_data_yearly)
+test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
 summary(test)
 df <- as.data.frame(test$coeftable)
+
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
@@ -181,10 +182,24 @@ df$upper <- df$estimate+df$std_error
 df$lower <- df$estimate-df$std_error
 ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.2) +
-  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.2) +
-  geom_point(aes(x=as.Date("2008-01-01"), y=0), shape=21, fill='white') +
-  geom_point(aes(year, estimate), shape=21, fill='white') 
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
 
 ### quarterly model
 
