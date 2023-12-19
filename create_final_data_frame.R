@@ -126,22 +126,6 @@ incidence_data_quarterly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/q
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
 
 ##yearly model
-## create yearly dummies
-incidence_data_yearly$time_05 <- ifelse(incidence_data_yearly$year >= as.Date("2005-01-01"), 1, 0)
-incidence_data_yearly$time_06 <- ifelse(incidence_data_yearly$year >= as.Date("2006-01-01"), 1, 0)
-incidence_data_yearly$time_07 <- ifelse(incidence_data_yearly$year >= as.Date("2007-01-01"), 1, 0)
-incidence_data_yearly$time_08 <- ifelse(incidence_data_yearly$year >= as.Date("2008-01-01"), 1, 0)
-incidence_data_yearly$time_09 <- ifelse(incidence_data_yearly$year >= as.Date("2009-01-01"), 1, 0)
-incidence_data_yearly$time_10 <- ifelse(incidence_data_yearly$year >= as.Date("2010-01-01"), 1, 0)
-incidence_data_yearly$time_11 <- ifelse(incidence_data_yearly$year >= as.Date("2011-01-01"), 1, 0)
-incidence_data_yearly$time_12 <- ifelse(incidence_data_yearly$year >= as.Date("2012-01-01"), 1, 0)
-incidence_data_yearly$time_13 <- ifelse(incidence_data_yearly$year >= as.Date("2013-01-01"), 1, 0)
-incidence_data_yearly$time_14 <- ifelse(incidence_data_yearly$year >= as.Date("2014-01-01"), 1, 0)
-incidence_data_yearly$time_15 <- ifelse(incidence_data_yearly$year >= as.Date("2015-01-01"), 1, 0)
-incidence_data_yearly$time_16 <- ifelse(incidence_data_yearly$year >= as.Date("2016-01-01"), 1, 0)
-incidence_data_yearly$time_17 <- ifelse(incidence_data_yearly$year >= as.Date("2017-01-01"), 1, 0)
-incidence_data_yearly$time_18 <- ifelse(incidence_data_yearly$year >= as.Date("2018-01-01"), 1, 0)
-incidence_data_yearly$time_19 <- ifelse(incidence_data_yearly$year >= as.Date("2019-01-01"), 1, 0)
 
 #baby model
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
@@ -171,7 +155,7 @@ coeftest(model, vcovHC(model, type = 'HC0', cluster = 'group'))
 incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
+test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly_no_pm)
 summary(test)
 df <- as.data.frame(test$coeftable)
 
