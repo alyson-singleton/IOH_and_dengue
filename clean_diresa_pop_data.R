@@ -71,7 +71,6 @@ colnames(pop_2017) <- c('health_center', 'total', '0y', '1y', '2y', '3y', '4y', 
 
 #load 2016
 pop_2016 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data/POBLACION_2016.csv", header=F, check.names = F)
-pop_2016[1,2] <- "HOSPITAL SANTA ROSA ESSALUD"
 colnames(pop_2016) <- c('renaes','health_center', 'total', '0y', '1y', '2y', '3y', '4y', '5y', '6y', '7y', '8y', '9y', '10y', '11y', '12y', '13y', '14y', '15y',
                         '16y', '17y', '18y', '19y', '20_24y', '25_29y', '30_34y', '35_39y', '40_44y', '45_49y', '50_54y', '55_59y', '60_64y',
                         '65_69y', '70_74y', '75_79y', '80y_older', 'births', '28d', 'total_fem', '10_14y_fem', '15_19y_fem',
@@ -79,6 +78,7 @@ colnames(pop_2016) <- c('renaes','health_center', 'total', '0y', '1y', '2y', '3y
 
 #load 2015
 pop_2015 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data/POBLACION_2015.csv", header=F, check.names = F)
+pop_2015 <- pop_2015[,c(2:dim(pop_2015)[2])]
 colnames(pop_2015) <- c('health_center', 'total', '0y', '1y', '2y', '3y', '4y', '5y', '6y', '7y', '8y', '9y', '10y', '11y', '12y', '13y', '14y', '15y',
                         '16y', '17y', '18y', '19y', '20_24y', '25_29y', '30_34y', '35_39y', '40_44y', '45_49y', '50_54y', '55_59y', '60_64y',
                         '65_69y', '70_74y', '75_79y', '80y_older', 'births', '28d', 'total_fem', '10_14y_fem', '15_19y_fem',
@@ -131,3 +131,19 @@ colnames(pop_2009) <- c('health_center', 'total', '0y', '1y', '2y', '3y', '4y', 
 
 #load 2008
 #missing 
+
+### build best combined total dataset across years
+pop_total <- full_join(pop_2009[,c(1:2)],pop_2010[,c(1:2)], by='health_center')
+pop_total <- full_join(pop_total,pop_2011[,c(1:2)], by='health_center')
+pop_total <- full_join(pop_total,pop_2012[,c(1:2)], by='health_center')
+pop_total <- full_join(pop_total,pop_2013[,c(1:2)], by='health_center')
+pop_total <- full_join(pop_total,pop_2014[,c(1:2)], by='health_center')
+pop_total <- full_join(pop_total,pop_2015[,c(1:2)], by='health_center')
+pop_total <- full_join(pop_total,pop_2016[,c(2:3)], by='health_center')
+pop_total <- full_join(pop_total,pop_2017[,c(1:2)], by='health_center')
+colnames(pop_total) <- c('health_center' ,'2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017')
+pop_total <- pop_total[c(1:(dim(pop_total)[1]-3)),]
+pop_total2 <- full_join(pop_2020[,c(3,4,20)], pop_2021[,c(3,4,20)], by=c('health_center', 'microrred'))
+pop_total2 <- full_join(pop_total2,pop_2022[,c(3,4,20)], by=c('health_center', 'microrred'))
+pop_total2 <- full_join(pop_total2,pop_2023[,c(3,4,20)], by=c('health_center', 'microrred'))
+colnames(pop_total2) <- c('microrred', 'health_center' ,'2020', '2021', '2022', '2023')
