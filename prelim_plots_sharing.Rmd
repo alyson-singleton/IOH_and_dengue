@@ -225,7 +225,7 @@ incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
 incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 #summary(test)
