@@ -32,7 +32,8 @@ showtext_auto()
 #### Including all spatial units, varying near/far cut point (1km, 5km, 10km). Vertical line at 2008.
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+#incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data$year <- as.Date(incidence_data$year)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
@@ -218,13 +219,13 @@ ggplot(tenkm_plotting) +
 
 ```{r}
 ### yearly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
 incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
 incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 #summary(test)
@@ -244,7 +245,7 @@ dengue_yearly_did <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Yearly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.20))+
+  ylim(c(-0.02,0.135))+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title=element_text(size=18),
@@ -683,7 +684,7 @@ ggplot(tenkm_plotting) +
 #### Including all spatial units, varying near/far cut point (1km, 5km, 10km). Vertical line at 2008.
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
 incidence_data$year <- as.Date(incidence_data$year)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
@@ -778,7 +779,7 @@ ggplot(tenkm_plotting) +
 
 ```{r}
 ### yearly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
 incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
 incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
@@ -804,7 +805,7 @@ leish_yearly_did <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Yearly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.20))+
+  ylim(c(-0.02,0.135))+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title=element_text(size=18),
@@ -917,7 +918,7 @@ ggplot(tenkm_plotting) +
 #### Including all spatial units, varying near/far cut point (1km, 5km, 10km). Vertical line at 2008.
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data.csv")
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 incidence_data$quarter <- as.Date(incidence_data$quarter)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
@@ -1007,7 +1008,7 @@ ggplot(tenkm_plotting) +
 
 ```{r}
 ### yearly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data.csv")
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$quarterly_cases/incidence_data_yearly$population
 incidence_data_yearly$quarter <- as.factor(incidence_data_yearly$quarter)
 incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)

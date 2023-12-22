@@ -3,6 +3,7 @@ library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(plm)
+library(fixest)
 
 #add back in arial font
 library(showtext)
@@ -32,7 +33,7 @@ e_salud_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_E_Sal
 id_cluster_key_7500 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/idClusterKey7500.csv")
 
 linked_ids_codes <- left_join(e_salud_codes, id_cluster_key_7500, by = 'key')
-
+write.csv(linked_ids_codes,"~/Desktop/doctorate/ch2 mdd highway/data/linking_clusterid_esaludkey.csv")
 dengue_data_linked <- left_join(linked_ids_codes, monthly_dengue_data, by = 'e_salud')
 dengue_data_linked <- dengue_data_linked %>%
   group_by(cluster = clust, month = month) %>%
@@ -85,18 +86,50 @@ population_mdd_long <- population_mdd %>%
                values_to = "population")
 population_mdd_long$year <- as.Date(population_mdd_long$year)
 
+## load cleaned diresa pop data
+cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/cleaned_diresa_pop.csv")
+cleaned_diresa_pop <- cleaned_diresa_pop[,c(4:18)]
+colnames(cleaned_diresa_pop)[c(7:15)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
+
+## impute population from 2000 to 2020 based on 2009 to 2017 values
+# group into clusters and match format
+cleaned_diresa_pop <- cleaned_diresa_pop[,c(6:15)]
+cleaned_diresa_pop <- cleaned_diresa_pop %>%
+  pivot_longer(cols = c(2:10), 
+               names_to = "year", 
+               values_to = "population") %>%
+  group_by(clust,year) %>%
+  summarize(population=sum(population, na.rm=T),
+            year=max(year))
+colnames(cleaned_diresa_pop) <- c('cluster','year','population')
+cleaned_diresa_pop$year <- as.Date(cleaned_diresa_pop$year)
+#left join
+all_pop <- left_join(population_mdd_long, cleaned_diresa_pop, by=c('cluster','year'))
+colnames(all_pop) <- c('cluster', 'year', 'worldpop', 'diresapop')
+#get average ratio between the two *for EACH CLUSTER
+all_pop$ratio <- all_pop$worldpop/all_pop$diresapop
+all_pop <- all_pop %>%
+  group_by(cluster) %>%
+  mutate(average_ratio = mean(ratio, na.rm=T))
+#fill in the blanks, keep the "known" values
+all_pop$worldpop_ratio <- all_pop$worldpop/all_pop$average_ratio
+adjusted_diresa_pop <- all_pop[,c(1,2,7)]
+colnames(adjusted_diresa_pop) <- c('cluster', 'year', 'population')
+  
 #build year column for linking to yearly population data
 dengue_data_buffers_21$year <- format(as.Date(dengue_data_buffers_21$month, format="%Y-%m-%d"),"%Y")
 dengue_data_buffers_21$year <- format(as.Date(dengue_data_buffers_21$year, format="%Y"),"%Y-01-01")
 dengue_data_buffers_21$year <- as.Date(dengue_data_buffers_21$year)
 
 #link population data and create incidence
-incidence_data <- full_join(dengue_data_buffers_21, population_mdd_long, by=c('cluster'='cluster', 'year'='year'))
+incidence_data <- full_join(dengue_data_buffers_21, adjusted_diresa_pop, by=c('cluster'='cluster', 'year'='year'))
 incidence_data$incidence <- incidence_data$monthly_cases/incidence_data$population
 incidence_data$incidence[is.na(incidence_data$incidence)] <- 0
 min(incidence_data$incidence)
 max(incidence_data$incidence)
-write.csv(incidence_data, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data.csv")
+table(which(incidence_data$incidence=="Inf"))
+incidence_data$incidence[which(incidence_data$incidence=="Inf")] <- 0
+write.csv(incidence_data, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data_pop_adjusted.csv")
 incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data.csv")
 
 #quarterly and yearly incidence
@@ -109,7 +142,7 @@ incidence_data_quarterly <- incidence_data_quarterly  %>%
             fivekm=max(fivekm),
             tenkm=max(tenkm),
             population=max(population)) 
-write.csv(incidence_data_quarterly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data.csv")
+write.csv(incidence_data_quarterly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data_pop_adjusted.csv")
 
 incidence_data_yearly <- incidence_data  %>%
   group_by(year,cluster) %>%
@@ -118,50 +151,27 @@ incidence_data_yearly <- incidence_data  %>%
             fivekm=max(fivekm),
             tenkm=max(tenkm),
             population=max(population)) 
-write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 
 # load stored data
 incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data.csv")
 incidence_data_quarterly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data.csv")
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
 
-##yearly model
-
-#baby model
-incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
-baby <- lm(formula = incidence ~ time_10 + fivekm + time_10:fivekm, data = incidence_data_yearly)
-summary(baby)
-
-baby2 <- lm(formula = incidence ~ time_10*fivekm, data = incidence_data_yearly)
-summary(baby2)
-
-baby3 <- lm(formula = incidence ~ as.factor(cluster) + as.factor(year) + time_10 + fivekm + time_10:fivekm, data = incidence_data_yearly)
-summary(baby3)
-
-install.packages("plm")
-library(plm)
-
-incidence_data_yearly <- incidence_data_yearly[complete.cases(incidence_data_yearly), ]
-incidence_data_yearly$cluster <- as.factor(incidence_data_yearly$cluster)
-model <- plm(incidence ~ time_09 + fivekm + time_09:fivekm, 
-                    data = incidence_data_yearly,
-                    index = c("cluster", "year"), 
-                    model = "within", 
-                    effect = "twoways")
-coeftest(model, vcovHC(model, type = 'HC0', cluster = 'group'))
 
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
 incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
+incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly_no_pm)
-test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
-test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
+test <- feols(incidence ~ i(year, onekm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 summary(test)
-class(test)
+#class(test)
 
 df <- as.data.frame(test$coeftable)
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
@@ -201,7 +211,7 @@ incidence_data_quarterly$year <- format(as.Date(incidence_data_quarterly$quarter
 incidence_data_quarterly$year <- format(as.Date(incidence_data_quarterly$year, format="%Y"),"%Y-01-01")
 incidence_data_quarterly_small <- incidence_data_quarterly[(incidence_data_quarterly$year %in% as.factor(c(seq(as.Date("2006-01-01"), as.Date("2015-01-01"), by="year")))),]
 
-test <- feols(incidence ~ i(quarter, tenkm, ref = '2009-06-30') | cluster + quarter, data = incidence_data_quarterly_small)
+test <- feols(incidence ~ i(quarter, tenkm, ref = '2009-06-30') | cluster + quarter,  vcov = "twoway", data = incidence_data_quarterly_small)
 summary(test)
 df <- as.data.frame(test$coeftable)
 df$quarter <- seq(as.Date("2006-03-31"), as.Date("2015-12-01"), by="quarter")
@@ -245,12 +255,14 @@ leish_data_buffers_21$year <- format(as.Date(leish_data_buffers_21$year, format=
 leish_data_buffers_21$year <- as.Date(leish_data_buffers_21$year)
 
 #link population data and create incidence
-leish_incidence_data <- full_join(leish_data_buffers_21, population_mdd_long, by=c('cluster'='cluster', 'year'='year'))
+leish_incidence_data <- full_join(leish_data_buffers_21, adjusted_diresa_pop, by=c('cluster'='cluster', 'year'='year'))
 leish_incidence_data$incidence <- leish_incidence_data$monthly_cases/leish_incidence_data$population
 leish_incidence_data$incidence[is.na(leish_incidence_data$incidence)] <- 0
 min(leish_incidence_data$incidence)
 max(leish_incidence_data$incidence)
-write.csv(leish_incidence_data, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data.csv")
+table(which(leish_incidence_data$incidence=="Inf"))
+leish_incidence_data$incidence[which(leish_incidence_data$incidence=="Inf")] <- 0
+write.csv(leish_incidence_data, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data_pop_adjusted.csv")
 leish_incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data.csv")
 
 #quarterly and yearly incidence
@@ -263,7 +275,7 @@ leish_incidence_data_quarterly <- leish_incidence_data_quarterly  %>%
             fivekm=max(fivekm),
             tenkm=max(tenkm),
             population=max(population)) 
-write.csv(leish_incidence_data_quarterly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data.csv")
+write.csv(leish_incidence_data_quarterly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 
 incidence_data_yearly <- leish_incidence_data  %>%
   group_by(year,cluster) %>%
@@ -272,7 +284,7 @@ incidence_data_yearly <- leish_incidence_data  %>%
             fivekm=max(fivekm),
             tenkm=max(tenkm),
             population=max(population)) 
-write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
+write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
 
 # load stored data
 incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_leish_data.csv")
@@ -280,33 +292,7 @@ incidence_data_quarterly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/q
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
 
 ##yearly model
-
-#baby model
-incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
-baby <- lm(formula = incidence ~ time_10 + fivekm + time_10:fivekm, data = incidence_data_yearly)
-summary(baby)
-
-baby2 <- lm(formula = incidence ~ time_10*fivekm, data = incidence_data_yearly)
-summary(baby2)
-
-baby3 <- lm(formula = incidence ~ as.factor(cluster) + as.factor(year) + time_10 + fivekm + time_10:fivekm, data = incidence_data_yearly)
-summary(baby3)
-
-
-
 incidence_data_yearly <- incidence_data_yearly[complete.cases(incidence_data_yearly), ]
 incidence_data_yearly$cluster <- as.factor(incidence_data_yearly$cluster)
 
-model <- plm(incidence ~ time_09 + fivekm + time_09:fivekm + time_09:fivekm + time_09:fivekm + time_09:fivekm + time_09:fivekm, 
-             data = incidence_data_yearly,
-             index = c("cluster", "year"), 
-             model = "within", 
-             effect = "twoways")
-coeftest(model, vcov. = vcovHC, type = "HC0", cluster = 'group')
-coeftest(model, vcovHC(model, type = 'HC0', cluster = 'group'))
-
-fatal_fe_mod <- plm(incidence ~ time_09 + fivekm + time_09:fivekm, 
-                    data = incidence_data_yearly,
-                    index = 'year')
-coeftest(fatal_fe_mod, vcov. = vcovHC, type = "HC1")
 
