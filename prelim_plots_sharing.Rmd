@@ -25,6 +25,65 @@ font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
 ```
 
+# Helpful maps
+```{r}
+center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
+## health center locations figure
+#center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/e_salud_key_with_lat_long.csv")
+center_lat_long <- data.frame(center_lat_long)
+center_lat_long <- center_lat_long %>%
+  mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude),
+         cluster=cluster) %>%
+  sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
+#center_lat_long <- st_transform(center_lat_long$geometry, 4326)
+#mapview(center_lat_long, xcol = "longitude", ycol = "latitude", crs = 4269, grid = FALSE)
+
+center_lat_long$fivekm <- ifelse(center_lat_long$fivekm>0, 2, 0)
+center_lat_long$tenkm <- ifelse(center_lat_long$tenkm>0, 3, 0)
+for(i in 1:dim(center_lat_long)[1]){
+  center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$onekm[i]>0, 1, 0)
+  center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$fivekm[i]>1&&center_lat_long$onekm[i]==0, 2, center_lat_long$all_cutoffs[i])
+  center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$tenkm[i]>2&&center_lat_long$fivekm[i]==0&&center_lat_long$onekm[i]==0, 3, center_lat_long$all_cutoffs[i])
+  #center_lat_long$all_cutoffs[i] <- min(center_lat_long$onekm[i],center_lat_long$fivekm[i],center_lat_long$tenkm[i])
+}
+
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
+districts <- st_as_sf(districts) 
+districts$geometry <- st_transform(districts$geometry, 4326)
+
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/peru_roads_important.shp")
+highway <- highway[which(highway$ref=="PE-30C"),]
+highway <- st_as_sf(highway) 
+highway$geometry <- st_transform(highway$geometry, 4326)
+
+mdd_region <- st_union(districts$geometry)
+highway_mdd <- st_covers(mdd_region,highway$geometry, sparse = FALSE)
+highway_mdd <- highway[highway_mdd[1,],]
+
+no_axis <- theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank(),
+                 panel.grid.major = element_blank())
+
+# Plot all Brazilian states
+center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
+fig1a <- ggplot() +
+  geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=1) +
+  geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs, line='grey'), pch=21, size = 2.7, alpha=1) + #colour='#25CED1',
+  scale_fill_manual(name= "Cutoffs", values=c("0" = "#fffffc", "1" = "#ffcccc", "2" = "#41b6c4", "3" = "#225ea8"),
+                    labels=c("Control", "1km", "5km", "10km")) +
+  theme_minimal() +
+  no_axis +
+  theme(legend.text=element_text(size=10),
+        legend.title=element_text(size=12),
+        legend.position='right') +
+  
+  guides(fill=guide_legend(override.aes=list(shape=21)))
+fig1a
+legend <- get_legend(fig1a)
+```
+
 # Dengue plots
 
 ## Yearly incidence

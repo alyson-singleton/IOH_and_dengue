@@ -28,11 +28,13 @@ monthly_dengue_data <- dengue_data %>%
   summarize(sum = n())
 
 ## merge e_salud codes and cluster ids
-cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/cluster_cenetroids_7500.csv")
+cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/cluster_cenetroids_7500.csv")
 e_salud_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_E_Salud_Coordinates_Key.csv")
-id_cluster_key_7500 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/idClusterKey7500.csv")
+id_cluster_key_7500 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/idClusterKey7500.csv")
 
 linked_ids_codes <- left_join(e_salud_codes, id_cluster_key_7500, by = 'key')
+#linked_ids_codes <- left_join(cluster_ids, id_cluster_key_7500, by = 'clust')
+
 write.csv(linked_ids_codes,"~/Desktop/doctorate/ch2 mdd highway/data/linking_clusterid_esaludkey.csv")
 dengue_data_linked <- left_join(linked_ids_codes, monthly_dengue_data, by = 'e_salud')
 dengue_data_linked <- dengue_data_linked %>%
@@ -71,6 +73,13 @@ dengue_data_complete_time_steps$cluster <- as.numeric(dengue_data_complete_time_
 dengue_data_buffers <- full_join(dengue_data_complete_time_steps,onekm_tf, by='cluster')
 dengue_data_buffers <- full_join(dengue_data_buffers,fivekm_tf, by='cluster')
 dengue_data_buffers <- full_join(dengue_data_buffers,tenkm_tf, by='cluster')
+
+# just to build spatial inclusion/exclustion maps
+linked_ids_codes$cluster <- linked_ids_codes$clust
+linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes,onekm_tf, by='cluster')
+linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,fivekm_tf, by='cluster')
+linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,tenkm_tf, by='cluster')
+write.csv(linked_ids_codes_with_cutoffs, "~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
 
 #remove 2021 & 2022
 dengue_data_buffers_21 <- dengue_data_buffers[!(dengue_data_buffers$month %in% seq(as.Date("2021-01-01"), as.Date("2022-12-01"), by="months")),]
