@@ -95,7 +95,7 @@ legend <- get_legend(fig1a)
 
 #### Dengue coverage
 
-Bar plot showing how many spatial units had at least one case of dengue for each year in of our data. Blue is "far" (control) and yellow is "near" (treatment).
+Bar plot showing how many spatial units had at least one case of dengue for each year in our data. Blue is "far" (control) and yellow is "near" (treatment).
 
 ```{r}
 ## data coverage calculation
@@ -132,7 +132,7 @@ dengue_yearly_coverage_plot
 
 #### Leishmaniasis coverage
 
-Bar plot showing how many spatial units had at least one case of leishmaniasis for each year in of our data. Blue is "far" (control) and yellow is "near" (treatment).
+Bar plot showing how many spatial units had at least one case of leishmaniasis for each year in our data. Blue is "far" (control) and yellow is "near" (treatment).
 
 ```{r}
 ## data coverage calculation
@@ -360,7 +360,7 @@ ggplot(tenkm_plotting) +
 
 ## Preliminary diff-in-diff results
 
-Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficents diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). Notably, I have not yet included any additional control variables; I am considering adding precipitation and/or urban area.
+Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference in yearly incidence between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficients diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). Notably, I have not yet included any additional control variables; I am considering adding precipitation and/or urban area.
 
 ```{r, worldpop dengue yearly, eval=F}
 ### yearly model
