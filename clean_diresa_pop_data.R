@@ -166,5 +166,5 @@ write.csv(letssee, "~/Desktop/doctorate/ch2 mdd highway/data/temporary_diresa_po
 cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/cleaned_diresa_pop.csv")
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(4:18)]
 colnames(cleaned_diresa_pop)[c(7:15)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
-
+write.csv(cleaned_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/cleaned_diresa_pop_totals.csv")
 

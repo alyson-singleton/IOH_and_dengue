@@ -25,7 +25,16 @@ font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
 ```
 
-# Helpful maps
+# Summary
+
+This analysis will investigate the effect of road building and paving on dengue and leishmaniasis—diseases transmitted by mosquitoes and sandfly vectors, respectively—in Peru’s Amazon basin. Building off of two months of field work in Summer 2022 that spurred a collaboration with Universidad Peruana Cayetano Heredia (UPCH) and the Regional Health Directorate of Madre de Dios (DIRESA, in Spanish), I plan to analyze how road quality upgrades drive changes in mobility through recently deforested areas, facilitating disease diffusion. A rapid paving of the Interoceanic Highway (2007-2009) throughout the region provides a unique opportunity to compare disease case data from health centers within 5km of the newly paved highway and those outside a 5km buffer before and after the highway was paved (a difference-in-differences causal inference approach). This work will include image classification analysis to create historical road development and quality datasets from satellite-imagery. I hypothesize that we will see dengue incidence increase almost immediately post paving (dengue produces highly localized outbreaks and responds directly to human movement), while leishmaniasis will not increase immediately post-paving and will act as a placebo (leishmaniasis transmission is affected more by frontier clearings and development of agricultural land).
+
+# Background 
+
+#### Treatment cutoffs
+
+A map of all spatial units in our region of interest ($n=70$), colored by treatment group options. All results in this document use a 5km cutoff, which results in 26 units in the treatment group and 44 in the control group. Tentatively, the results have not been sensitive to cutoff choice.
+
 ```{r}
 center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
 ## health center locations figure
@@ -84,11 +93,87 @@ fig1a
 legend <- get_legend(fig1a)
 ```
 
-# Dengue plots
+#### Dengue coverage
 
-## Yearly incidence
+Bar plot showing how many spatial units had at least one case of dengue for each year in of our data. Blue is "far" (control) and yellow is "near" (treatment).
 
-#### 5km boundary (little variation between cutpoints). Vertical line at 2008. WorldPop population data.
+```{r}
+## data coverage calculation
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+incidence_data_yearly$case_yn <- ifelse(incidence_data_yearly$yearly_cases>0, 1, 0)
+dengue_coverage_yearly <- incidence_data_yearly %>%
+  group_by(year, fivekm) %>%
+  summarize(coverage = sum(case_yn))
+
+#plot coverage
+dengue_coverage_yearly$fivekm <- as.character(dengue_coverage_yearly$fivekm)
+dengue_coverage_yearly <- dengue_coverage_yearly[0:42,]
+dengue_coverage_yearly$year <- format(as.Date(dengue_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
+dengue_yearly_coverage_plot <- ggplot(dengue_coverage_yearly) +
+  geom_col(aes(x= year, y=coverage, fill=fivekm), width=0.5, color="white", position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
+  geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
+  xlab("Year") + ylab("No. spatial units\nw dengue case\n(n=70)") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        #axis.title=element_text(size=20),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=14),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+dengue_yearly_coverage_plot
+```
+
+#### Leishmaniasis coverage
+
+Bar plot showing how many spatial units had at least one case of leishmaniasis for each year in of our data. Blue is "far" (control) and yellow is "near" (treatment).
+
+```{r}
+## data coverage calculation
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
+incidence_data_yearly$case_yn <- ifelse(incidence_data_yearly$yearly_cases>0, 1, 0)
+leish_coverage_yearly <- incidence_data_yearly %>%
+  group_by(year, fivekm) %>%
+  summarize(coverage = sum(case_yn))
+
+#plot coverage
+leish_coverage_yearly$fivekm <- as.character(leish_coverage_yearly$fivekm)
+leish_coverage_yearly <- leish_coverage_yearly[0:42,]
+leish_coverage_yearly$year <- format(as.Date(leish_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
+leish_yearly_coverage_plot <- ggplot(leish_coverage_yearly) +
+  geom_col(aes(x= year, y=coverage, fill=fivekm), color="white", width=0.5, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
+  geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
+  xlab("Year") + ylab("No. spatial units\nw leish case\n(n=70)") + 
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        #axis.title=element_text(size=20),
+        axis.title.y=element_text(size=14, angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=14),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+leish_yearly_coverage_plot
+```
+
+# Dengue results
+
+## Yearly incidence and population calculation
+
+Raw data showing yearly dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
+
+Yearly population data was calculated by combining remotely-sensed WorldPop population data (2000-2020) and health center surveillance data from DIRESA (2009-2017). All years with DIRESA data were kept, and all years without DIRESA data were filled in with adjusted WorldPop data. WorldPop data was adjusted by the average ratio between DIRESA and WorldPop data for each spatial unit for years where we had both DIRESA and WorldPop data. This adjusted population data is used for all of the following results.  
 
 ```{r}
 #incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
@@ -112,7 +197,7 @@ onekm_yearly <- ggplot(onekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Yearly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -139,7 +224,7 @@ fivekm_yearly <- ggplot(fivekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Yearly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -166,7 +251,7 @@ tenkm_yearly <- ggplot(tenkm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Yearly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>10km)', 'Near (<10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -275,9 +360,9 @@ ggplot(tenkm_plotting) +
 
 ## Preliminary diff-in-diff results
 
-#### Yearly dengue incidence w 5km boundary, standard errors clustered at district & yearly levels. Unit and year fixed effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data.
+Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficents diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). Notably, I have not yet included any additional control variables; I am considering adding precipitation and/or urban area.
 
-```{r}
+```{r, worldpop dengue yearly, eval=F}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
@@ -305,7 +390,7 @@ dengue_yearly_did <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Yearly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.135))+
+  ylim(c(-0.02,0.31))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -322,9 +407,7 @@ dengue_yearly_did <- ggplot(df) +
 dengue_yearly_did
 ```
 
-#### Yearly dengue incidence w 5km boundary, standard errors clustered at district & yearly levels. Unit and year fixed effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data adjusted to incorporate DIRESA population data magnitudes (worldpop used to create relative values for years missing DIRESA data).
-
-```{r}
+```{r, adjusted pop}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
@@ -352,7 +435,7 @@ dengue_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Yearly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.135))+
+  ylim(c(-0.02,0.16))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -371,29 +454,19 @@ dengue_yearly_did_popadj
 
 ## Quarterly incidence
 
-#### 5km boundary (little variation between cutpoints). Vertical line at 2008. WorldPop population data.
+Raw data showing quarterly dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data.csv")
-incidence_data$month <- as.Date(incidence_data$month)
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data_pop_adjusted.csv")
+incidence_data$quarter <- as.Date(incidence_data$quarter)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
 incidence_data$tenkm <- as.character(incidence_data$tenkm)
 incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
 
-incidence_data_quarterly <- incidence_data %>% 
-  group_by(quarter = lubridate::quarter(month, type = "date_last"), cluster)
-incidence_data_quarterly <- incidence_data_quarterly  %>%
-  group_by(quarter,cluster) %>%
-  summarize(quarterly_cases = sum(monthly_cases),
-            onekm=max(onekm),
-            fivekm=max(fivekm),
-            tenkm=max(tenkm),
-            population=mean(population)) 
-  
 #plots
 #onekm
-onekm_plotting <- incidence_data_quarterly %>%
+onekm_plotting <- incidence_data %>%
   group_by(onekm, quarter) %>%
   summarize(new_incidence = sum(quarterly_cases)/sum(population))
 
@@ -403,7 +476,7 @@ onekm_quarterly <- ggplot(onekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Quarterly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
@@ -421,7 +494,7 @@ onekm_quarterly <- ggplot(onekm_plotting) +
 #onekm_quarterly
 
 #fivekm
-fivekm_plotting <- incidence_data_quarterly %>%
+fivekm_plotting <- incidence_data %>%
   group_by(fivekm, quarter) %>%
   summarize(new_incidence = sum(quarterly_cases)/sum(population))
 
@@ -431,7 +504,7 @@ fivekm_quarterly <- ggplot(fivekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Quarterly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -448,7 +521,7 @@ fivekm_quarterly <- ggplot(fivekm_plotting) +
 fivekm_quarterly
 
 #tenkm
-tenkm_plotting <- incidence_data_quarterly %>%
+tenkm_plotting <- incidence_data %>%
   group_by(tenkm, quarter) %>%
   summarize(new_incidence = sum(quarterly_cases)/sum(population))
 
@@ -458,7 +531,7 @@ tenkm_quarterly <- ggplot(tenkm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Quarterly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>10km)', 'Near (<10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -475,9 +548,9 @@ tenkm_quarterly <- ggplot(tenkm_plotting) +
 #tenkm_quarterly
 ``` 
 
-#### Quarterly dengue incidence w 5km boundary, standard errors clustered at district & quarterly levels. Unit and quarter fixed effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data.
+All the same as the description for the yearly model above, except for unit and quarter fixed effects and standard errors are clustered at the unit and quarterly levels.
 
-```{r}
+```{r, worldpop dengue quarterly, eval=F}
 ### quarterly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$quarterly_cases/incidence_data_yearly$population
@@ -495,17 +568,21 @@ df <- as.data.frame(test$coeftable)
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$quarter <- c(seq(as.Date("2000-03-01"), as.Date("2008-09-01"), by="quarter"),
                 seq(as.Date("2009-03-01"), as.Date("2020-12-01"), by="quarter"))
+df$rainy <- 0
+df$rainy[c(seq(4, 83, 4))] <- 1
+df$rainy <- as.character(df$rainy)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 dengue_quarterly_did <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=quarter, ymax=upper, ymin=lower), width=0, size=0.5) +
+  geom_errorbar(aes(x=quarter, ymax=upper, ymin=lower), color='black', width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-12-31")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-12-31"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(quarter, estimate), size=3, shape=21, fill='white') +
+  geom_point(aes(quarter, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
   xlab("Year") + ylab("Quarterly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.20))+
+  ylim(c(-0.02,0.175))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -521,8 +598,6 @@ dengue_quarterly_did <- ggplot(df) +
         strip.text.x = element_text(size = 12))
 dengue_quarterly_did
 ```
-
-#### Quarterly dengue incidence w 5km boundary, standard errors clustered at district & quarterly levels. Unit and year quarter effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data adjusted to incorporate DIRESA population data magnitudes (worldpop used to create relative values for years missing DIRESA data).
 
 ```{r}
 ### quarterly model
@@ -542,6 +617,9 @@ df <- as.data.frame(test$coeftable)
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$quarter <- c(seq(as.Date("2000-03-01"), as.Date("2008-09-01"), by="quarter"),
                 seq(as.Date("2009-03-01"), as.Date("2020-12-01"), by="quarter"))
+df$rainy <- 0
+df$rainy[c(seq(4, 83, 4))] <- 1
+df$rainy <- as.character(df$rainy)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 dengue_quarterly_did_popadj <- ggplot(df) +
@@ -549,10 +627,11 @@ dengue_quarterly_did_popadj <- ggplot(df) +
   geom_errorbar(aes(x=quarter, ymax=upper, ymin=lower), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-12-31")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-12-31"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(quarter, estimate), size=3, shape=21, fill='white') +
+  geom_point(aes(quarter, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
   xlab("Year") + ylab("Quarterly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.20))+
+  ylim(c(-0.02,0.10))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -838,14 +917,14 @@ ggplot(tenkm_plotting) +
 
 ``` 
 
-# Leish plots
+# Leish results
 
 ## Yearly incidence
 
-#### 5km boundary (little variation between cutpoints). Vertical line at 2008. WorldPop population data.
+Raw data showing yearly leishmaniasis incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
 incidence_data$year <- as.Date(incidence_data$year)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
@@ -865,7 +944,7 @@ onekm_yearly_leish <- ggplot(onekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Yearly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
@@ -893,7 +972,7 @@ fivekm_yearly_leish <- ggplot(fivekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Yearly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -920,7 +999,7 @@ tenkm_yearly_leish <- ggplot(tenkm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Yearly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>10km)', 'Near (<10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -939,9 +1018,9 @@ tenkm_yearly_leish <- ggplot(tenkm_plotting) +
 
 ## Preliminary diff-in-diff results
 
-#### Yearly leishmaniasis incidence w 5km boundary, standard errors clustered at district & yearly levels. Unit and year fixed effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data.
+All the same as the description for the yearly dengue model above, except that now we would expect the coefficients to center on zero both before and after the paving. This would align with our hypothesis that leishmaniasis transmission was not impacted by the road paving. The coefficients are as expected. Please see the end of this document for easy side-by-side comparisons of the two disease systems. I also colored the coefficients by rainy (red) or dry (white) season. The rainy season is regarded as the main dengue season in this region.
 
-```{r}
+```{r, worldpop leish yearly, eval=F}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
@@ -969,7 +1048,7 @@ leish_yearly_did <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Yearly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.135))+
+  ylim(c(-0.02,0.31))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -985,8 +1064,6 @@ leish_yearly_did <- ggplot(df) +
         strip.text.x = element_text(size = 12))
 leish_yearly_did
 ```
-
-#### Yearly leishmaniasis incidence w 5km boundary, standard errors clustered at district & yearly levels. Unit and year fixed effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data adjusted to incorporate DIRESA population data magnitudes (worldpop used to create relative values for years missing DIRESA data).
 
 ```{r}
 ### yearly model
@@ -1016,7 +1093,7 @@ leish_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Yearly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.135))+
+  ylim(c(-0.02,0.16))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1126,10 +1203,10 @@ ggplot(tenkm_plotting) +
 
 ## Quarterly incidence
 
-#### 5km boundary (little variation between cutpoints). Vertical line at 2008. WorldPop population data.
+Raw data showing quarterly leishmaniasis incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data.csv")
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 incidence_data$quarter <- as.Date(incidence_data$quarter)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
@@ -1148,7 +1225,7 @@ onekm_quarterly_leish <- ggplot(onekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Quarterly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>1km (far)', '<1km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
@@ -1176,7 +1253,7 @@ fivekm_quarterly_leish <- ggplot(fivekm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Quarterly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>5km (far)', '<5km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1203,7 +1280,7 @@ tenkm_quarterly_leish <- ggplot(tenkm_plotting) +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
   xlab("Year") + ylab("Quarterly\nincidence") + 
-  scale_color_manual(values=c('#3ecbdd', '#FFBC42'), labels=c('>10km (far)', '<10km (near)')) + 
+  scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>10km)', 'Near (<10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1220,9 +1297,9 @@ tenkm_quarterly_leish <- ggplot(tenkm_plotting) +
 #tenkm_quarterly_leish
 ``` 
 
-#### Quarterly leishmaniasis incidence w 5km boundary, standard errors clustered at district & quarterly levels. Unit and quarter fixed effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data.
+All the same as the description for the quarterly dengue model above, except that we expect coefficients to remain at zero as we did for the yearly leish regression model. Season coloring is the same as the yearly leish model above.
 
-```{r}
+```{r, worldpop leish quarterly, eval=F}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$quarterly_cases/incidence_data_yearly$population
@@ -1240,6 +1317,9 @@ df <- as.data.frame(test$coeftable)
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$quarter <- c(seq(as.Date("2000-03-01"), as.Date("2008-09-01"), by="quarter"),
                 seq(as.Date("2009-03-01"), as.Date("2020-12-01"), by="quarter"))
+df$rainy <- 0
+df$rainy[c(seq(4, 83, 4))] <- 1
+df$rainy <- as.character(df$rainy)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 leish_quarterly_did <- ggplot(df) +
@@ -1247,10 +1327,11 @@ leish_quarterly_did <- ggplot(df) +
   geom_errorbar(aes(x=quarter, ymax=upper, ymin=lower), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-12-31")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-12-31"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(quarter, estimate), size=3, shape=21, fill='white') +
+  geom_point(aes(quarter, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
   xlab("Year") + ylab("Quarterly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.20))+
+  ylim(c(-0.02,0.175))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1266,8 +1347,6 @@ leish_quarterly_did <- ggplot(df) +
         strip.text.x = element_text(size = 12))
 leish_quarterly_did
 ```
-
-#### Quarterly leishmaniasis incidence w 5km boundary, standard errors clustered at district & quarterly levels. Unit and year quarter effects. Baseline year is 2008 (year before hypothesized "shock"). Puerto Maldonado included. WorldPop population data adjusted to incorporate DIRESA population data magnitudes (worldpop used to create relative values for years missing DIRESA data).
 
 ```{r}
 ### yearly model
@@ -1287,6 +1366,9 @@ df <- as.data.frame(test$coeftable)
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$quarter <- c(seq(as.Date("2000-03-01"), as.Date("2008-09-01"), by="quarter"),
                 seq(as.Date("2009-03-01"), as.Date("2020-12-01"), by="quarter"))
+df$rainy <- 0
+df$rainy[c(seq(4, 83, 4))] <- 1
+df$rainy <- as.character(df$rainy)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 leish_quarterly_did_popadj <- ggplot(df) +
@@ -1294,10 +1376,11 @@ leish_quarterly_did_popadj <- ggplot(df) +
   geom_errorbar(aes(x=quarter, ymax=upper, ymin=lower), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-12-31")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-12-31"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(quarter, estimate), size=3, shape=21, fill='white') +
+  geom_point(aes(quarter, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
   xlab("Year") + ylab("Quarterly\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.20))+
+  ylim(c(-0.02,0.10))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1398,18 +1481,18 @@ ggplot(tenkm_plotting) +
 
 ``` 
 
-## Easier diff-in-diff comparison between the two disease systems
+## Side by side plots to compare the disease systems
 
 ```{r}
-dengue_yearly_did + ggtitle("Dengue yearly (worldpop)")
-leish_yearly_did + ggtitle("Leish yearly (worldpop)")
+#dengue_yearly_did + ggtitle("Dengue yearly (worldpop)")
+#leish_yearly_did + ggtitle("Leish yearly (worldpop)")
 
-dengue_yearly_did_popadj + ggtitle("Dengue yearly (pop adjusted)")
-leish_yearly_did_popadj + ggtitle("Leish yearly (pop adjusted)")
+dengue_yearly_did_popadj + ggtitle("Dengue yearly")
+leish_yearly_did_popadj + ggtitle("Leish yearly")
 
-dengue_quarterly_did + ggtitle("Dengue quarterly (worldpop)")
-leish_quarterly_did + ggtitle("Leish quarterly (worldpop)")
+#dengue_quarterly_did + ggtitle("Dengue quarterly (worldpop)")
+#leish_quarterly_did + ggtitle("Leish quarterly (worldpop)")
 
-dengue_quarterly_did_popadj + ggtitle("Dengue quarterly (pop adjusted)")
-leish_quarterly_did_popadj + ggtitle("Leish quarterly (pop adjusted)")
+dengue_quarterly_did_popadj + ggtitle("Dengue quarterly")
+leish_quarterly_did_popadj + ggtitle("Leish quarterly")
 ```
