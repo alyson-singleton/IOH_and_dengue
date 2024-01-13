@@ -173,20 +173,26 @@ incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/year
 
 
 ### yearly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
 incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
 incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_yearly_covariates.csv")
+covariates$year <- format(as.Date(as.character(covariates$year), c("%Y")),"%Y-01-01")
+incidence_data_yearly <- left_join(incidence_data_yearly, covariates, by=c("cluster"= "cluster", "year" = "year"))
+
+test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 summary(test)
 #class(test)
+coefplot(test)
 
 df <- as.data.frame(test$coeftable)
+df <- df[1:20,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
@@ -413,3 +419,4 @@ covariates <- left_join(precip_yearly_mdd_long,temp_yearly_mdd_long, by=c("clust
 urban_area$year <- as.character(urban_area$year)
 covariates <- left_join(covariates,urban_area, by=c("cluster"="cluster", "year" = "year"))
 covariates$urban_area[which(is.na(covariates$urban_area))] <- 0
+write.csv(covariates, "~/Desktop/doctorate/ch2 mdd highway/data/mdd_yearly_covariates.csv")
