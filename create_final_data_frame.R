@@ -215,17 +215,6 @@ ggplot(df) +
         strip.text.x = element_text(size = 12))
 
 # average yearly incidence pre treatment
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
-incidence_data_yearly_avg <- incidence_data_yearly %>%
-  mutate(incidence = yearly_cases/population) %>%
-  group_by(year) %>%
-  summarize(mean = mean(incidence, na.rm=T))
-print(incidence_data_yearly_avg, n=22)
-summary(test)
-#average pretreatment
-mean(incidence_data_yearly_avg$mean[2:9])
-mean(incidence_data_yearly_avg$mean[8:9])
-
 incidence_data_yearly_popadj <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly_popadj_avg <- incidence_data_yearly_popadj %>%
   group_by(year) %>%
@@ -368,3 +357,59 @@ incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/year
 incidence_data_yearly <- incidence_data_yearly[complete.cases(incidence_data_yearly), ]
 incidence_data_yearly$cluster <- as.factor(incidence_data_yearly$cluster)
 
+##########################################
+#############POTENTIALCONTROLS############
+##########################################
+
+#### Add precip, temp, and land-use data
+precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_precipitation_monthly_mean.csv")
+temp_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_temperature_monthly_mean.csv")
+urban_area <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_urban_area_mapbiomas.csv")
+
+#precip
+precip_monthly <- precip_monthly[,c(2:254)]
+precip_monthly <- precip_monthly[,c(253,1:252)]
+colnames(precip_monthly)[2:253] <- as.character(seq(as.Date("2000-01-01"), as.Date("2020-12-01"), by="months"))
+colnames(precip_monthly)[1] <- "cluster"
+precip_monthly_mdd_long <- precip_monthly %>%
+  pivot_longer(cols = c(2:253), 
+               names_to = "month", 
+               values_to = "mean_precip")
+precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
+precip_yearly_mdd_long <- precip_monthly_mdd_long %>%
+  group_by(year,cluster) %>%
+  summarize(mean_precip = mean(mean_precip))
+precip_quarterly_mdd_long <- precip_monthly_mdd_long %>%
+  mutate(quarter = lubridate::quarter(month, type = "date_last")) %>%
+  group_by(quarter,cluster) %>%
+  summarize(mean_precip = mean(mean_precip))
+
+#temp
+temp_monthly <- temp_monthly[,c(2:254)]
+temp_monthly <- temp_monthly[,c(253,1:252)]
+colnames(temp_monthly)[2:253] <- as.character(seq(as.Date("2000-01-01"), as.Date("2020-12-01"), by="months"))
+colnames(temp_monthly)[1] <- "cluster"
+temp_monthly_mdd_long <- temp_monthly %>%
+  pivot_longer(cols = c(2:253), 
+               names_to = "month", 
+               values_to = "mean_temp")
+temp_monthly_mdd_long$year <- format(as.Date(temp_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
+temp_yearly_mdd_long <- temp_monthly_mdd_long %>%
+  group_by(year,cluster) %>%
+  summarize(mean_temp = mean(mean_temp))
+temp_quarterly_mdd_long <- temp_monthly_mdd_long %>%
+  mutate(quarter = lubridate::quarter(month, type = "date_last")) %>%
+  group_by(quarter,cluster) %>%
+  summarize(mean_temp = mean(mean_temp))
+
+#urban_area
+urban_area <- urban_area[,c(2:5)]
+urban_area <- urban_area[which(urban_area$class==24),]
+urban_area <- urban_area[,c(1,3,4)]
+colnames(urban_area) <- c("urban_area", "cluster", "year")
+
+#yearly all covariates
+covariates <- left_join(precip_yearly_mdd_long,temp_yearly_mdd_long, by=c("cluster"="cluster", "year" = "year"))
+urban_area$year <- as.character(urban_area$year)
+covariates <- left_join(covariates,urban_area, by=c("cluster"="cluster", "year" = "year"))
+covariates$urban_area[which(is.na(covariates$urban_area))] <- 0
