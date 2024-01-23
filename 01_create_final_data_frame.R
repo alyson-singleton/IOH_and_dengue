@@ -187,7 +187,6 @@ incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_inc
 incidence_data_quarterly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data.csv")
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data.csv")
 
-
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
@@ -242,6 +241,7 @@ incidence_data_yearly_popadj_avg <- incidence_data_yearly_popadj %>%
   group_by(year) %>%
   summarize(mean = mean(incidence, na.rm=T))
 print(incidence_data_yearly_popadj_avg, n=22)
+
 #average pretreatment
 mean(incidence_data_yearly_popadj_avg$mean[2:9])
 mean(incidence_data_yearly_popadj_avg$mean[8:9])
@@ -261,48 +261,10 @@ dengue_coverage_yearly <- incidence_data_yearly %>%
   group_by(year, tenkm) %>%
   summarize(coverage = sum(case_yn))
 
-#plot coverage
-dengue_coverage_yearly$tenkm <- as.character(dengue_coverage_yearly$tenkm)
-dengue_coverage_yearly <- dengue_coverage_yearly[0:42,]
-dengue_coverage_yearly$year <- format(as.Date(dengue_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
-dengue_yearly_coverage_plot <- ggplot(dengue_coverage_yearly) +
-  geom_col(aes(x= year, y=coverage, fill=tenkm), width=0.5, position = position_dodge(width = 0.5)) +
-  scale_fill_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>10km)', 'Near (<10km)'),) +
-  geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
-  xlab("Year") + ylab("No. spatial units\nw dengue case\n(n=70)") + 
-  theme_bw()+
-  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=20),
-        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=16),
-        axis.title.x=element_text(size=16),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=16),
-        legend.text=element_text(size=14),
-        legend.title=element_text(size=14),
-        legend.position = "right",
-        strip.text.x = element_text(size = 14))
-
-### biannual model
-
-
-### quarterly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data_pop_adjusted.csv")
-incidence_data_yearly$incidence <- incidence_data_yearly$quarterly_cases/incidence_data_yearly$population
-incidence_data_yearly$quarter <- as.factor(incidence_data_yearly$quarter)
-incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
-incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
-
-test <- feols(incidence ~ i(quarter, tenkm, ref = '2009-06-30') | cluster + quarter,  vcov = "twoway", data = incidence_data_quarterly_small)
-summary(test)
-df <- as.data.frame(test$coeftable)
-df$quarter <- seq(as.Date("2006-03-31"), as.Date("2015-12-01"), by="quarter")
-ggplot(df) +
-  geom_point(aes(quarter, Estimate))
-
 ################################
 #############Leish##############
+################################
+
 leish_data <- case_data[which(case_data$DIAGNOSTIC=="B55.1" | case_data$DIAGNOSTIC=="B55.2"),]
 mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
 leish_data <- leish_data[which(leish_data$UBIGEO %in% mdd_districts),]
@@ -384,15 +346,6 @@ leish_incidence_data_yearly <- leish_incidence_data  %>%
             tenkm=max(tenkm),
             population=max(population)) 
 write.csv(leish_incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
-
-# load stored data
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_leish_data.csv")
-incidence_data_quarterly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data.csv")
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
-
-##yearly model
-incidence_data_yearly <- incidence_data_yearly[complete.cases(incidence_data_yearly), ]
-incidence_data_yearly$cluster <- as.factor(incidence_data_yearly$cluster)
 
 ##########################################
 #############POTENTIALCONTROLS############
