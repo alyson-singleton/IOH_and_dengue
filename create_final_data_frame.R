@@ -141,7 +141,7 @@ incidence_data$incidence[which(incidence_data$incidence=="Inf")] <- 0
 write.csv(incidence_data, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data_pop_adjusted.csv")
 incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_data_pop_adjusted.csv")
 
-#quarterly and yearly incidence
+#quarterly, biannual and yearly incidence
 incidence_data_quarterly <- incidence_data %>% 
   mutate(quarter = lubridate::quarter(month, type = "date_last"))
 incidence_data_quarterly <- incidence_data_quarterly  %>%
@@ -152,6 +152,22 @@ incidence_data_quarterly <- incidence_data_quarterly  %>%
             tenkm=max(tenkm),
             population=max(population)) 
 write.csv(incidence_data_quarterly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data_pop_adjusted.csv")
+
+incidence_data_biannual <- incidence_data 
+incidence_data_biannual$month_wo_year <- format(as.Date(incidence_data_biannual$month, format="%Y-%m-%d"),"%m")
+incidence_data_biannual$biannual_index <- ifelse(incidence_data_biannual$month_wo_year %in% c('01', '02', '03', 10, 11, 12), 1, 0)
+incidence_data_biannual <- incidence_data_biannual[complete.cases(incidence_data_biannual),]
+incidence_data_biannual$biannual_date <- ifelse(incidence_data_biannual$month_wo_year==10 | incidence_data_biannual$month_wo_year=='04', incidence_data_biannual$month, NA)
+incidence_data_biannual <- incidence_data_biannual %>% 
+  fill(biannual_date)
+incidence_data_biannual <- incidence_data_biannual  %>%
+  group_by(biannual_date,cluster) %>%
+  summarize(biannual_cases = sum(monthly_cases),
+            onekm=max(onekm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            population=max(population)) 
+write.csv(incidence_data_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/biannual_incidence_data_pop_adjusted.csv")
 
 incidence_data_yearly <- incidence_data  %>%
   group_by(year,cluster) %>%
@@ -268,16 +284,15 @@ dengue_yearly_coverage_plot <- ggplot(dengue_coverage_yearly) +
         legend.position = "right",
         strip.text.x = element_text(size = 14))
 
+### biannual model
+
 
 ### quarterly model
-
-incidence_data_quarterly$incidence <- incidence_data_quarterly$quarterly_cases/incidence_data_quarterly$population
-incidence_data_quarterly$quarter <- as.factor(incidence_data_quarterly$quarter)
-incidence_data_quarterly$tenkm <- as.factor(incidence_data_quarterly$tenkm)
-incidence_data_quarterly$cluster <- as.factor(incidence_data_quarterly$cluster)
-incidence_data_quarterly$year <- format(as.Date(incidence_data_quarterly$quarter, format="%Y-%m-%d"),"%Y")
-incidence_data_quarterly$year <- format(as.Date(incidence_data_quarterly$year, format="%Y"),"%Y-01-01")
-incidence_data_quarterly_small <- incidence_data_quarterly[(incidence_data_quarterly$year %in% as.factor(c(seq(as.Date("2006-01-01"), as.Date("2015-01-01"), by="year")))),]
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data_pop_adjusted.csv")
+incidence_data_yearly$incidence <- incidence_data_yearly$quarterly_cases/incidence_data_yearly$population
+incidence_data_yearly$quarter <- as.factor(incidence_data_yearly$quarter)
+incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
+incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
 test <- feols(incidence ~ i(quarter, tenkm, ref = '2009-06-30') | cluster + quarter,  vcov = "twoway", data = incidence_data_quarterly_small)
 summary(test)
@@ -331,9 +346,9 @@ max(leish_incidence_data$incidence)
 table(which(leish_incidence_data$incidence=="Inf"))
 leish_incidence_data$incidence[which(leish_incidence_data$incidence=="Inf")] <- 0
 write.csv(leish_incidence_data, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data_pop_adjusted.csv")
-leish_incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data.csv")
+leish_incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data_pop_adjusted.csv")
 
-#quarterly and yearly incidence
+#quarterly, biannual(rainy/dry), and yearly incidence
 leish_incidence_data_quarterly <- leish_incidence_data %>% 
   mutate(quarter = lubridate::quarter(month, type = "date_last"))
 leish_incidence_data_quarterly <- leish_incidence_data_quarterly  %>%
@@ -345,14 +360,30 @@ leish_incidence_data_quarterly <- leish_incidence_data_quarterly  %>%
             population=max(population)) 
 write.csv(leish_incidence_data_quarterly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 
-incidence_data_yearly <- leish_incidence_data  %>%
+leish_incidence_data_biannual <- leish_incidence_data 
+leish_incidence_data_biannual$month_wo_year <- format(as.Date(leish_incidence_data_biannual$month, format="%Y-%m-%d"),"%m")
+leish_incidence_data_biannual$biannual_index <- ifelse(leish_incidence_data_biannual$month_wo_year %in% c('01', '02', '03', 10, 11, 12), 1, 0)
+leish_incidence_data_biannual <- leish_incidence_data_biannual[complete.cases(leish_incidence_data_biannual),]
+leish_incidence_data_biannual$biannual_date <- ifelse(leish_incidence_data_biannual$month_wo_year==10 | leish_incidence_data_biannual$month_wo_year=='04', leish_incidence_data_biannual$month, NA)
+leish_incidence_data_biannual <- leish_incidence_data_biannual %>% 
+  fill(biannual_date)
+leish_incidence_data_biannual <- leish_incidence_data_biannual  %>%
+  group_by(biannual_date,cluster) %>%
+  summarize(biannual_cases = sum(monthly_cases),
+            onekm=max(onekm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            population=max(population)) 
+write.csv(leish_incidence_data_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/biannual_leish_incidence_data_pop_adjusted.csv")
+
+leish_incidence_data_yearly <- leish_incidence_data  %>%
   group_by(year,cluster) %>%
   summarize(yearly_cases = sum(monthly_cases),
             onekm=max(onekm),
             fivekm=max(fivekm),
             tenkm=max(tenkm),
             population=max(population)) 
-write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
+write.csv(leish_incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
 
 # load stored data
 incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_incidence_leish_data.csv")
@@ -389,6 +420,17 @@ precip_quarterly_mdd_long <- precip_monthly_mdd_long %>%
   mutate(quarter = lubridate::quarter(month, type = "date_last")) %>%
   group_by(quarter,cluster) %>%
   summarize(mean_precip = mean(mean_precip))
+
+#look at precip for rainy season/biannual split
+precip_monthly_all <- precip_monthly_mdd_long %>%
+  group_by(month, year) %>%
+  summarize(mean_precip = mean(mean_precip)) 
+precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
+ggplot(precip_monthly_all) +
+  geom_line(aes(x=month_wo_year,y=mean_precip,group=year)) +
+  geom_hline(yintercept=mean(precip_monthly_all$mean_precip), color='red', linetype="dashed") +
+  geom_vline(xintercept=04, color='red', linetype="dashed") +
+  geom_vline(xintercept=10, color='red', linetype="dashed")
 
 #temp
 temp_monthly <- temp_monthly[,c(2:254)]

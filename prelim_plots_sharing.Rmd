@@ -169,7 +169,7 @@ leish_yearly_coverage_plot
 
 # Dengue results
 
-## Yearly incidence and population calculation
+## Yearly dengue incidence and population calculation
 
 Raw data showing yearly dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
@@ -358,7 +358,7 @@ ggplot(tenkm_plotting) +
 
 ``` 
 
-## Preliminary diff-in-diff results
+## Preliminary diff-in-diff results (yearly dengue model)
 
 Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference in yearly incidence between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficients diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). Notably, I have not yet included any additional control variables; I am considering adding precipitation and/or urban area.
 
@@ -452,13 +452,13 @@ dengue_yearly_did_popadj <- ggplot(df) +
 dengue_yearly_did_popadj
 ```
 
-## Quarterly incidence
+## Biannual dengue model
 
-Raw data showing quarterly dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
+Raw data showing biannual dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data_pop_adjusted.csv")
-incidence_data$quarter <- as.Date(incidence_data$quarter)
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_incidence_data_pop_adjusted.csv")
+incidence_data$biannual_date <- as.Date(incidence_data$biannual_date)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
 incidence_data$tenkm <- as.character(incidence_data$tenkm)
@@ -467,15 +467,15 @@ incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
 #plots
 #onekm
 onekm_plotting <- incidence_data %>%
-  group_by(onekm, quarter) %>%
-  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+  group_by(onekm, biannual_date) %>%
+  summarize(new_incidence = sum(biannual_cases)/sum(population))
 
 onekm_quarterly <- ggplot(onekm_plotting) +
-  geom_line(aes(x=quarter, y=new_incidence, colour=onekm)) +
+  geom_line(aes(x=biannual_date, y=new_incidence, colour=onekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Quarterly\nincidence") + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
   scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=20),
@@ -495,15 +495,15 @@ onekm_quarterly <- ggplot(onekm_plotting) +
 
 #fivekm
 fivekm_plotting <- incidence_data %>%
-  group_by(fivekm, quarter) %>%
-  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+  group_by(fivekm, biannual_date) %>%
+  summarize(new_incidence = sum(biannual_cases)/sum(population))
 
 fivekm_quarterly <- ggplot(fivekm_plotting) +
-  geom_line(aes(x=quarter, y=new_incidence, colour=fivekm)) +
+  geom_line(aes(x=biannual_date, y=new_incidence, colour=fivekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Quarterly\nincidence") + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
   scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
@@ -522,15 +522,15 @@ fivekm_quarterly
 
 #tenkm
 tenkm_plotting <- incidence_data %>%
-  group_by(tenkm, quarter) %>%
-  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+  group_by(tenkm, biannual_date) %>%
+  summarize(new_incidence = sum(biannual_cases)/sum(population))
 
 tenkm_quarterly <- ggplot(tenkm_plotting) +
-  geom_line(aes(x=quarter, y=new_incidence, colour=tenkm)) +
+  geom_line(aes(x=biannual_date, y=new_incidence, colour=tenkm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Quarterly\nincidence") + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
   scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>10km)', 'Near (<10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
@@ -548,7 +548,7 @@ tenkm_quarterly <- ggplot(tenkm_plotting) +
 #tenkm_quarterly
 ``` 
 
-All the same as the description for the yearly model above, except for unit and quarter fixed effects and standard errors are clustered at the unit and quarterly levels.
+All the same as the description for the yearly model above, except for unit and biannual fixed effects and standard errors are clustered at the unit and biannual levels. I also colored the coefficients by rainy (red) or dry (white) season. The rainy season is regarded as the main dengue season in this region and runs from the beginning of October to the end of March.
 
 ```{r, worldpop dengue quarterly, eval=F}
 ### quarterly model
@@ -600,6 +600,54 @@ dengue_quarterly_did
 ```
 
 ```{r}
+### biannual model
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_incidence_data_pop_adjusted.csv")
+incidence_data_yearly$incidence <- incidence_data_yearly$biannual_cases/incidence_data_yearly$population
+incidence_data_yearly$biannual_date <- as.factor(incidence_data_yearly$biannual_date)
+incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
+incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
+
+test <- feols(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') | cluster + biannual_date, vcov = "twoway", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
+#summary(test)
+#class(test)
+
+df <- as.data.frame(test$coeftable)
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$biannual_date <- as.Date(c(unique(incidence_data_yearly$biannual_date)[c(1:16,18:42)]))
+df$rainy <- 0
+df$rainy[c(seq(1, 41, 2))] <- 1
+df$rainy <- as.character(df$rainy)
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+dengue_quarterly_did_popadj <- ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
+  theme_bw()+
+  ylim(c(-0.02,0.12))+
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
+dengue_quarterly_did_popadj
+```
+
+```{r, eval=F}
 ### quarterly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$quarterly_cases/incidence_data_yearly$population
@@ -919,7 +967,7 @@ ggplot(tenkm_plotting) +
 
 # Leish results
 
-## Yearly incidence
+## Yearly leish incidence
 
 Raw data showing yearly leishmaniasis incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
@@ -1016,9 +1064,9 @@ tenkm_yearly_leish <- ggplot(tenkm_plotting) +
 #tenkm_yearly_leish
 ``` 
 
-## Preliminary diff-in-diff results
+## Preliminary diff-in-diff results (yearly leish model)
 
-All the same as the description for the yearly dengue model above, except that now we would expect the coefficients to center on zero both before and after the paving. This would align with our hypothesis that leishmaniasis transmission was not impacted by the road paving. The coefficients are as expected. Please see the end of this document for easy side-by-side comparisons of the two disease systems. I also colored the coefficients by rainy (red) or dry (white) season. The rainy season is regarded as the main dengue season in this region.
+All the same as the description for the yearly dengue model above, except that now we would expect the coefficients to center on zero both before and after the paving. This would align with our hypothesis that leishmaniasis transmission was not impacted by the road paving. The coefficients are as expected. Please see the end of this document for easy side-by-side comparisons of the two disease systems. 
 
 ```{r, worldpop leish yearly, eval=F}
 ### yearly model
@@ -1201,13 +1249,13 @@ ggplot(tenkm_plotting) +
 
 ``` 
 
-## Quarterly incidence
+## Biannual leish model
 
 Raw data showing quarterly leishmaniasis incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 ```{r}
-incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
-incidence_data$quarter <- as.Date(incidence_data$quarter)
+incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_leish_incidence_data_pop_adjusted.csv")
+incidence_data$biannual_date <- as.Date(incidence_data$biannual_date)
 incidence_data$onekm <- as.character(incidence_data$onekm)
 incidence_data$fivekm <- as.character(incidence_data$fivekm)
 incidence_data$tenkm <- as.character(incidence_data$tenkm)
@@ -1216,15 +1264,15 @@ incidence_data_nopm <- incidence_data[!(incidence_data$cluster %in% 1),]
 #plots
 #onekm
 onekm_plotting <- incidence_data %>%
-  group_by(onekm, quarter) %>%
-  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+  group_by(onekm, biannual_date) %>%
+  summarize(new_incidence = sum(biannual_cases)/sum(population))
 
 onekm_quarterly_leish <- ggplot(onekm_plotting) +
-  geom_line(aes(x=quarter, y=new_incidence, colour=onekm)) +
+  geom_line(aes(x=biannual_date, y=new_incidence, colour=onekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Quarterly\nincidence") + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
   scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=20),
@@ -1244,15 +1292,15 @@ onekm_quarterly_leish <- ggplot(onekm_plotting) +
 
 #fivekm
 fivekm_plotting <- incidence_data %>%
-  group_by(fivekm, quarter) %>%
-  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+  group_by(fivekm, biannual_date) %>%
+  summarize(new_incidence = sum(biannual_cases)/sum(population))
 
 fivekm_quarterly_leish <- ggplot(fivekm_plotting) +
-  geom_line(aes(x=quarter, y=new_incidence, colour=fivekm)) +
+  geom_line(aes(x=biannual_date, y=new_incidence, colour=fivekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Quarterly\nincidence") + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
   scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
@@ -1271,15 +1319,15 @@ fivekm_quarterly_leish
 
 #tenkm
 tenkm_plotting <- incidence_data %>%
-  group_by(tenkm, quarter) %>%
-  summarize(new_incidence = sum(quarterly_cases)/sum(population))
+  group_by(tenkm, biannual_date) %>%
+  summarize(new_incidence = sum(biannual_cases)/sum(population))
 
 tenkm_quarterly_leish <- ggplot(tenkm_plotting) +
-  geom_line(aes(x=quarter, y=new_incidence, colour=tenkm)) +
+  geom_line(aes(x=biannual_date, y=new_incidence, colour=tenkm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   #labs(color="Model Type") +
   #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Quarterly\nincidence") + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
   scale_color_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>10km)', 'Near (<10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
@@ -1297,7 +1345,7 @@ tenkm_quarterly_leish <- ggplot(tenkm_plotting) +
 #tenkm_quarterly_leish
 ``` 
 
-All the same as the description for the quarterly dengue model above, except that we expect coefficients to remain at zero as we did for the yearly leish regression model. Season coloring is the same as the yearly leish model above.
+All the same as the description for the quarterly dengue model above, except that we expect coefficients to remain at zero as we did for the yearly leish regression model. Season coloring is the same as the biannual dengue model above.
 
 ```{r, worldpop leish quarterly, eval=F}
 ### yearly model
@@ -1349,14 +1397,14 @@ leish_quarterly_did
 ```
 
 ```{r}
-### yearly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
-incidence_data_yearly$incidence <- incidence_data_yearly$quarterly_cases/incidence_data_yearly$population
-incidence_data_yearly$quarter <- as.factor(incidence_data_yearly$quarter)
+### biannual model
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_leish_incidence_data_pop_adjusted.csv")
+incidence_data_yearly$incidence <- incidence_data_yearly$biannual_cases/incidence_data_yearly$population
+incidence_data_yearly$biannual_date <- as.factor(incidence_data_yearly$biannual_date)
 incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(quarter, fivekm, ref = '2008-12-31') | cluster + quarter, vcov = "twoway", data = incidence_data_yearly)
+test <- feols(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') | cluster + biannual_date, vcov = "twoway", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 #summary(test)
@@ -1364,23 +1412,22 @@ test <- feols(incidence ~ i(quarter, fivekm, ref = '2008-12-31') | cluster + qua
 
 df <- as.data.frame(test$coeftable)
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$quarter <- c(seq(as.Date("2000-03-01"), as.Date("2008-09-01"), by="quarter"),
-                seq(as.Date("2009-03-01"), as.Date("2020-12-01"), by="quarter"))
+df$biannual_date <- as.Date(c(unique(incidence_data_yearly$biannual_date)[c(1:16,18:42)]))
 df$rainy <- 0
-df$rainy[c(seq(4, 83, 4))] <- 1
+df$rainy[c(seq(1, 41, 2))] <- 1
 df$rainy <- as.character(df$rainy)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 leish_quarterly_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=quarter, ymax=upper, ymin=lower), width=0, size=0.5) +
-  geom_vline(aes(xintercept=as.Date("2008-12-31")), linetype='dashed', size=0.4) +
-  geom_point(aes(x=as.Date("2008-12-31"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(quarter, estimate, fill=rainy), size=3, shape=21) +
+  geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
-  xlab("Year") + ylab("Quarterly\nincidence") + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
   theme_bw()+
-  ylim(c(-0.02,0.10))+
+  ylim(c(-0.02,0.12))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1493,6 +1540,6 @@ leish_yearly_did_popadj + ggtitle("Leish yearly")
 #dengue_quarterly_did + ggtitle("Dengue quarterly (worldpop)")
 #leish_quarterly_did + ggtitle("Leish quarterly (worldpop)")
 
-dengue_quarterly_did_popadj + ggtitle("Dengue quarterly")
-leish_quarterly_did_popadj + ggtitle("Leish quarterly")
+dengue_quarterly_did_popadj + ggtitle("Dengue biannually")
+leish_quarterly_did_popadj + ggtitle("Leish biannually")
 ```
