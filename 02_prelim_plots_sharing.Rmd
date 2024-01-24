@@ -360,7 +360,62 @@ ggplot(tenkm_plotting) +
 
 ## Preliminary diff-in-diff results (yearly dengue model)
 
-Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference in yearly incidence between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficients diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). Notably, I have not yet included any additional control variables; I am considering adding precipitation and/or urban area.
+Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference in yearly incidence between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficients diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). 
+
+UPDATE (Jan 22nd): These results now include controls for yearly mean precipitation, yearly mean temperature, and yearly urban area, with no noticeable impact (as expected).
+
+```{r, adjusted pop}
+### yearly model
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
+incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
+incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
+incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
+incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
+
+### add covariates
+covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_yearly_covariates.csv")
+covariates$year <- as.Date(as.character(covariates$year),"%Y")
+covariates$year <- format(as.Date(covariates$year,"%Y-01-22"), "%Y-01-01")
+covariates$year <- as.character(covariates$year)
+incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("cluster"="cluster", "year" = "year"))
+
+test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
+#summary(test)
+#class(test)
+
+df <- as.data.frame(test$coeftable)
+df <- df[1:20,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
+             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+dengue_yearly_did_popadj <- ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  theme_bw()+
+  ylim(c(-0.02,0.165))+
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
+dengue_yearly_did_popadj
+```
 
 ```{r, worldpop dengue yearly, eval=F}
 ### yearly model
@@ -405,51 +460,6 @@ dengue_yearly_did <- ggplot(df) +
         legend.position = "right",
         strip.text.x = element_text(size = 12))
 dengue_yearly_did
-```
-
-```{r, adjusted pop}
-### yearly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
-incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
-incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
-incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
-incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
-
-test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
-#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
-#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
-#summary(test)
-#class(test)
-
-df <- as.data.frame(test$coeftable)
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-dengue_yearly_did_popadj <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
-  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
-  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("Yearly\nincidence") + 
-  theme_bw()+
-  ylim(c(-0.02,0.16))+
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=18),
-        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=12),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "right",
-        strip.text.x = element_text(size = 12))
-dengue_yearly_did_popadj
 ```
 
 ## Biannual dengue model
@@ -548,7 +558,62 @@ tenkm_quarterly <- ggplot(tenkm_plotting) +
 #tenkm_quarterly
 ``` 
 
-All the same as the description for the yearly model above, except for unit and biannual fixed effects and standard errors are clustered at the unit and biannual levels. I also colored the coefficients by rainy (red) or dry (white) season. The rainy season is regarded as the main dengue season in this region and runs from the beginning of October to the end of March.
+All the same as the description for the yearly model above, except for unit and biannual fixed effects and standard errors are clustered at the unit and biannual levels. I also colored the coefficients by rainy (red) or dry (white) season. The rainy season is regarded as the main dengue season in this region and runs from the beginning of October to the end of March. 
+
+UPDATE (Jan 22nd): These results now include controls for biannual mean precipitation, biannual mean temperature, and biannual urban area, with no noticeable impact (as expected).
+
+```{r}
+### biannual model
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_incidence_data_pop_adjusted.csv")
+incidence_data_yearly$incidence <- incidence_data_yearly$biannual_cases/incidence_data_yearly$population
+incidence_data_yearly$biannual_date <- as.factor(incidence_data_yearly$biannual_date)
+incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
+incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
+
+### add covariates
+covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_biannual_covariates.csv")
+incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("cluster"="cluster", "biannual_date" = "biannual_date"))
+
+test <- feols(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + urban_area | cluster + biannual_date, vcov = "twoway", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
+#summary(test)
+#class(test)
+
+df <- as.data.frame(test$coeftable)
+df <- df[1:41,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$biannual_date <- as.Date(c(unique(incidence_data_yearly$biannual_date)[c(1:16,18:42)]))
+df$rainy <- 0
+df$rainy[c(seq(1, 41, 2))] <- 1
+df$rainy <- as.character(df$rainy)
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+dengue_quarterly_did_popadj <- ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
+  xlab("Year") + ylab("Biannual\nincidence") + 
+  theme_bw()+
+  ylim(c(-0.02,0.12))+
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
+dengue_quarterly_did_popadj
+```
 
 ```{r, worldpop dengue quarterly, eval=F}
 ### quarterly model
@@ -597,54 +662,6 @@ dengue_quarterly_did <- ggplot(df) +
         legend.position = "right",
         strip.text.x = element_text(size = 12))
 dengue_quarterly_did
-```
-
-```{r}
-### biannual model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_incidence_data_pop_adjusted.csv")
-incidence_data_yearly$incidence <- incidence_data_yearly$biannual_cases/incidence_data_yearly$population
-incidence_data_yearly$biannual_date <- as.factor(incidence_data_yearly$biannual_date)
-incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
-incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
-
-test <- feols(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') | cluster + biannual_date, vcov = "twoway", data = incidence_data_yearly)
-#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
-#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
-#summary(test)
-#class(test)
-
-df <- as.data.frame(test$coeftable)
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$biannual_date <- as.Date(c(unique(incidence_data_yearly$biannual_date)[c(1:16,18:42)]))
-df$rainy <- 0
-df$rainy[c(seq(1, 41, 2))] <- 1
-df$rainy <- as.character(df$rainy)
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-dengue_quarterly_did_popadj <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower), width=0, size=0.5) +
-  geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
-  geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
-  scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
-  xlab("Year") + ylab("Biannual\nincidence") + 
-  theme_bw()+
-  ylim(c(-0.02,0.12))+
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=18),
-        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=12),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "right",
-        strip.text.x = element_text(size = 12))
-dengue_quarterly_did_popadj
 ```
 
 ```{r, eval=F}
@@ -1068,6 +1085,61 @@ tenkm_yearly_leish <- ggplot(tenkm_plotting) +
 
 All the same as the description for the yearly dengue model above, except that now we would expect the coefficients to center on zero both before and after the paving. This would align with our hypothesis that leishmaniasis transmission was not impacted by the road paving. The coefficients are as expected. Please see the end of this document for easy side-by-side comparisons of the two disease systems. 
 
+UPDATE (Jan 22nd): These results now include controls for yearly mean precipitation, yearly mean temperature, and yearly urban area, with no noticeable impact (as expected).
+
+```{r}
+### yearly model
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
+incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
+incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
+incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
+incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
+
+### add covariates
+covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_yearly_covariates.csv")
+covariates$year <- as.Date(as.character(covariates$year),"%Y")
+covariates$year <- format(as.Date(covariates$year,"%Y-01-22"), "%Y-01-01")
+covariates$year <- as.character(covariates$year)
+incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("cluster"="cluster", "year" = "year"))
+
+test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_precip + mean_temp + urban_area | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
+#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
+#summary(test)
+#class(test)
+
+df <- as.data.frame(test$coeftable)
+df <- df[1:20,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
+             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+leish_yearly_did_popadj <- ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  theme_bw()+
+  ylim(c(-0.02,0.16))+
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
+leish_yearly_did_popadj
+```
+
 ```{r, worldpop leish yearly, eval=F}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data.csv")
@@ -1111,51 +1183,6 @@ leish_yearly_did <- ggplot(df) +
         legend.position = "right",
         strip.text.x = element_text(size = 12))
 leish_yearly_did
-```
-
-```{r}
-### yearly model
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_leish_incidence_data_pop_adjusted.csv")
-incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
-incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
-incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
-incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
-
-test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') | cluster + year, vcov = "twoway", data = incidence_data_yearly)
-#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
-#test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
-#summary(test)
-#class(test)
-
-df <- as.data.frame(test$coeftable)
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-leish_yearly_did_popadj <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
-  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
-  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("Yearly\nincidence") + 
-  theme_bw()+
-  ylim(c(-0.02,0.16))+
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=18),
-        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=12),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "right",
-        strip.text.x = element_text(size = 12))
-leish_yearly_did_popadj
 ```
 
 ```{r, eval=F}
@@ -1253,6 +1280,8 @@ ggplot(tenkm_plotting) +
 
 Raw data showing quarterly leishmaniasis incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
+UPDATE (Jan 22nd): These results now include controls for biannual mean precipitation, biannual mean temperature, and biannual urban area, with no noticeable impact (as expected).
+
 ```{r}
 incidence_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_leish_incidence_data_pop_adjusted.csv")
 incidence_data$biannual_date <- as.Date(incidence_data$biannual_date)
@@ -1345,8 +1374,6 @@ tenkm_quarterly_leish <- ggplot(tenkm_plotting) +
 #tenkm_quarterly_leish
 ``` 
 
-All the same as the description for the quarterly dengue model above, except that we expect coefficients to remain at zero as we did for the yearly leish regression model. Season coloring is the same as the biannual dengue model above.
-
 ```{r, worldpop leish quarterly, eval=F}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data.csv")
@@ -1396,6 +1423,8 @@ leish_quarterly_did <- ggplot(df) +
 leish_quarterly_did
 ```
 
+All the same as the description for the quarterly dengue model above, except that we expect coefficients to remain at zero as we did for the yearly leish regression model. Season coloring is the same as the biannual dengue model above.
+
 ```{r}
 ### biannual model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/biannual_leish_incidence_data_pop_adjusted.csv")
@@ -1404,13 +1433,18 @@ incidence_data_yearly$biannual_date <- as.factor(incidence_data_yearly$biannual_
 incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
-test <- feols(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') | cluster + biannual_date, vcov = "twoway", data = incidence_data_yearly)
+### add covariates
+covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_biannual_covariates.csv")
+incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("cluster"="cluster", "biannual_date" = "biannual_date"))
+
+test <- feols(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + urban_area | cluster + biannual_date, vcov = "twoway", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 #summary(test)
 #class(test)
 
 df <- as.data.frame(test$coeftable)
+df <- df[1:41,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$biannual_date <- as.Date(c(unique(incidence_data_yearly$biannual_date)[c(1:16,18:42)]))
 df$rainy <- 0
