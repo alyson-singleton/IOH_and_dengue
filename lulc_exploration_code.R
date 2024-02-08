@@ -246,9 +246,9 @@ ggplot(data = time_series_data_summarize, aes(x = year, y = log_area, group=clas
 library(RColorBrewer)
 district_names <- c("1. Iberia", "2. Tambopata", "3. Laberinto", "4. Inambari",     
                     "5. Manu", "6. Madre de Dios", "7. Huepetuhe", "8. Las Piedras",
-                    "9. Tahuamanu", "10. Fitzcarrald", "11. I?apari") 
+                    "9. Tahuamanu", "10. Fitzcarrald", "11. Iñapari") 
 colors <- c("#D5D5E5",c(RColorBrewer::brewer.pal(9, "Blues"))[1:9],"#70A5AE")
-mdd_shapefiles <- st_read("~/Desktop/doctorate/mordecai_lab/mdd_lulc/peru_shapefiles/Madre_de_Dios.shp")
+mdd_shapefiles <- st_read("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
 mdd_shapefiles$row_code <- factor(mdd_shapefiles$row_code)
 ggplot(mdd_shapefiles) +
   geom_sf(aes(geometry=geometry,fill=row_code),color='black') +

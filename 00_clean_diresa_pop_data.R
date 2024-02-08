@@ -1,4 +1,5 @@
-# load data
+install.packages("drake")
+install.packages("here")
 
 #read in required packages
 require(readxl)
@@ -6,11 +7,28 @@ require(tidyverse)
 library(sf)
 library(mapview)
 library(ggplot2)
+library(drake)
+library(here)
 
 #add back in arial font
 library(showtext)
 font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
+
+list.files(here::here(), full.names = T)
+
+ch2_mdd_highway_plan <- drake_plan(
+  pop_2023 = read.csv(file.path("~/Desktop/doctorate/ch2 mdd highway/data/biannual_leish_incidence_data_pop_adjusted.csv"))
+)
+
+if(file.exists(".drake")){
+  ch2_drake_cache = drake::drake_cache(".drake")
+} else {
+  ch2_drake_cache = drake::new_cache(".drake")
+}
+
+make(ch2_mdd_highway_plan, cache = ch2_drake_cache)
+loadd(pop_2023)
 
 #load 2023
 pop_2023 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data/POBLAC_MDD_2023_FINAL.csv", header=T, check.names = F)
