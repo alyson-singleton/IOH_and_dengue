@@ -384,6 +384,16 @@ test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mea
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 #summary(test)
 #class(test)
+sum(coef(summary(test))[9:20])
+sum(coef(summary(test))[9:19])
+
+pop <- incidence_data_yearly %>%
+  group_by(year,fivekm) %>%
+  summarise(pop_sum = sum(population))
+mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
+
+sum(coef(summary(test))[9:20])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
+sum(coef(summary(test))[9:20]*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T))
 
 df <- as.data.frame(test$coeftable)
 df <- df[1:20,]
