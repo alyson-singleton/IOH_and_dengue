@@ -37,12 +37,21 @@ A map of all spatial units in our region of interest ($n=70$), colored by treatm
 
 ```{r}
 center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
+cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/cluster_centroids_70.csv")
+center_lat_long <- left_join(center_lat_long, cluster_ids, by='clust')
+center_lat_long <- center_lat_long %>%
+  group_by(clust) %>%
+  summarize(onekm=max(onekm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            longitude=max(longitude.y),
+            latitude=max(latitude.y))
 ## health center locations figure
 #center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/e_salud_key_with_lat_long.csv")
 center_lat_long <- data.frame(center_lat_long)
 center_lat_long <- center_lat_long %>%
   mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude),
-         cluster=cluster) %>%
+         cluster=clust) %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 #center_lat_long <- st_transform(center_lat_long$geometry, 4326)
 #mapview(center_lat_long, xcol = "longitude", ycol = "latitude", crs = 4269, grid = FALSE)
@@ -76,6 +85,7 @@ no_axis <- theme(axis.title=element_blank(),
 
 # Plot all Brazilian states
 center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
+center_lat_long$clust <- as.character(center_lat_long$clust)
 fig1a <- ggplot() +
   geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
   geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=1) +
@@ -84,13 +94,15 @@ fig1a <- ggplot() +
                     labels=c("Control", "1km", "5km", "10km")) +
   theme_minimal() +
   no_axis +
-  theme(legend.text=element_text(size=10),
-        legend.title=element_text(size=12),
+  theme(legend.text=element_text(size=14),
+        legend.title=element_text(size=16),
         legend.position='right') +
   
   guides(fill=guide_legend(override.aes=list(shape=21)))
 fig1a
 legend <- get_legend(fig1a)
+
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure1.pdf", fig1a, width = 8, height = 8, units = c("in"), device="pdf")
 ```
 
 #### Dengue coverage
@@ -384,6 +396,8 @@ test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mea
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 #summary(test)
 #class(test)
+
+#mean
 sum(coef(summary(test))[9:20])
 sum(coef(summary(test))[9:19])
 
@@ -395,6 +409,11 @@ mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
 sum(coef(summary(test))[9:20])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
 sum(coef(summary(test))[9:20]*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T))
 
+#upper & lower bound
+sum(coef(summary(test))[9:20]+test$coeftable[9:20,2])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
+sum(coef(summary(test))[9:20]-test$coeftable[9:20,2])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
+
+
 df <- as.data.frame(test$coeftable)
 df <- df[1:20,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
@@ -403,12 +422,12 @@ df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 dengue_yearly_did_popadj <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
-  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
+  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("Yearly\nincidence") + 
+  xlab("Year") + ylab("Difference in\nyearly dengue\nincidence") + 
   theme_bw()+
   ylim(c(-0.02,0.165))+
   theme(plot.title = element_text(size=20),
@@ -425,6 +444,9 @@ dengue_yearly_did_popadj <- ggplot(df) +
         legend.position = "right",
         strip.text.x = element_text(size = 12))
 dengue_yearly_did_popadj
+
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure2.pdf", dengue_yearly_did_popadj, width = 10, height = 6, units = c("in"), device="pdf")
+
 ```
 
 ```{r, worldpop dengue yearly, eval=F}
@@ -566,6 +588,7 @@ tenkm_quarterly <- ggplot(tenkm_plotting) +
         legend.position = "right",
         strip.text.x = element_text(size = 14))
 #tenkm_quarterly
+
 ``` 
 
 All the same as the description for the yearly model above, except for unit and biannual fixed effects and standard errors are clustered at the unit and biannual levels. I also colored the coefficients by rainy (red) or dry (white) season. The rainy season is regarded as the main dengue season in this region and runs from the beginning of October to the end of March. 
@@ -606,7 +629,7 @@ dengue_quarterly_did_popadj <- ggplot(df) +
   geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
-  xlab("Year") + ylab("Biannual\nincidence") + 
+  xlab("Year") + ylab("Difference in\nbiannual dengue\nincidence") + 
   theme_bw()+
   ylim(c(-0.02,0.12))+
   theme(plot.title = element_text(size=20),
@@ -623,6 +646,7 @@ dengue_quarterly_did_popadj <- ggplot(df) +
         legend.position = "right",
         strip.text.x = element_text(size = 12))
 dengue_quarterly_did_popadj
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure3.pdf", dengue_quarterly_did_popadj, width = 10, height = 6, units = c("in"), device="pdf")
 ```
 
 ```{r, worldpop dengue quarterly, eval=F}
@@ -1131,7 +1155,7 @@ leish_yearly_did_popadj <- ggplot(df) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("Yearly\nincidence") + 
+  xlab("Year") + ylab("Difference in\nyearly leish\nincidence") + 
   theme_bw()+
   ylim(c(-0.02,0.16))+
   theme(plot.title = element_text(size=20),
@@ -1148,6 +1172,8 @@ leish_yearly_did_popadj <- ggplot(df) +
         legend.position = "right",
         strip.text.x = element_text(size = 12))
 leish_yearly_did_popadj
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure2leish.pdf", leish_yearly_did_popadj, width = 10, height = 6, units = c("in"), device="pdf")
+
 ```
 
 ```{r, worldpop leish yearly, eval=F}
@@ -1469,7 +1495,7 @@ leish_quarterly_did_popadj <- ggplot(df) +
   geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('white', 'red'), labels=c('Dry', 'Rainy')) + 
-  xlab("Year") + ylab("Biannual\nincidence") + 
+  xlab("Year") + ylab("Difference in\nbiannual leish\nincidence") + 
   theme_bw()+
   ylim(c(-0.02,0.12))+
   theme(plot.title = element_text(size=20),
@@ -1486,6 +1512,8 @@ leish_quarterly_did_popadj <- ggplot(df) +
         legend.position = "right",
         strip.text.x = element_text(size = 12))
 leish_quarterly_did_popadj
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure3leish.pdf", leish_quarterly_did_popadj, width = 10, height = 6, units = c("in"), device="pdf")
+
 ```
 
 ```{r, eval=F}
