@@ -386,8 +386,9 @@ incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$clu
 
 ### add covariates
 covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_yearly_covariates.csv")
-covariates$year <- as.Date(as.character(covariates$year),"%Y")
-covariates$year <- format(as.Date(covariates$year,"%Y-01-22"), "%Y-01-01")
+covariates$year <- as.character(covariates$year)
+covariates$year <- lubridate::ymd(covariates$year, truncated = 2L)
+covariates$year <- format(as.Date(covariates$year,"%Y"), "%Y-01-01")
 covariates$year <- as.character(covariates$year)
 incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("cluster"="cluster", "year" = "year"))
 
@@ -405,14 +406,22 @@ pop <- incidence_data_yearly %>%
   group_by(year,fivekm) %>%
   summarise(pop_sum = sum(population))
 mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
+pop_1 <- pop[which(pop$fivekm==1)]
+pop_1 <- pop_1[10:21,]
 
+#using mean pop
 sum(coef(summary(test))[9:20])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
-sum(coef(summary(test))[9:20]*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T))
-
-#upper & lower bound
 sum(coef(summary(test))[9:20]+test$coeftable[9:20,2])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
 sum(coef(summary(test))[9:20]-test$coeftable[9:20,2])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
 
+#yearly pop instead of mean pop
+coef(summary(test))[9:20]*pop_1[,3]
+sum(coef(summary(test))[9:20]*pop_1[,3])
+sum((coef(summary(test))[9:20]+test$coeftable[9:20,2])*pop_1[,3])
+sum((coef(summary(test))[9:20]-test$coeftable[9:20,2])*pop_1[,3])
+
+#percent idea
+sum(coef(summary(test))[9:20]*pop_1[,3])/pop_1[12,3]
 
 df <- as.data.frame(test$coeftable)
 df <- df[1:20,]
