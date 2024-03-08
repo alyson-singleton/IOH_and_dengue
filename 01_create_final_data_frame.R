@@ -385,3 +385,33 @@ urban_area$year <- as.character(urban_area$year)
 covariates <- left_join(covariates,urban_area, by=c("cluster"="cluster", "year.x" = "year"))
 covariates$urban_area[which(is.na(covariates$urban_area))] <- 0
 write.csv(covariates, "~/Desktop/doctorate/ch2 mdd highway/data/mdd_biannual_covariates.csv")
+
+#add more road buffer vars
+
+#20km
+twentykm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_20km_boolean.csv")
+twentykm_tf <- twentykm_tf[,c(2,4)]
+twentykm_tf$isInsideBuffer[twentykm_tf$isInsideBuffer == 'true'] <- 1
+twentykm_tf$isInsideBuffer[twentykm_tf$isInsideBuffer == 'false'] <- 0
+colnames(twentykm_tf) <- c('cluster', 'twentykm')
+
+#30km
+thirtykm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_30km_boolean.csv")
+thirtykm_tf <- thirtykm_tf[,c(2,4)]
+thirtykm_tf$isInsideBuffer[thirtykm_tf$isInsideBuffer == 'true'] <- 1
+thirtykm_tf$isInsideBuffer[thirtykm_tf$isInsideBuffer == 'false'] <- 0
+colnames(thirtykm_tf) <- c('cluster', 'thirtykm')
+
+#40km
+fortykm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_40km_boolean.csv")
+fortykm_tf <- fortykm_tf[,c(2,4)]
+fortykm_tf$isInsideBuffer[fortykm_tf$isInsideBuffer == 'true'] <- 1
+fortykm_tf$isInsideBuffer[fortykm_tf$isInsideBuffer == 'false'] <- 0
+colnames(fortykm_tf) <- c('cluster', 'fortykm')
+
+df_to_link <- left_join(twentykm_tf, thirtykm_tf, by = "cluster")
+df_to_link <- left_join(df_to_link, fortykm_tf, by = "cluster")
+
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data_pop_adjusted.csv")
+incidence_data_yearly <- left_join(incidence_data_yearly, df_to_link, by = "cluster")
+write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data_pop_adjusted.csv")
