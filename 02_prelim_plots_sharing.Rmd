@@ -530,6 +530,13 @@ pop <- incidence_data_yearly %>%
 mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
 pop_1 <- pop[which(pop$fivekm==1),]
 pop_1 <- pop_1[10:21,]
+pop_total <- pop %>%
+  group_by(year) %>%
+  summarise(pop_sum = sum(pop_sum))
+
+incidence_data_yearly_cases <- incidence_data_yearly %>%
+  group_by(year) %>%
+  summarise(cases_sum = sum(yearly_cases))
 
 #using mean pop
 sum(coef(summary(test))[9:20])*mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
@@ -542,10 +549,17 @@ sum(coef(summary(test))[9:20]*pop_1[,3])
 sum((coef(summary(test))[9:20]+test$coeftable[9:20,2])*pop_1[,3])
 sum((coef(summary(test))[9:20]-test$coeftable[9:20,2])*pop_1[,3])
 
-#percent idea
-sum(coef(summary(test))[9:20]*pop_1[,3])/pop_1[12,3]
-sum((coef(summary(test))[9:20]+test$coeftable[9:20,2])*pop_1[,3])/pop_1[12,3]
-sum((coef(summary(test))[9:20]-test$coeftable[9:20,2])*pop_1[,3])/pop_1[12,3]
+#percent of population
+sum(coef(summary(test))[9:20]*pop_1[,3])/pop_total[21,2]
+sum((coef(summary(test))[9:20]+test$coeftable[9:20,2])*pop_1[,3])/pop_total[21,2]
+sum((coef(summary(test))[9:20]-test$coeftable[9:20,2])*pop_1[,3])/pop_total[21,2]
+
+#percent of dengue cases
+sum(coef(summary(test))[9:20]*pop_1[,3])/sum(incidence_data_yearly_cases[c(10:21),2])
+
+#average yearly percent increase
+
+
 ```
 
 ## Biannual dengue model
@@ -1742,8 +1756,8 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure4.pdf", d
 
 ```
 
+```{r, spatial bounday sensitivity v2, eval=F}
 ## Spatial boundary sensitivity analysis v2
-```{r, spatial bounday sensitivity}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
@@ -2130,10 +2144,8 @@ test1_40_buffer <- feols(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_
 
 df <- rbind(
   as.data.frame(cbind(test1km$coeftable[1:20,],c(rep("1km",20)))),
-  as.data.frame(cbind(test1_5_buffer$coeftable[1:20,],c(rep("5km_buffered",20)))),
   as.data.frame(cbind(test1_10_buffer$coeftable[1:20,],c(rep("10km_buffered",20)))),
   as.data.frame(cbind(test1_20_buffer$coeftable[1:20,],c(rep("20km_buffered",20)))),
-  as.data.frame(cbind(test1_30_buffer$coeftable[1:20,],c(rep("30km_buffered",20)))),
   as.data.frame(cbind(test1_40_buffer$coeftable[1:20,],c(rep("40km_buffered",20)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
@@ -2143,21 +2155,21 @@ df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
-df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','5km_buffered','10km_buffered','20km_buffered','30km_buffered','40km_buffered'))
+df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','10km_buffered','20km_buffered','40km_buffered'))
 dengue_yearly_did_popadj_buffer_sens <- ggplot(df, aes(group=Cutoff)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Cutoff), position = position_dodge(width=250), width=0.1, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate, fill=Cutoff), color='black',position = position_dodge(width=250), size=3, shape=21) +
-  scale_color_manual(name="Treament, control", values=list('1km'="#648FFF",'5km_buffered'="#785EF0",'10km_buffered'='#DC267F',
-                                                   '20km_buffered'='#FE6100','30km_buffered'='#FFB000','40km_buffered'='#FFE518'), 
-                     labels=list("1km"="<1km, >1km", "5km_buffered"="<1km, >5km", "10km_buffered"="<1km, >10km",
-                                 "20km_buffered"="<1km, >20km", "30km_buffered"="<1km, >30km", "40km_buffered"="<1km, >40km"))+
-  scale_fill_manual(name="Treament, control", values=list('1km'="#648FFF",'5km_buffered'="#785EF0",'10km_buffered'='#DC267F',
-                                                  '20km_buffered'='#FE6100','30km_buffered'='#FFB000','40km_buffered'='#FFE518'), 
-                    labels=list("1km"="<1km, >1km", "5km_buffered"="<1km, >5km", "10km_buffered"="<1km, >10km",
-                                 "20km_buffered"="<1km, >20km", "30km_buffered"="<1km, >30km", "40km_buffered"="<1km, >40km"))+
+  scale_color_manual(name="Treament, control", values=list('1km'="#648FFF",'10km_buffered'='#DC267F',
+                                                   '20km_buffered'='#FE6100','40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
+                     labels=list("1km"="<1km, >1km", "10km_buffered"="<1km, >10km",
+                                 "20km_buffered"="<1km, >20km", "40km_buffered"="<1km, >40km"))+
+  scale_fill_manual(name="Treament, control", values=list('1km'="#648FFF",'10km_buffered'='#DC267F',
+                                                  '20km_buffered'='#FE6100','40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
+                    labels=list("1km"="<1km, >1km", "10km_buffered"="<1km, >10km",
+                                 "20km_buffered"="<1km, >20km", "40km_buffered"="<1km, >40km"))+
   xlab("Year") + ylab("Difference in\nyearly dengue\nincidence") + 
   theme_bw()+
   ylim(c(-0.02,0.22))+
