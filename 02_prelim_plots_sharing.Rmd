@@ -298,6 +298,133 @@ tenkm_yearly <- ggplot(tenkm_plotting) +
 
 ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S2.pdf", fivekm_yearly, width = 10, height = 6, units = c("in"), device="pdf")
 
+```
+
+```{r, all cutoffs raw data fig}
+#all cutoffs
+incidence_data_yearly_buffered_test <- incidence_data_yearly_buffered
+#incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==1),14]<-as.character(2)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==3),14]<-as.character(2)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==6),14]<-as.character(0)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==5),14]<-as.character(4)
+table(incidence_data_yearly_buffered_test$all_cutoffs)/12
+
+incidence_data_yearly_buffered_plotting <- incidence_data_yearly_buffered_test %>%
+  group_by(all_cutoffs, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+incidence_data_yearly_buffered_plotting$year <- as.Date(incidence_data_yearly_buffered_plotting$year)
+incidence_data_yearly_buffered_plotting$new_incidence <- as.numeric(incidence_data_yearly_buffered_plotting$new_incidence)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- as.character(incidence_data_yearly_buffered_plotting$all_cutoffs)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- factor(incidence_data_yearly_buffered_plotting$all_cutoffs, levels=c('1', '2', '4', '0'))
+
+all_cutoffs_yearly <- ggplot(incidence_data_yearly_buffered_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=all_cutoffs)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(name = "Treatment", values=c('#DC267F', '#FFB000','#648FFF',"#785EF0"), labels=c('<1km', '[1km, 10km)', '[10km, 30km)', '>30km')) +
+  #scale_color_manual(name="Distance",values=list('2'="#DC267F",'3'="#FFB000",'4'='#648FFF', '0'="#785EF0"))+
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+all_cutoffs_yearly
+
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S3.pdf", all_cutoffs_yearly, width = 10, height = 6, units = c("in"), device="pdf")
+
+#all cutoffs
+incidence_data_yearly_buffered_test <- incidence_data_yearly_buffered
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==1),14]<-as.character(2)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==3),14]<-as.character(4)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==5),14]<-as.character(6)
+#incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==0),14]<-as.character(6)
+#table(incidence_data_yearly_buffered_test$all_cutoffs)/12
+
+incidence_data_yearly_buffered_plotting <- incidence_data_yearly_buffered_test %>%
+  group_by(all_cutoffs, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+incidence_data_yearly_buffered_plotting$year <- as.Date(incidence_data_yearly_buffered_plotting$year)
+incidence_data_yearly_buffered_plotting$new_incidence <- as.numeric(incidence_data_yearly_buffered_plotting$new_incidence)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- as.character(incidence_data_yearly_buffered_plotting$all_cutoffs)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- factor(incidence_data_yearly_buffered_plotting$all_cutoffs, levels=c('2','4', '6', '0'))
+table(incidence_data_yearly_buffered_plotting$all_cutoffs)
+
+all_cutoffs_yearly2 <- ggplot(incidence_data_yearly_buffered_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=all_cutoffs)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(name = "Distance", values=c('#DC267F', '#FFB000','#648FFF', '#785EF0'), labels=c('<5km', '(5km, 20km]', '(20km, 40km]', '>40km')) +
+  #scale_color_manual(name="Distance",values=list('2'="#DC267F",'3'="#FFB000",'4'='#648FFF', '0'="#785EF0"))+
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+all_cutoffs_yearly2
+
+#all cutoffs
+incidence_data_yearly_buffered_test <- incidence_data_yearly_buffered
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==1),14]<-as.character(2)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==3),14]<-as.character(4)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==5),14]<-as.character(6)
+incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==0),14]<-as.character(6)
+table(incidence_data_yearly_buffered_test$all_cutoffs)/12
+
+incidence_data_yearly_buffered_plotting <- incidence_data_yearly_buffered_test %>%
+  group_by(all_cutoffs, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+incidence_data_yearly_buffered_plotting$year <- as.Date(incidence_data_yearly_buffered_plotting$year)
+incidence_data_yearly_buffered_plotting$new_incidence <- as.numeric(incidence_data_yearly_buffered_plotting$new_incidence)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- as.character(incidence_data_yearly_buffered_plotting$all_cutoffs)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- factor(incidence_data_yearly_buffered_plotting$all_cutoffs, levels=c('2','4', '6'))
+table(incidence_data_yearly_buffered_plotting$all_cutoffs)
+
+all_cutoffs_yearly3 <- ggplot(incidence_data_yearly_buffered_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=all_cutoffs)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(name = "Distance", values=c('#DC267F', '#FFB000','#648FFF'), labels=c('<5km', '(5km, 20km]', '>20km')) +
+  #scale_color_manual(name="Distance",values=list('2'="#DC267F",'3'="#FFB000",'4'='#648FFF', '0'="#785EF0"))+
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+all_cutoffs_yearly3
+
 ``` 
 
 ```{r, eval=F}
@@ -2037,6 +2164,11 @@ covariates$year <- as.character(covariates$year)
 incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("cluster"="cluster", "year" = "year"))
 set.seed(99)
 incidence_data_yearly_permuted  <- transform(incidence_data_yearly, fivekm = sample(fivekm))   
+
+
+for(i in 1:100){
+  
+}
 
 #build models
 test_original <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly)
