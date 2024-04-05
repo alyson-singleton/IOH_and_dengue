@@ -83,7 +83,7 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
 
-# Plot all Brazilian states
+# Plot MdD
 center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
 center_lat_long$clust <- as.character(center_lat_long$clust)
 fig1a <- ggplot() +
