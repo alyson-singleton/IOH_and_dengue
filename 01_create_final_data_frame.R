@@ -81,7 +81,7 @@ linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,fivekm_
 linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,tenkm_tf, by='cluster')
 write.csv(linked_ids_codes_with_cutoffs, "~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
 
-#remove 2021 & 2022
+#remove 2021 & 2022 (because world pop ends in jan 2021)
 dengue_data_buffers_21 <- dengue_data_buffers[!(dengue_data_buffers$month %in% seq(as.Date("2021-01-01"), as.Date("2022-12-01"), by="months")),]
 
 ### add population data
