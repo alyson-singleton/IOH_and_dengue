@@ -106,7 +106,7 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure1.pdf", f
 ```
 
 #### Compare observable characteristics between treatment and control
-```{r, eval=F}
+```{r, cobalt, eval=F}
 ### yearly model
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
 incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
@@ -124,7 +124,7 @@ incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$clu
 incidence_data_yearly <- incidence_data_yearly[complete.cases(incidence_data_yearly),]
 incidence_data_yearly_no_pm <- incidence_data_yearly_no_pm[complete.cases(incidence_data_yearly_no_pm),]
 
-covariates <- c("mean_precip","mean_temp","urban_area")
+covariates <- c("mean_precip","mean_temp","urban_area", "population")
 # Compute summary statistics for each covariate by treatment group
 obs_balance <- cobalt::bal.tab(incidence_data_yearly_no_pm[, covariates], treat = incidence_data_yearly_no_pm$onekm)
 obs_balance
@@ -679,6 +679,7 @@ incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("clus
 incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
 
 test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly, weights=~population)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, vcov = "cluster", data = incidence_data_yearly)
 #test <- feols(incidence ~ i(year, tenkm, ref = '2008-01-01') | cluster + year, data = incidence_data_yearly)
 #summary(test)
@@ -1994,6 +1995,70 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure4v2.pdf",
 
 ```
 
+## Population weighting sensitivity analysis
+```{r, pop weight sensitivity}
+### yearly model
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/yearly_incidence_data_pop_adjusted.csv")
+incidence_data_yearly$incidence <- incidence_data_yearly$yearly_cases/incidence_data_yearly$population
+incidence_data_yearly$year <- as.factor(incidence_data_yearly$year)
+incidence_data_yearly$onekm <- as.numeric(incidence_data_yearly$onekm)
+
+### add covariates
+covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_yearly_covariates.csv")
+covariates$year <- as.character(covariates$year)
+covariates$year <- lubridate::ymd(covariates$year, truncated = 2L)
+covariates$year <- format(as.Date(covariates$year,"%Y"), "%Y-01-01")
+covariates$year <- as.character(covariates$year)
+incidence_data_yearly <- full_join(incidence_data_yearly, covariates, by=c("cluster"="cluster", "year" = "year"))
+incidence_data_yearly_no_pm <- incidence_data_yearly[!(incidence_data_yearly$cluster %in% 1),]
+
+#build models
+test <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly)
+test_popweight <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly, weights=~population)
+#test_popweight <- feols(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = incidence_data_yearly, weights = ~population)
+
+df <- rbind(
+  as.data.frame(cbind(test$coeftable[1:20,],c(rep("No weighting",20)))),
+  as.data.frame(cbind(test_popweight$coeftable[1:20,],c(rep("Pop weighting",20)))))
+
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Weighting')
+df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
+             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+df$estimate <- as.numeric(df$estimate)
+df$std_error <- as.numeric(df$std_error)
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+df$Weighting <- factor(as.character(df$Weighting), levels=c('No weighting','Pop weighting'))
+dengue_yearly_did_popweighting <- ggplot(df, aes(group=Weighting)) +
+  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Weighting), position = position_dodge(width=250), width=0.1, linewidth=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate, fill=Weighting), color='black',position = position_dodge(width=250), size=3, shape=21) +
+  scale_color_manual(values=list('No weighting'="#DC267F",'Pop weighting'="#FFB000"))+
+  scale_fill_manual(values=list('No weighting'="#DC267F",'Pop weighting'="#FFB000"))+
+  xlab("Year") + ylab("Difference in\nyearly dengue\nincidence") + 
+  theme_bw()+
+  ylim(c(-0.02,0.25))+
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
+dengue_yearly_did_popweighting
+
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S4.pdf", dengue_yearly_did_popweighting, width = 10, height = 6, units = c("in"), device="pdf")
+
+```
+
 ## Puerto Maldonado sensitivity analysis
 ```{r, pm sensitivity}
 ### yearly model
@@ -2313,7 +2378,7 @@ test1_40_buffer <- feols(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_
 
 df <- rbind(
   as.data.frame(cbind(test1km$coeftable[1:20,],c(rep("1km",20)))),
-  as.data.frame(cbind(test1_10_buffer$coeftable[1:20,],c(rep("10km_buffered",20)))),
+  #as.data.frame(cbind(test1_10_buffer$coeftable[1:20,],c(rep("10km_buffered",20)))),
   as.data.frame(cbind(test1_20_buffer$coeftable[1:20,],c(rep("20km_buffered",20)))),
   as.data.frame(cbind(test1_40_buffer$coeftable[1:20,],c(rep("40km_buffered",20)))))
 
@@ -2324,20 +2389,20 @@ df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
-df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','10km_buffered','20km_buffered','40km_buffered'))
+df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','20km_buffered','40km_buffered'))
 dengue_yearly_did_popadj_buffer_sens <- ggplot(df, aes(group=Cutoff)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Cutoff), position = position_dodge(width=250), width=0.1, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate, fill=Cutoff), color='black',position = position_dodge(width=250), size=3, shape=21) +
-  scale_color_manual(name="Treament, control", values=list('1km'="#648FFF",'10km_buffered'='#DC267F',
-                                                   '20km_buffered'='#FE6100','40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
-                     labels=list("1km"="<1km, >1km", "10km_buffered"="<1km, >10km",
+  scale_color_manual(name="Treament, control", values=list('1km'="#648FFF",'20km_buffered'='#DC267F',
+                                                   '40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
+                     labels=list("1km"="<1km, >1km",
                                  "20km_buffered"="<1km, >20km", "40km_buffered"="<1km, >40km"))+
-  scale_fill_manual(name="Treament, control", values=list('1km'="#648FFF",'10km_buffered'='#DC267F',
-                                                  '20km_buffered'='#FE6100','40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
-                    labels=list("1km"="<1km, >1km", "10km_buffered"="<1km, >10km",
+  scale_fill_manual(name="Treament, control", values=list('1km'="#648FFF",'20km_buffered'='#DC267F',
+                                                  '40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
+                    labels=list("1km"="<1km, >1km",
                                  "20km_buffered"="<1km, >20km", "40km_buffered"="<1km, >40km"))+
   xlab("Year") + ylab("Difference in\nyearly dengue\nincidence") + 
   theme_bw()+
