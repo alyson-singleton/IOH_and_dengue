@@ -51,6 +51,11 @@ dengue_data_complete_time_steps <- dengue_data_linked %>%
   complete(month = seq(as.Date("2000-01-01"), as.Date("2022-01-01"), by="months"), 
            fill = list(monthly_cases = 0)) %>%
   as.data.frame()
+incidence_data_yearly$year <- as.Date(incidence_data_yearly$year)
+incidence_data_yearly <- incidence_data_yearly %>%
+  complete(year = seq(as.Date("2000-01-01"), as.Date("2022-01-01"), by="months"), 
+           fill = list(yearly_cases = 0)) %>%
+  as.data.frame()
 
 ## link to various road buffers
 onekm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_1km_boolean.csv")
@@ -409,9 +414,30 @@ fortykm_tf$isInsideBuffer[fortykm_tf$isInsideBuffer == 'true'] <- 1
 fortykm_tf$isInsideBuffer[fortykm_tf$isInsideBuffer == 'false'] <- 0
 colnames(fortykm_tf) <- c('cluster', 'fortykm')
 
-df_to_link <- left_join(twentykm_tf, thirtykm_tf, by = "cluster")
-df_to_link <- left_join(df_to_link, fortykm_tf, by = "cluster")
+#2km
+twokm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_2km_boolean.csv")
+twokm_tf <- twokm_tf[,c(2,4)]
+twokm_tf$isInsideBuffer[twokm_tf$isInsideBuffer == 'true'] <- 1
+twokm_tf$isInsideBuffer[twokm_tf$isInsideBuffer == 'false'] <- 0
+colnames(twokm_tf) <- c('cluster', 'twokm')
 
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data_pop_adjusted.csv")
+#3km
+threekm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_3km_boolean.csv")
+threekm_tf <- threekm_tf[,c(2,4)]
+threekm_tf$isInsideBuffer[threekm_tf$isInsideBuffer == 'true'] <- 1
+threekm_tf$isInsideBuffer[threekm_tf$isInsideBuffer == 'false'] <- 0
+colnames(threekm_tf) <- c('cluster', 'threekm')
+
+#4km
+fourkm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_4km_boolean.csv")
+fourkm_tf <- fourkm_tf[,c(2,4)]
+fourkm_tf$isInsideBuffer[fourkm_tf$isInsideBuffer == 'true'] <- 1
+fourkm_tf$isInsideBuffer[fourkm_tf$isInsideBuffer == 'false'] <- 0
+colnames(fourkm_tf) <- c('cluster', 'fourkm')
+
+df_to_link <- left_join(twokm_tf, threekm_tf, by = "cluster")
+df_to_link <- left_join(df_to_link, fourkm_tf, by = "cluster")
+
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 incidence_data_yearly <- left_join(incidence_data_yearly, df_to_link, by = "cluster")
-write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/monthly_leish_incidence_data_pop_adjusted.csv")
+write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
