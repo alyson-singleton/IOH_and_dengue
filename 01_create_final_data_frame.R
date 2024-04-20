@@ -120,6 +120,10 @@ cleaned_diresa_pop$year <- as.Date(cleaned_diresa_pop$year)
 #left join
 all_pop <- left_join(population_mdd_long, cleaned_diresa_pop, by=c('cluster','year'))
 colnames(all_pop) <- c('cluster', 'year', 'worldpop', 'diresapop')
+
+#fix cluster 16
+all_pop$diresapop[c(157:158)] <- all_pop$diresapop[c(159)]
+
 #get average ratio between the two *for EACH CLUSTER
 all_pop$ratio <- all_pop$worldpop/all_pop$diresapop
 all_pop <- all_pop %>%
@@ -129,6 +133,19 @@ all_pop <- all_pop %>%
 all_pop$worldpop_ratio <- all_pop$worldpop/all_pop$average_ratio
 adjusted_diresa_pop <- all_pop[,c(1,2,7)]
 colnames(adjusted_diresa_pop) <- c('cluster', 'year', 'population')
+
+#linearly interpolate for 2021 and 2022
+adjusted_diresa_pop <- adjusted_diresa_pop %>%
+  pivot_wider(names_from = "year",
+              values_from = "population")
+adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22)]
+adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22)]
+adjusted_diresa_pop$ratio_20_19 <- adjusted_diresa_pop$`2020-01-01`/adjusted_diresa_pop$`2019-01-01`
+adjusted_diresa_pop$`2021-01-01` <- adjusted_diresa_pop$ratio_20_19*adjusted_diresa_pop$`2020-01-01`
+adjusted_diresa_pop$`2022-01-01` <- adjusted_diresa_pop$ratio_20_19*adjusted_diresa_pop$`2021-01-01`
+adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22,24,25)]
+adjusted_diresa_pop <- adjusted_diresa_pop[which(adjusted_diresa_pop$cluster!=66),]
+write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/population_data_adjusted.csv")
   
 #build year column for linking to yearly population data
 dengue_data_buffers_21$year <- format(as.Date(dengue_data_buffers_21$month, format="%Y-%m-%d"),"%Y")
@@ -441,3 +458,5 @@ df_to_link <- left_join(df_to_link, fourkm_tf, by = "cluster")
 incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 incidence_data_yearly <- left_join(incidence_data_yearly, df_to_link, by = "cluster")
 write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
+
+

@@ -151,38 +151,41 @@ colnames(pop_2009) <- c('health_center', 'total', '0y', '1y', '2y', '3y', '4y', 
 #missing 
 
 ### build best combined total dataset across years
-pop_total <- full_join(pop_2009[,c(1:2)],pop_2010[,c(1:2)], by='health_center')
-pop_total <- full_join(pop_total,pop_2011[,c(1:2)], by='health_center')
-pop_total <- full_join(pop_total,pop_2012[,c(1:2)], by='health_center')
-pop_total <- full_join(pop_total,pop_2013[,c(1:2)], by='health_center')
-pop_total <- full_join(pop_total,pop_2014[,c(1:2)], by='health_center')
-pop_total <- full_join(pop_total,pop_2015[,c(1:2)], by='health_center')
-pop_total <- full_join(pop_total,pop_2016[,c(2:3)], by='health_center')
-pop_total <- full_join(pop_total,pop_2017[,c(1:2)], by='health_center')
-colnames(pop_total) <- c('pop_name' , as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
-pop_total <- pop_total[c(1:(dim(pop_total)[1]-3)),]
-pop_total$`2014-01-01` <- as.numeric(gsub(",","",pop_total$`2014-01-01`))
-pop_total$`2017-01-01` <- as.numeric(gsub(",","",pop_total$`2017-01-01`))
+pop_2009_2017 <- pop_2009[,c(1:2)] %>% 
+  full_join(pop_2010[,c(1:2)], by='health_center') %>%
+  full_join(pop_2011[,c(1:2)], by='health_center') %>%
+  full_join(pop_2012[,c(1:2)], by='health_center') %>%
+  full_join(pop_2013[,c(1:2)], by='health_center') %>%
+  full_join(pop_2014[,c(1:2)], by='health_center') %>%
+  full_join(pop_2015[,c(1:2)], by='health_center') %>%
+  full_join(pop_2016[,c(2:3)], by='health_center') %>%
+  full_join(pop_2017[,c(1:2)], by='health_center')
+colnames(pop_2009_2017) <- c('pop_name' , as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
+pop_2009_2017 <- pop_2009_2017[c(1:(dim(pop_2009_2017)[1]-3)),]
+pop_2009_2017$`2014-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2014-01-01`))
+pop_2009_2017$`2017-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2017-01-01`))
 
-pop_total2 <- full_join(pop_2020[,c(3,4,20)], pop_2021[,c(3,4,20)], by=c('health_center', 'microrred'))
-pop_total2 <- full_join(pop_total2,pop_2022[,c(3,4,20)], by=c('health_center', 'microrred'))
-pop_total2 <- full_join(pop_total2,pop_2023[,c(3,4,20)], by=c('health_center', 'microrred'))
-colnames(pop_total2) <- c('microrred', 'health_center' , as.character(seq(as.Date("2020-01-01"), as.Date("2023-01-01"), by="years")))
-pop_total2$`2020-01-01` <- as.numeric(gsub(",","",pop_total2$`2020-01-01`))
-pop_total2$`2021-01-01` <- as.numeric(gsub(",","",pop_total2$`2021-01-01`))
-pop_total2$`2022-01-01` <- as.numeric(gsub(",","",pop_total2$`2022-01-01`))
-pop_total2$`2023-01-01` <- as.numeric(gsub(",","",pop_total2$`2023-01-01`))
+pop_2020_2023 <- pop_2020[,c(3,4,20)] %>% 
+  full_join(pop_2021[,c(3,4,20)], by=c('health_center', 'microrred')) %>%
+  full_join(pop_2022[,c(3,4,20)], by=c('health_center', 'microrred')) %>%
+  full_join(pop_2023[,c(3,4,20)], by=c('health_center', 'microrred'))
+colnames(pop_2020_2023) <- c('microrred', 'health_center' , as.character(seq(as.Date("2020-01-01"), as.Date("2023-01-01"), by="years")))
+pop_2020_2023$`2020-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2020-01-01`))
+pop_2020_2023$`2021-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2021-01-01`))
+pop_2020_2023$`2022-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2022-01-01`))
+pop_2020_2023$`2023-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2023-01-01`))
 
 
 ### link names with e_salud codes
-linked <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/linking_clusterid_esaludkey.csv")
-letssee <- full_join(linked, pop_total, by='pop_name')
-## export to match issues in excel
-write.csv(letssee, "~/Desktop/doctorate/ch2 mdd highway/data/temporary_diresa_pop.csv")
+key_esalud_clusterid <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
+pop_2009_2017_linked <- full_join(key_esalud_clusterid, pop_2009_2017, by=join_by('name'=='pop_name'))
+## export to complete mis-matches by hand in excel
+write.csv(pop_2009_2017_linked, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_unmatched.csv")
 
-## match pop data names to case data names
-cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/cleaned_diresa_pop.csv")
+## load matched pop_2009_2017 data for final editing
+cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_matched.csv")
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(4:18)]
 colnames(cleaned_diresa_pop)[c(7:15)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
-write.csv(cleaned_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/cleaned_diresa_pop_totals.csv")
+write.csv(cleaned_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_final.csv")
+
 
