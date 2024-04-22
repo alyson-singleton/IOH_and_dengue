@@ -1,5 +1,3 @@
-install.packages("drake")
-install.packages("here")
 
 #read in required packages
 require(readxl)
@@ -7,28 +5,15 @@ require(tidyverse)
 library(sf)
 library(mapview)
 library(ggplot2)
-library(drake)
-library(here)
 
 #add back in arial font
 library(showtext)
 font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
 
-list.files(here::here(), full.names = T)
-
-ch2_mdd_highway_plan <- drake_plan(
-  pop_2023 = read.csv(file.path("~/Desktop/doctorate/ch2 mdd highway/data/biannual_leish_incidence_data_pop_adjusted.csv"))
-)
-
-if(file.exists(".drake")){
-  ch2_drake_cache = drake::drake_cache(".drake")
-} else {
-  ch2_drake_cache = drake::new_cache(".drake")
-}
-
-make(ch2_mdd_highway_plan, cache = ch2_drake_cache)
-loadd(pop_2023)
+#################################### 
+# load all diresa pop files (after some preprocessing done first in excel by hand)
+#################################### 
 
 #load 2023
 pop_2023 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data/POBLAC_MDD_2023_FINAL.csv", header=T, check.names = F)
@@ -150,7 +135,10 @@ colnames(pop_2009) <- c('health_center', 'total', '0y', '1y', '2y', '3y', '4y', 
 #load 2008
 #missing 
 
-### build best combined total dataset across years
+#################################### 
+### build diresa combined total dataset for 2009--2017 (consistent format type)
+#################################### 
+
 pop_2009_2017 <- pop_2009[,c(1:2)] %>% 
   full_join(pop_2010[,c(1:2)], by='health_center') %>%
   full_join(pop_2011[,c(1:2)], by='health_center') %>%
@@ -165,6 +153,22 @@ pop_2009_2017 <- pop_2009_2017[c(1:(dim(pop_2009_2017)[1]-3)),]
 pop_2009_2017$`2014-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2014-01-01`))
 pop_2009_2017$`2017-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2017-01-01`))
 
+### link names with e_salud codes
+key_esalud_clusterid <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
+pop_2009_2017_linked <- full_join(key_esalud_clusterid, pop_2009_2017, by=join_by('name'=='pop_name'))
+## export to complete mis-matches by hand in excel
+write.csv(pop_2009_2017_linked, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_unmatched.csv")
+
+## load matched pop_2009_2017 data for final editing
+cleaned_diresa_pop_2009_2017 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_matched.csv")
+cleaned_diresa_pop_2009_2017 <- cleaned_diresa_pop_2009_2017[,c(2:16)]
+colnames(cleaned_diresa_pop_2009_2017)[c(7:15)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
+write.csv(cleaned_diresa_pop_2009_2017, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_final.csv")
+
+#################################### 
+### build diresa combined total dataset for 2020--2023 (other consistent format type)
+#################################### 
+
 pop_2020_2023 <- pop_2020[,c(3,4,20)] %>% 
   full_join(pop_2021[,c(3,4,20)], by=c('health_center', 'microrred')) %>%
   full_join(pop_2022[,c(3,4,20)], by=c('health_center', 'microrred')) %>%
@@ -175,17 +179,26 @@ pop_2020_2023$`2021-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2021-01-01`)
 pop_2020_2023$`2022-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2022-01-01`))
 pop_2020_2023$`2023-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2023-01-01`))
 
-
 ### link names with e_salud codes
 key_esalud_clusterid <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
-pop_2009_2017_linked <- full_join(key_esalud_clusterid, pop_2009_2017, by=join_by('name'=='pop_name'))
+#remove "P.S." and "C.S." for matching"
+key_esalud_clusterid$name_short <- substr(key_esalud_clusterid$name, 6, 100)
+pop_2020_2023_linked <- full_join(key_esalud_clusterid, pop_2020_2023, by=join_by('name_short'=='health_center'))
 ## export to complete mis-matches by hand in excel
-write.csv(pop_2009_2017_linked, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_unmatched.csv")
+write.csv(pop_2020_2023_linked, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2020_2023_unmatched.csv")
 
-## load matched pop_2009_2017 data for final editing
-cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_matched.csv")
-cleaned_diresa_pop <- cleaned_diresa_pop[,c(4:18)]
-colnames(cleaned_diresa_pop)[c(7:15)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
-write.csv(cleaned_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_final.csv")
+## load matched pop_2020_2023 data for final editing
+cleaned_diresa_pop_2020_2023 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2020_2023_matched.csv")
+cleaned_diresa_pop_2020_2023 <- cleaned_diresa_pop_2020_2023[,c(2:6,9:12)]
+colnames(cleaned_diresa_pop_2020_2023)[c(6:9)] <- c(as.character(seq(as.Date("2020-01-01"), as.Date("2023-01-01"), by="years")))
+write.csv(cleaned_diresa_pop_2020_2023, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2020_2023_final.csv")
 
-
+####################################
+### build diresa population dataset across all years
+####################################
+cleaned_diresa_pop_2009_2017 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_matched.csv")
+cleaned_diresa_pop_2020_2023 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2020_2023_matched.csv")
+cleaned_diresa_pop_all_years <- full_join(cleaned_diresa_pop_2009_2017,cleaned_diresa_pop_2020_2023, by=c("key", "name", "e_salud", "latitude", "longitude", "clust"))
+cleaned_diresa_pop_all_years <- cleaned_diresa_pop_all_years[,c(1:3, 5:16, 19:22)]
+colnames(cleaned_diresa_pop_all_years)[c(7:19)] <- as.character(c(2009:2017,2020:2023))                                   
+write.csv(cleaned_diresa_pop_all_years, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_all_years_final.csv")
