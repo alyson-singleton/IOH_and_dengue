@@ -78,6 +78,7 @@ colnames(adjusted_diresa_pop) <- c('cluster', 'year', 'population')
 #export imputed population data
 write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final.csv")
 
+# SCRATCH
 #individual ratios
 #all_pop$individual_ratio <- NA
 #for(i in 1:dim(all_pop)[1]){

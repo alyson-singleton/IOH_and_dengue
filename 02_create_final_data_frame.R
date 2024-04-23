@@ -10,13 +10,15 @@ library(showtext)
 font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
 
-## load all mdd case data
+## load raw mdd case data
 case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_case_data.csv")
 head(case_data)
 
 #################################
-#############Dengue##############
-## dengue data only
+### dengue
+#################################
+
+## keep dengue data only
 dengue_data <- case_data[which(case_data$DIAGNOSTIC=="A97.0"),]
 mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
 dengue_data <- dengue_data[which(dengue_data$UBIGEO %in% mdd_districts),]
@@ -85,67 +87,6 @@ linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes,onekm_tf, by='cluste
 linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,fivekm_tf, by='cluster')
 linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,tenkm_tf, by='cluster')
 write.csv(linked_ids_codes_with_cutoffs, "~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
-
-#remove 2021 & 2022 (because world pop ends in jan 2021)
-dengue_data_buffers_21 <- dengue_data_buffers[!(dengue_data_buffers$month %in% seq(as.Date("2021-01-01"), as.Date("2022-12-01"), by="months")),]
-
-### add population data
-population_mdd <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_population_yearly.csv")
-population_mdd$cluster <- population_mdd$layer
-population_mdd <- population_mdd[,c(2:22,25)]
-colnames(population_mdd) <- c(as.character(seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by="years")), 'cluster')
-population_mdd_long <- population_mdd %>%
-  pivot_longer(cols = c(1:21), 
-               names_to = "year", 
-               values_to = "population")
-population_mdd_long$year <- as.Date(population_mdd_long$year)
-
-## load cleaned diresa pop data
-cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/cleaned_diresa_pop.csv")
-cleaned_diresa_pop <- cleaned_diresa_pop[,c(4:18)]
-colnames(cleaned_diresa_pop)[c(7:15)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
-
-## impute population from 2000 to 2020 based on 2009 to 2017 values
-# group into clusters and match format
-cleaned_diresa_pop <- cleaned_diresa_pop[,c(6:15)]
-cleaned_diresa_pop <- cleaned_diresa_pop %>%
-  pivot_longer(cols = c(2:10), 
-               names_to = "year", 
-               values_to = "population") %>%
-  group_by(clust,year) %>%
-  summarize(population=sum(population, na.rm=T),
-            year=max(year))
-colnames(cleaned_diresa_pop) <- c('cluster','year','population')
-cleaned_diresa_pop$year <- as.Date(cleaned_diresa_pop$year)
-#left join
-all_pop <- left_join(population_mdd_long, cleaned_diresa_pop, by=c('cluster','year'))
-colnames(all_pop) <- c('cluster', 'year', 'worldpop', 'diresapop')
-
-#fix cluster 16
-all_pop$diresapop[c(157:158)] <- all_pop$diresapop[c(159)]
-
-#get average ratio between the two *for EACH CLUSTER
-all_pop$ratio <- all_pop$worldpop/all_pop$diresapop
-all_pop <- all_pop %>%
-  group_by(cluster) %>%
-  mutate(average_ratio = mean(ratio, na.rm=T))
-#fill in the blanks, keep the "known" values
-all_pop$worldpop_ratio <- all_pop$worldpop/all_pop$average_ratio
-adjusted_diresa_pop <- all_pop[,c(1,2,7)]
-colnames(adjusted_diresa_pop) <- c('cluster', 'year', 'population')
-
-#linearly interpolate for 2021 and 2022
-adjusted_diresa_pop <- adjusted_diresa_pop %>%
-  pivot_wider(names_from = "year",
-              values_from = "population")
-adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22)]
-adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22)]
-adjusted_diresa_pop$ratio_20_19 <- adjusted_diresa_pop$`2020-01-01`/adjusted_diresa_pop$`2019-01-01`
-adjusted_diresa_pop$`2021-01-01` <- adjusted_diresa_pop$ratio_20_19*adjusted_diresa_pop$`2020-01-01`
-adjusted_diresa_pop$`2022-01-01` <- adjusted_diresa_pop$ratio_20_19*adjusted_diresa_pop$`2021-01-01`
-adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22,24,25)]
-adjusted_diresa_pop <- adjusted_diresa_pop[which(adjusted_diresa_pop$cluster!=66),]
-write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/population_data_adjusted.csv")
   
 #build year column for linking to yearly population data
 dengue_data_buffers_21$year <- format(as.Date(dengue_data_buffers_21$month, format="%Y-%m-%d"),"%Y")
