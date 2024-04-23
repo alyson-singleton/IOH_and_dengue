@@ -3,15 +3,15 @@ title: "IOH and dengue updates"
 author: "Alyson Singleton"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
-  word_document: default
   html_document: default
+  word_document: default
+  pdf_document: default
 ---
 ```{r setup, include=FALSE}
 # install packages, load libraries, set themes, knit formatting
 pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt)
 theme_set(theme_bw())
-knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=T,
+knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=F,
                       fig.height=5, fig.width=10)
 
 get_legend<-function(myggplot){
@@ -559,13 +559,13 @@ Each dot in this plot represents the beta coefficient for each year in the regre
 
 ```{r, main specification}
 ### yearly model
-dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly, weights=~population)
 #summary(dengue_yearly_model)
 
 df <- as.data.frame(dengue_yearly_model$coeftable)
-df <- df[1:19,]
+df <- df[1:20,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$year <- c(seq(as.Date("2001-01-01"), as.Date("2007-01-01"), by="year"),
+df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
