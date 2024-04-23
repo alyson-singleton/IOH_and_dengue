@@ -18,8 +18,11 @@ population_mdd <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_
 population_mdd$cluster <- population_mdd$layer
 population_mdd <- population_mdd[,c(2:22,25)]
 colnames(population_mdd) <- c(as.character(seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by="years")), 'cluster')
+population_mdd$`2021-01-01` <- NA
+population_mdd$`2022-01-01` <- NA
+population_mdd$`2023-01-01` <- NA
 population_mdd_long <- population_mdd %>%
-  pivot_longer(cols = c(1:21), 
+  pivot_longer(cols = c(1:21,23:25), 
                names_to = "year", 
                values_to = "population")
 population_mdd_long$year <- as.Date(population_mdd_long$year)
@@ -58,38 +61,27 @@ colnames(all_pop) <- c('cluster', 'year', 'worldpop', 'diresapop')
 all_pop$diresapop[which(all_pop$diresapop==0)] <- NA
 
 #get average ratio between the diresa and worldpop for EACH CLUSTER
-all_pop$ratio <- all_pop$worldpop/all_pop$diresapop
+all_pop$individual_ratio <- all_pop$worldpop/all_pop$diresapop
 all_pop <- all_pop %>%
   group_by(cluster) %>%
-  mutate(average_ratio = mean(ratio, na.rm=T))
-all_pop$worldpop_ratio <- all_pop$worldpop/all_pop$average_ratio
-
-#individual ratios
-all_pop$individual_ratio <- NA
-for(i in 1:dim(all_pop)[1]){
-  all_pop$individual_ratio[i] <- all_pop$worldpop[i+1]/all_pop$worldpop[i]
-}
-
-for(i in 1:dim(all_pop)[1]){
-  all_pop$individual_ratio[i] <- all_pop$worldpop[i+1]/all_pop$worldpop[i]
-}
+  mutate(average_ratio = mean(individual_ratio, na.rm=T))
+all_pop$worldpop_adjusted <- all_pop$worldpop/all_pop$average_ratio
 
 #fill in the blanks, keep the "known" values
-#start here.. should it be the average or a year by year linear interpolation ? ie missing 2008 is the ratio of world pop 2008 to just 2009 (most recent year, like below)
-adjusted_diresa_pop <- all_pop[,c(1,2,7)]
+all_pop$adjusted_pop <- all_pop$diresapop
+all_pop$adjusted_pop[which(is.na(all_pop$adjusted_pop))] <- all_pop$worldpop_adjusted[which(is.na(all_pop$adjusted_pop))]
+
+#reduce to final columns
+adjusted_diresa_pop <- all_pop[,c(1,2,8)]
 colnames(adjusted_diresa_pop) <- c('cluster', 'year', 'population')
 
-#linearly interpolate for 2021 and 2022
-adjusted_diresa_pop <- adjusted_diresa_pop %>%
-  pivot_wider(names_from = "year",
-              values_from = "population")
-adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22)]
-adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22)]
-adjusted_diresa_pop$ratio_20_19 <- adjusted_diresa_pop$`2020-01-01`/adjusted_diresa_pop$`2019-01-01`
-adjusted_diresa_pop$`2021-01-01` <- adjusted_diresa_pop$ratio_20_19*adjusted_diresa_pop$`2020-01-01`
-adjusted_diresa_pop$`2022-01-01` <- adjusted_diresa_pop$ratio_20_19*adjusted_diresa_pop$`2021-01-01`
-adjusted_diresa_pop <- adjusted_diresa_pop[,c(1:22,24,25)]
-adjusted_diresa_pop <- adjusted_diresa_pop[which(adjusted_diresa_pop$cluster!=66),]
-
 #export imputed population data
-write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/population_data_adjusted.csv")
+write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/population_data_clusters_adjusted.csv")
+
+#individual ratios
+#all_pop$individual_ratio <- NA
+#for(i in 1:dim(all_pop)[1]){
+#  all_pop$individual_ratio[i] <- all_pop$worldpop[i+1]/all_pop$worldpop[i]
+#}
+
+
