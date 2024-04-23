@@ -2,8 +2,6 @@
 #read in required packages
 require(readxl)
 require(tidyverse)
-library(sf)
-library(mapview)
 library(ggplot2)
 
 #add back in arial font
