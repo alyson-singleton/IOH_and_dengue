@@ -40,6 +40,7 @@ colnames(cleaned_diresa_pop)[c(6)] <- "cluster"
 #################################### 
 ## impute missing population values from 2000 to 2020 based on worldpop ratio
 #################################### 
+
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(6:19)]
 
 # change into long format and group into clusters 
@@ -78,7 +79,9 @@ colnames(adjusted_diresa_pop) <- c('cluster', 'year', 'population')
 #export imputed population data
 write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final.csv")
 
-# SCRATCH
+#################################### 
+## SCRATCH
+#################################### 
 #individual ratios
 #all_pop$individual_ratio <- NA
 #for(i in 1:dim(all_pop)[1]){

@@ -10,84 +10,73 @@ library(showtext)
 font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
 
-## load raw mdd case data
+## load raw mdd case data (all diseases)
 case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_case_data.csv")
 head(case_data)
 
 #################################
-### dengue
+### preprocess dengue cases
 #################################
 
-## keep dengue data only
+## keep dengue data only (in this case do not include A97.1--alarm--or A97.2--severe)
 dengue_data <- case_data[which(case_data$DIAGNOSTIC=="A97.0"),]
+
+## remove cases listed as being from outside madre de dios
 mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
 dengue_data <- dengue_data[which(dengue_data$UBIGEO %in% mdd_districts),]
-dengue_data$FECHA_INI <- as.Date(dengue_data$FECHA_INI)
 
-## monthly case data
+## group into months
+dengue_data$FECHA_INI <- as.Date(dengue_data$FECHA_INI)
 monthly_dengue_data <- dengue_data %>% 
   group_by(month = lubridate::floor_date(FECHA_INI, 'month'), e_salud = E_SALUD) %>%
-  summarize(sum = n())
+  summarize(monthly_cases = n())
 
 ## merge e_salud codes and cluster ids
-cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/cluster_centroids_70.csv")
-e_salud_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_E_Salud_Coordinates_Key.csv")
+e_salud_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_ESalud_Coordinates_Key.csv")
 id_cluster_key_7500 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/idClusterKey7500.csv")
-
 linked_ids_codes <- left_join(e_salud_codes, id_cluster_key_7500, by = 'key')
-#linked_ids_codes <- left_join(cluster_ids, id_cluster_key_7500, by = 'clust')
+#write.csv(linked_ids_codes,"~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
 
-write.csv(linked_ids_codes,"~/Desktop/doctorate/ch2 mdd highway/data/linking_clusterid_esaludkey.csv")
+## link to cluster ids and group into healthcare center clusters
 dengue_data_linked <- left_join(linked_ids_codes, monthly_dengue_data, by = 'e_salud')
 dengue_data_linked <- dengue_data_linked %>%
   group_by(cluster = clust, month = month) %>%
-  summarize(monthly_cases = sum(sum),
-            name = first(name))
+  summarize(monthly_cases = sum(monthly_cases))
 
-## add zeroes
+## add zeroes to cluster-months with no recorded cases
 full_months <- data.frame(seq(as.Date("2000-01-01"), as.Date("2022-01-01"), by="months"))
 colnames(full_months) <- 'month'
 dengue_data_linked$cluster <- as.vector(dengue_data_linked$cluster)
-dengue_data_linked <- dengue_data_linked[,c(1:3)]
 dengue_data_complete_time_steps <- dengue_data_linked %>%
   complete(month = seq(as.Date("2000-01-01"), as.Date("2022-01-01"), by="months"), 
            fill = list(monthly_cases = 0)) %>%
   as.data.frame()
-incidence_data_yearly$year <- as.Date(incidence_data_yearly$year)
-incidence_data_yearly <- incidence_data_yearly %>%
-  complete(year = seq(as.Date("2000-01-01"), as.Date("2022-01-01"), by="months"), 
-           fill = list(yearly_cases = 0)) %>%
-  as.data.frame()
 
-## link to various road buffers
-onekm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_1km_boolean.csv")
-onekm_tf <- onekm_tf[,c(2,4)]
-onekm_tf$isInsideBuffer[onekm_tf$isInsideBuffer == 'true'] <- 1
-onekm_tf$isInsideBuffer[onekm_tf$isInsideBuffer == 'false'] <- 0
-colnames(onekm_tf) <- c('cluster', 'onekm')
-fivekm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_5km_boolean.csv")
-fivekm_tf <- fivekm_tf[,c(2,4)]
-fivekm_tf$isInsideBuffer[fivekm_tf$isInsideBuffer == 'true'] <- 1
-fivekm_tf$isInsideBuffer[fivekm_tf$isInsideBuffer == 'false'] <- 0
-colnames(fivekm_tf) <- c('cluster', 'fivekm')
-tenkm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_10km_boolean.csv")
-tenkm_tf <- tenkm_tf[,c(2,4)]
-tenkm_tf$isInsideBuffer[tenkm_tf$isInsideBuffer == 'true'] <- 1
-tenkm_tf$isInsideBuffer[tenkm_tf$isInsideBuffer == 'false'] <- 0
-colnames(tenkm_tf) <- c('cluster', 'tenkm')
+#################################
+## create dataframe of road buffers
+#################################
+
+boundary_files <- list.files(path="~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars", pattern="csv", all.files=FALSE, full.names=TRUE,recursive=TRUE)
+boundary_dummy_vars <- as.data.frame(c(1:70)); colnames(boundary_dummy_vars) = c('cluster')
+for (i in 1:length(boundary_files)){
+  boundary_csv <- read.csv(boundary_files[i])
+  boundary_csv <- boundary_csv[,c(2,4)]
+  boundary_csv$isInsideBuffer[boundary_csv$isInsideBuffer == 'true'] <- 1
+  boundary_csv$isInsideBuffer[boundary_csv$isInsideBuffer == 'false'] <- 0
+  colnames(boundary_csv) <- c('cluster', strsplit(tools::file_path_sans_ext(boundary_files[i]), "_(?!.*_)", perl=TRUE)[[1]][2])
+  boundary_dummy_vars <- left_join(boundary_dummy_vars, boundary_csv, by = "cluster")
+}
+
+incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
+incidence_data_yearly <- left_join(incidence_data_yearly, df_to_link, by = "cluster")
+write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
 
 dengue_data_complete_time_steps$cluster <- as.numeric(dengue_data_complete_time_steps$cluster)
 dengue_data_buffers <- full_join(dengue_data_complete_time_steps,onekm_tf, by='cluster')
 dengue_data_buffers <- full_join(dengue_data_buffers,fivekm_tf, by='cluster')
 dengue_data_buffers <- full_join(dengue_data_buffers,tenkm_tf, by='cluster')
 
-# just to build spatial inclusion/exclusion maps
-linked_ids_codes$cluster <- linked_ids_codes$clust
-linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes,onekm_tf, by='cluster')
-linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,fivekm_tf, by='cluster')
-linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,tenkm_tf, by='cluster')
-write.csv(linked_ids_codes_with_cutoffs, "~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
-  
+
 #build year column for linking to yearly population data
 dengue_data_buffers_21$year <- format(as.Date(dengue_data_buffers_21$month, format="%Y-%m-%d"),"%Y")
 dengue_data_buffers_21$year <- format(as.Date(dengue_data_buffers_21$year, format="%Y"),"%Y-01-01")
@@ -349,55 +338,14 @@ covariates <- left_join(covariates,urban_area, by=c("cluster"="cluster", "year.x
 covariates$urban_area[which(is.na(covariates$urban_area))] <- 0
 write.csv(covariates, "~/Desktop/doctorate/ch2 mdd highway/data/mdd_biannual_covariates.csv")
 
-#add more road buffer vars
+#################################
+## SCRATCH
+#################################
 
-#20km
-twentykm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_20km_boolean.csv")
-twentykm_tf <- twentykm_tf[,c(2,4)]
-twentykm_tf$isInsideBuffer[twentykm_tf$isInsideBuffer == 'true'] <- 1
-twentykm_tf$isInsideBuffer[twentykm_tf$isInsideBuffer == 'false'] <- 0
-colnames(twentykm_tf) <- c('cluster', 'twentykm')
-
-#30km
-thirtykm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_30km_boolean.csv")
-thirtykm_tf <- thirtykm_tf[,c(2,4)]
-thirtykm_tf$isInsideBuffer[thirtykm_tf$isInsideBuffer == 'true'] <- 1
-thirtykm_tf$isInsideBuffer[thirtykm_tf$isInsideBuffer == 'false'] <- 0
-colnames(thirtykm_tf) <- c('cluster', 'thirtykm')
-
-#40km
-fortykm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_40km_boolean.csv")
-fortykm_tf <- fortykm_tf[,c(2,4)]
-fortykm_tf$isInsideBuffer[fortykm_tf$isInsideBuffer == 'true'] <- 1
-fortykm_tf$isInsideBuffer[fortykm_tf$isInsideBuffer == 'false'] <- 0
-colnames(fortykm_tf) <- c('cluster', 'fortykm')
-
-#2km
-twokm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_2km_boolean.csv")
-twokm_tf <- twokm_tf[,c(2,4)]
-twokm_tf$isInsideBuffer[twokm_tf$isInsideBuffer == 'true'] <- 1
-twokm_tf$isInsideBuffer[twokm_tf$isInsideBuffer == 'false'] <- 0
-colnames(twokm_tf) <- c('cluster', 'twokm')
-
-#3km
-threekm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_3km_boolean.csv")
-threekm_tf <- threekm_tf[,c(2,4)]
-threekm_tf$isInsideBuffer[threekm_tf$isInsideBuffer == 'true'] <- 1
-threekm_tf$isInsideBuffer[threekm_tf$isInsideBuffer == 'false'] <- 0
-colnames(threekm_tf) <- c('cluster', 'threekm')
-
-#4km
-fourkm_tf <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_IOH_buffered_4km_boolean.csv")
-fourkm_tf <- fourkm_tf[,c(2,4)]
-fourkm_tf$isInsideBuffer[fourkm_tf$isInsideBuffer == 'true'] <- 1
-fourkm_tf$isInsideBuffer[fourkm_tf$isInsideBuffer == 'false'] <- 0
-colnames(fourkm_tf) <- c('cluster', 'fourkm')
-
-df_to_link <- left_join(twokm_tf, threekm_tf, by = "cluster")
-df_to_link <- left_join(df_to_link, fourkm_tf, by = "cluster")
-
-incidence_data_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
-incidence_data_yearly <- left_join(incidence_data_yearly, df_to_link, by = "cluster")
-write.csv(incidence_data_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/quarterly_leish_incidence_data_pop_adjusted.csv")
-
+# just to build spatial inclusion/exclusion maps
+#linked_ids_codes$cluster <- linked_ids_codes$clust
+#linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes,onekm_tf, by='cluster')
+#linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,fivekm_tf, by='cluster')
+#linked_ids_codes_with_cutoffs <- full_join(linked_ids_codes_with_cutoffs,tenkm_tf, by='cluster')
+#write.csv(linked_ids_codes_with_cutoffs, "~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
 
