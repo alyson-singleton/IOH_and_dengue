@@ -252,6 +252,7 @@ leish_df_yearly <- read.csv("~/Desktop/leish_df_yearly.csv")
 leish_df_yearly_at_least_one_case <- read.csv("~/Desktop/leish_df_yearly_at_least_one_case.csv")
 leish_df_yearly_no_pm <- read.csv("~/Desktop/leish_df_yearly_no_pm.csv")
 ```
+
 #### Dengue coverage
 
 Bar plot showing how many spatial units had at least one case of dengue for each year in our data. Blue is "far" (control) and yellow is "near" (treatment).
