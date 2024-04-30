@@ -44,11 +44,11 @@ dengue_data_linked <- dengue_data_linked %>%
   summarize(monthly_cases = sum(monthly_cases))
 
 ## add zeroes to cluster-months with no recorded cases
-full_months <- data.frame(seq(as.Date("2000-01-01"), as.Date("2022-01-01"), by="months"))
+full_months <- data.frame(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
 colnames(full_months) <- 'month'
 dengue_data_linked$cluster <- as.vector(dengue_data_linked$cluster)
 dengue_data_complete_time_steps <- dengue_data_linked %>%
-  complete(month = seq(as.Date("2000-01-01"), as.Date("2022-01-01"), by="months"), 
+  complete(month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"), 
            fill = list(monthly_cases = 0)) %>%
   as.data.frame()
 
@@ -81,8 +81,9 @@ dengue_data_w_buffers$year <- format(as.Date(dengue_data_w_buffers$year, format=
 dengue_data_w_buffers$year <- as.Date(dengue_data_w_buffers$year)
 
 #link population data
-adjusted_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/population_data_clusters_adjusted.csv")
+adjusted_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final.csv")
 adjusted_diresa_pop$year <- as.Date(adjusted_diresa_pop$year)
+adjusted_diresa_pop <- adjusted_diresa_pop[which(adjusted_diresa_pop$year!=as.Date("2023-01-01")),]#remove 2023 because no case data
 adjusted_diresa_pop <- adjusted_diresa_pop[,c(2:4)]
 dengue_data_w_pop <- full_join(dengue_data_w_buffers, adjusted_diresa_pop, by=c('cluster'='cluster', 'year'='year'))
 
@@ -92,14 +93,15 @@ dengue_data_w_pop <- full_join(dengue_data_w_buffers, adjusted_diresa_pop, by=c(
 
 ### precip data
 precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_precipitation_monthly_mean.csv")
-precip_monthly <- precip_monthly[,c(2:254)]
-precip_monthly <- precip_monthly[,c(253,1:252)]
-colnames(precip_monthly)[2:253] <- as.character(seq(as.Date("2000-01-01"), as.Date("2020-12-01"), by="months"))
+precip_monthly <- precip_monthly[,c(2:278)]
+precip_monthly <- precip_monthly[,c(277,1:276)]
+colnames(precip_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
 colnames(precip_monthly)[1] <- "cluster"
 precip_monthly_mdd_long <- precip_monthly %>%
-  pivot_longer(cols = c(2:253), 
+  pivot_longer(cols = c(2:277), 
                names_to = "month", 
                values_to = "mean_precip")
+precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 
 #look at precip to inform rainy season/biannual split
 precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
@@ -115,18 +117,18 @@ ggplot(precip_monthly_all) +
 
 ### temp data
 temp_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_temperature_monthly_mean.csv")
-temp_monthly <- temp_monthly[,c(2:254)]
-temp_monthly <- temp_monthly[,c(253,1:252)]
-colnames(temp_monthly)[2:253] <- as.character(seq(as.Date("2000-01-01"), as.Date("2020-12-01"), by="months"))
+temp_monthly <- temp_monthly[,c(2:278)]
+temp_monthly <- temp_monthly[,c(277,1:276)]
+colnames(temp_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
 colnames(temp_monthly)[1] <- "cluster"
 temp_monthly_mdd_long <- temp_monthly %>%
-  pivot_longer(cols = c(2:253), 
+  pivot_longer(cols = c(2:277), 
                names_to = "month", 
                values_to = "mean_temp")
 temp_monthly_mdd_long$year <- format(as.Date(temp_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 
 ### urban area data
-urban_area <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_urban_area_mapbiomas.csv")
+urban_area <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_urban_area_mapbiomas_2022.csv")
 urban_area <- urban_area[,c(2:5)]
 urban_area <- urban_area[which(urban_area$class==24),]
 urban_area <- urban_area[,c(1,3,4)]
@@ -144,6 +146,7 @@ write.csv(covariates, "~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/
 covariates$month <- as.Date(covariates$month)
 covariates <- covariates[,c(1:3,5:6)] #drop extra year column
 dengue_data_w_covariates_monthly <- full_join(dengue_data_w_pop, covariates, by=c("cluster"="cluster", "month" = "month"))
+dengue_data_w_covariates_monthly <- dengue_data_w_covariates_monthly[complete.cases(dengue_data_w_covariates_monthly),]
 write.csv(dengue_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_monthly_full_dataset.csv")
 
 ################################

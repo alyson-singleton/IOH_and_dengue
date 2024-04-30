@@ -13,7 +13,6 @@ showtext_auto()
 ### load worldpop data (downloaded from google earth engine)
 #################################### 
 
-### add population data
 population_mdd <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_population_yearly.csv")
 population_mdd$cluster <- population_mdd$layer
 population_mdd <- population_mdd[,c(2:22,25)]
@@ -71,6 +70,24 @@ all_pop$worldpop_adjusted <- all_pop$worldpop/all_pop$average_ratio
 #fill in the blanks, keep the "known" values
 all_pop$adjusted_pop <- all_pop$diresapop
 all_pop$adjusted_pop[which(is.na(all_pop$adjusted_pop))] <- all_pop$worldpop_adjusted[which(is.na(all_pop$adjusted_pop))]
+
+#################################### 
+## fix edge cases
+#################################### 
+
+#cluster 66 just use worldpop
+all_pop$adjusted_pop[which(all_pop$cluster==66)] <- all_pop$worldpop[which(all_pop$cluster==66)]
+
+#cluster that dont have diresa (or worldpop) data for 2020-2023, linearly interpolate
+all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2021-01-01"))] <- 
+  (all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2020-01-01"))] / 
+  all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2019-01-01"))]) * 
+  all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2020-01-01"))]
+
+all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2022-01-01"))] <- 
+  (all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2021-01-01"))] / 
+     all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2020-01-01"))]) * 
+  all_pop$adjusted_pop[which(all_pop$cluster %in% c(20,23,24,66) & all_pop$year==as.Date("2021-01-01"))]
 
 #reduce to final columns
 adjusted_diresa_pop <- all_pop[,c(1,2,8)]
