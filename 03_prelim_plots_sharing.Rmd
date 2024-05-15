@@ -154,30 +154,23 @@ vert_line_date <- as.Date('2008-01-01')
 ###################
 
 ### yearly data
-dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/yearly_incidence_data_pop_adjusted.csv")
-dengue_df_yearly$incidence <- (dengue_df_yearly$yearly_cases+1)/dengue_df_yearly$population #add one so 0's dont go to infinity when logged
+dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
 dengue_df_yearly$year <- as.factor(dengue_df_yearly$year)
 
-### add covariates
-covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_yearly_covariates.csv")
-covariates$year <- as.character(covariates$year)
-covariates$year <- lubridate::ymd(covariates$year, truncated = 2L)
-covariates$year <- format(as.Date(covariates$year,"%Y"), "%Y-01-01")
-covariates$year <- as.character(covariates$year)
-dengue_df_yearly <- full_join(dengue_df_yearly, covariates, by=c("cluster"="cluster", "year" = "year"))
+#cases + 1 so 0's dont go to infinity when logged
+dengue_df_yearly$incidence <- (dengue_df_yearly$yearly_cases+1)/dengue_df_yearly$population 
 
-#urban area + 0.001 (to be able to take the log later)
+#urban area + 0.001 so 0's dont go to infinity when logged
 dengue_df_yearly$urban_area <- dengue_df_yearly$urban_area + 0.001
-
-#remove 16 and 66 (pop zero)
-dengue_df_yearly <- dengue_df_yearly[which(dengue_df_yearly$cluster %in% c(1:15, 17:65, 67:70)),]
 
 #complete cases
 dengue_df_yearly <- dengue_df_yearly[complete.cases(dengue_df_yearly),]
 
-# remove extreme outliers
+#remove extreme outliers
 dengue_df_yearly <- dengue_df_yearly[which(dengue_df_yearly$incidence < 0.5),]
-#write.csv(dengue_df_yearly, "~/Desktop/dengue_df_yearly.csv")
+
+#fix road buffers colnames
+colnames(dengue_df_yearly)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
 
 #check how many are always zero
 dengue_df_yearly_zeroes <- dengue_df_yearly %>% 
@@ -192,42 +185,54 @@ dengue_df_yearly_no_pm <- dengue_df_yearly[!(dengue_df_yearly$cluster %in% 1),]
 dengue_df_yearly_no_pm <- dengue_df_yearly_no_pm[complete.cases(dengue_df_yearly_no_pm),]
 #write.csv(dengue_df_yearly_no_pm, "~/Desktop/dengue_df_yearly_no_pm.csv")
 
-
-#hist((log(incidence_data_yearly$incidence)*-1))
-#summary(test)
-#hist(unique(incidence_data_yearly$population))
-#summary(unique(incidence_data_yearly$population))
-#plot(predict(test, incidence_data_yearly)[!is.na(predict(test, incidence_data_yearly))], residuals(test))
-#plot(predict(test_popweight, incidence_data_yearly), residuals(test_popweight))
+# build all_cutoffs column to optionally create a buffer zone
+for(i in 1:dim(dengue_df_yearly)[1]){
+  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$onekm[i]==1, 1, 0)
+  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$fivekm[i]==1&&dengue_df_yearly$onekm[i]==0, 2, 
+                                            dengue_df_yearly$all_cutoffs[i])
+  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$tenkm[i]==1&&dengue_df_yearly$fivekm[i]==0&&
+                                              dengue_df_yearly$onekm[i]==0, 3, dengue_df_yearly$all_cutoffs[i])
+  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$twentykm[i]==1&&dengue_df_yearly$tenkm[i]==0&&
+                                              dengue_df_yearly$fivekm[i]==0&&dengue_df_yearly$onekm[i]==0, 4, 
+                                            dengue_df_yearly$all_cutoffs[i])
+  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$thirtykm[i]==1&&dengue_df_yearly$twentykm[i]==0&&
+                                              dengue_df_yearly$tenkm[i]==0&&dengue_df_yearly$fivekm[i]==0&&
+                                              dengue_df_yearly$onekm[i]==0, 5, dengue_df_yearly$all_cutoffs[i])
+  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$fortykm[i]==1&&dengue_df_yearly$thirtykm[i]==0&&
+                                              dengue_df_yearly$twentykm[i]==0&&dengue_df_yearly$tenkm[i]==0&&
+                                              dengue_df_yearly$fivekm[i]==0&&dengue_df_yearly$onekm[i]==0, 6, 
+                                            dengue_df_yearly$all_cutoffs[i])
+}
+# build easily accessible buffer datasets for each buffer option
+# build treatment dummy where below 5km is 1, between 5km and 10km are thrown out, and above 10km is 0
+dengue_df_yearly_buffered_23 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,0)),]
+dengue_df_yearly_buffered_24 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
+dengue_df_yearly_buffered_25 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,5,6,0)),]
+dengue_df_yearly_buffered_26 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,6,0)),]
+dengue_df_yearly_buffered_20 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,0)),]
 
 ###################
 ### leish data ####
 ###################
 ### yearly data
-leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/yearly_leish_incidence_data_pop_adjusted.csv")
-leish_df_yearly$incidence <- (leish_df_yearly$yearly_cases+1)/leish_df_yearly$population #add one so 0's dont go to infinity when logged
+leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_yearly_full_dataset.csv")
+
 leish_df_yearly$year <- as.factor(leish_df_yearly$year)
 
-### add covariates
-covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_yearly_covariates.csv")
-covariates$year <- as.character(covariates$year)
-covariates$year <- lubridate::ymd(covariates$year, truncated = 2L)
-covariates$year <- format(as.Date(covariates$year,"%Y"), "%Y-01-01")
-covariates$year <- as.character(covariates$year)
-leish_df_yearly <- full_join(leish_df_yearly, covariates, by=c("cluster"="cluster", "year" = "year"))
+#cases + 1 so 0's dont go to infinity when logged
+leish_df_yearly$incidence <- (leish_df_yearly$yearly_cases+1)/leish_df_yearly$population
 
-#urban area (to be able to take the log later)
+#urban area + 0.001 so 0's dont go to infinity when logged
 leish_df_yearly$urban_area <- leish_df_yearly$urban_area + 0.0001
-
-#remove 16 and 66 (pop zero)
-leish_df_yearly <- leish_df_yearly[which(leish_df_yearly$cluster %in% c(1:15, 17:65, 67:70)),]
 
 #complete cases
 leish_df_yearly <- leish_df_yearly[complete.cases(leish_df_yearly),]
 
 # remove extreme outliers
 leish_df_yearly <- leish_df_yearly[which(leish_df_yearly$incidence < 0.5),]
-#write.csv(leish_df_yearly, "~/Desktop/leish_df_yearly.csv")
+
+#fix road buffers colnames
+colnames(leish_df_yearly)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
 
 #check how many are always zero
 leish_df_yearly_zeroes <- leish_df_yearly  %>% 
@@ -244,33 +249,24 @@ leish_df_yearly_no_pm <- leish_df_yearly[complete.cases(leish_df_yearly_no_pm),]
 
 ```
 
-```{r, eval=F}
-dengue_df_yearly <- read.csv("~/Desktop/dengue_df_yearly.csv")
-dengue_df_yearly_at_least_one_case <- read.csv("~/Desktop/dengue_df_yearly_at_least_one_case.csv")
-dengue_df_yearly_no_pm <- read.csv("~/Desktop/dengue_df_yearly_no_pm.csv")
-leish_df_yearly <- read.csv("~/Desktop/leish_df_yearly.csv")
-leish_df_yearly_at_least_one_case <- read.csv("~/Desktop/leish_df_yearly_at_least_one_case.csv")
-leish_df_yearly_no_pm <- read.csv("~/Desktop/leish_df_yearly_no_pm.csv")
-```
-
 #### Dengue coverage
 
 Bar plot showing how many spatial units had at least one case of dengue for each year in our data. Blue is "far" (control) and yellow is "near" (treatment).
 
 ```{r}
 ## data coverage calculation
-leish_df_yearly$case_yn <- ifelse(leish_df_yearly$yearly_cases>0, 1, 0)
-dengue_coverage_yearly <- leish_df_yearly %>%
-  group_by(year, onekm) %>%
+dengue_df_yearly$case_yn <- ifelse(dengue_df_yearly$yearly_cases>0, 1, 0)
+dengue_coverage_yearly <- dengue_df_yearly %>%
+  group_by(year, fivekm) %>%
   summarize(coverage = sum(case_yn))
 
 #plot coverage
-dengue_coverage_yearly$onekm <- as.character(dengue_coverage_yearly$onekm)
+dengue_coverage_yearly$fivekm <- as.character(dengue_coverage_yearly$fivekm)
 dengue_coverage_yearly <- dengue_coverage_yearly[0:42,]
 dengue_coverage_yearly$year <- format(as.Date(dengue_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
 dengue_yearly_coverage_plot <- ggplot(dengue_coverage_yearly) +
-  geom_col(aes(x= year, y=coverage, fill=onekm), width=0.5, color="white", position = position_dodge(width = 0.5)) +
-  scale_fill_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
+  geom_col(aes(x= year, y=coverage, fill=fivekm), width=0.5, color="white", position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
   xlab("Year") + ylab("No. spatial units\nw dengue case\n(n=70)") + 
   theme_bw()+
@@ -299,16 +295,16 @@ Bar plot showing how many spatial units had at least one case of leishmaniasis f
 ## data coverage calculation
 leish_df_yearly$case_yn <- ifelse(leish_df_yearly$yearly_cases>0, 1, 0)
 leish_coverage_yearly <- leish_df_yearly %>%
-  group_by(year, onekm) %>%
+  group_by(year, fivekm) %>%
   summarize(coverage = sum(case_yn))
 
 #plot coverage
-leish_coverage_yearly$onekm <- as.character(leish_coverage_yearly$onekm)
+leish_coverage_yearly$fivekm <- as.character(leish_coverage_yearly$fivekm)
 leish_coverage_yearly <- leish_coverage_yearly[0:42,]
 leish_coverage_yearly$year <- format(as.Date(leish_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
 leish_yearly_coverage_plot <- ggplot(leish_coverage_yearly) +
-  geom_col(aes(x= year, y=coverage, fill=onekm), color="white", width=0.5, position = position_dodge(width = 0.5)) +
-  scale_fill_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>1km)', 'Near (<1km)'),) +
+  geom_col(aes(x= year, y=coverage, fill=fivekm), color="white", width=0.5, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Treatment", values=c('#3ecbdd', '#FFBC42'), labels=c('Far (>5km)', 'Near (<5km)'),) +
   geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
   xlab("Year") + ylab("No. spatial units\nw leish case\n(n=70)") + 
   theme_bw() +
@@ -346,7 +342,7 @@ We include spatial unit (i.e., healthcare center) fixed effects, $\gamma_i$’s,
 
 ## Yearly dengue incidence and population calculation
 
-Raw data showing yearly dengue incidence in treatment (<1km) and control (>1km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
+Raw data showing yearly dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 Yearly population data was calculated by combining remotely-sensed WorldPop population data (2000-2020) and health center surveillance data from DIRESA (2009-2017). All years with DIRESA data were kept, and all years without DIRESA data were filled in with adjusted WorldPop data. WorldPop data was adjusted by the average ratio between DIRESA and WorldPop data for each spatial unit for years where we had both DIRESA and WorldPop data. This adjusted population data is used for all of the following results.  
 
@@ -411,12 +407,12 @@ fivekm_yearly <- ggplot(fivekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-#fivekm_yearly
+fivekm_yearly
 
 #tenkm
 tenkm_plotting <- dengue_df_yearly %>%
   group_by(tenkm, year) %>%
-  summarize(new_incidence = log(sum(yearly_cases)/sum(population)))
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
 
 tenkm_yearly <- ggplot(tenkm_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=tenkm)) +
@@ -438,13 +434,13 @@ tenkm_yearly <- ggplot(tenkm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-#tenkm_yearly
+tenkm_yearly
 
-ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S2.pdf", onekm_yearly, width = 10, height = 6, units = c("in"), device="pdf")
+#ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S2.pdf", onekm_yearly, width = 10, height = 6, units = c("in"), device="pdf")
 
 ```
 
-```{r, all cutoffs raw data fig, eval=F}
+```{r, all cutoffs raw data fig v1, eval=F}
 #all cutoffs
 incidence_data_yearly_buffered_test <- incidence_data_yearly_buffered
 #incidence_data_yearly_buffered_test[which(incidence_data_yearly_buffered_test$all_cutoffs==1),14]<-as.character(2)
@@ -571,6 +567,54 @@ all_cutoffs_yearly3
 
 ``` 
 
+```{r, all cutoffs raw data fig v2, eval=F}
+#all cutoffs
+incidence_data_yearly_buffered_test <- dengue_df_yearly_buffered
+incidence_data_yearly_buffered_test$all_cutoffs[which(incidence_data_yearly_buffered_test$all_cutoffs %in% c(1,2))]<-as.character(2)
+incidence_data_yearly_buffered_test$all_cutoffs[which(incidence_data_yearly_buffered_test$all_cutoffs==3)]<-as.character(3)
+incidence_data_yearly_buffered_test$all_cutoffs[which(incidence_data_yearly_buffered_test$all_cutoffs==4)]<-as.character(4)
+incidence_data_yearly_buffered_test$all_cutoffs[which(incidence_data_yearly_buffered_test$all_cutoffs==5)]<-as.character(5)
+incidence_data_yearly_buffered_test$all_cutoffs[which(incidence_data_yearly_buffered_test$all_cutoffs==6)]<-as.character(6)
+incidence_data_yearly_buffered_test$all_cutoffs[which(incidence_data_yearly_buffered_test$all_cutoffs==0)]<-as.character(7)
+table(incidence_data_yearly_buffered_test$all_cutoffs)/12
+
+incidence_data_yearly_buffered_plotting <- incidence_data_yearly_buffered_test %>%
+  group_by(all_cutoffs, year) %>%
+  summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+incidence_data_yearly_buffered_plotting$year <- as.Date(incidence_data_yearly_buffered_plotting$year)
+incidence_data_yearly_buffered_plotting$new_incidence <- as.numeric(incidence_data_yearly_buffered_plotting$new_incidence)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- as.character(incidence_data_yearly_buffered_plotting$all_cutoffs)
+incidence_data_yearly_buffered_plotting$all_cutoffs <- factor(incidence_data_yearly_buffered_plotting$all_cutoffs, levels=c('2', '3', '4', '5', '6', '7'))
+
+all_cutoffs_yearly <- ggplot(incidence_data_yearly_buffered_plotting) +
+  geom_line(aes(x=year, y=new_incidence, colour=all_cutoffs)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  #labs(color="Model Type") +
+  #ggtitle("B. straminea") +
+  xlab("Year") + ylab("Yearly\nincidence") + 
+  scale_color_manual(name = "Treatment", values=c('#DC267F', 'darkorange', '#FFB000','#648FFF',"#785EF0","darkgreen"))+#, labels=c('<1km', '[1km, 10km)', '[10km, 30km)', '>30km')) +
+  #scale_color_manual(name="Distance",values=list('2'="#DC267F",'3'="#FFB000",'4'='#648FFF', '0'="#785EF0"))+
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=22),
+        axis.title.y=element_text(size=16,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=16),
+        axis.title.x=element_text(size=16),
+        axis.text.x=element_text(size=16),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "right",
+        strip.text.x = element_text(size = 14))
+all_cutoffs_yearly
+
+#ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S3v2.pdf", all_cutoffs_yearly, width = 10, height = 6, units = c("in"), device="pdf")
+
+``` 
+
+
 ## Diff-in-diff results (yearly dengue model)
 
 Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference in yearly incidence between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficients diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). All results now include controls for yearly mean precipitation, yearly mean temperature, and yearly urban area, with no noticeable impact (as expected).
@@ -581,14 +625,14 @@ dengue_df_yearly$fivekm <- as.numeric(dengue_df_yearly$fivekm)
 dengue_df_yearly$tenkm <- as.numeric(dengue_df_yearly$tenkm)
 
 ### yearly model
-dengue_yearly_model <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
 #summary(dengue_yearly_model)
 
 df <- as.data.frame(dengue_yearly_model$coeftable)
-df <- df[1:20,]
+df <- df[1:22,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 dengue_yearly_did_popadj <- ggplot(df) +
@@ -599,7 +643,7 @@ dengue_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("log(yearly\ndengue incidence\nrate ratio)") + 
   theme_bw()+
-  ylim(c(-2.5,6))+
+  ylim(c(-2.5,4))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -670,75 +714,68 @@ sum(coef(summary(dengue_yearly_model))[9:20]*pop_1[,3])/sum(incidence_data_yearl
 
 ## Biannual dengue model
 
-Raw data showing biannual dengue incidence in treatment (<1km) and control (>1km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
+Raw data showing biannual dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
-```{r, load biannual data}
+```{r, load biannaul data}
+vert_line_date <- as.Date('2008-01-01')
+
 ###################
 ### dengue data ###
 ###################
 
 ### biannual data
-dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/biannual_incidence_data_pop_adjusted.csv")
-dengue_df_biannual$incidence <- (dengue_df_biannual$biannual_cases+1)/dengue_df_biannual$population #add one so 0's dont go to infinity when logged
+dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
 dengue_df_biannual$biannual_date <- as.factor(dengue_df_biannual$biannual_date)
 
-### add covariates
-covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_biannual_covariates.csv")
-dengue_df_biannual <- full_join(dengue_df_biannual, covariates, by=c("cluster"="cluster", "biannual_date" = "biannual_date"))
+#cases + 1 so 0's dont go to infinity when logged
+dengue_df_biannual$incidence <- (dengue_df_biannual$biannual_cases+1)/dengue_df_biannual$population 
 
-#urban area (to be able to take the log later)
+#urban area + 0.001 so 0's dont go to infinity when logged
 dengue_df_biannual$urban_area <- dengue_df_biannual$urban_area + 0.001
-
-#remove 16 and 66 (pop zero)
-dengue_df_biannual <- dengue_df_biannual[which(dengue_df_biannual$cluster %in% c(1:15, 17:65, 67:70)),]
 
 #complete cases
 dengue_df_biannual <- dengue_df_biannual[complete.cases(dengue_df_biannual),]
 
-# remove extreme outliers
+#remove extreme outliers
 dengue_df_biannual <- dengue_df_biannual[which(dengue_df_biannual$incidence < 0.5),]
+
+#fix road buffers colnames
+colnames(dengue_df_biannual)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
 
 #check how many are always zero
 dengue_df_biannual_zeroes <- dengue_df_biannual %>% 
   group_by(cluster) %>% 
   summarize(total_cases = sum(biannual_cases))
 clusters_w_at_least_one_case_biannual <- dengue_df_biannual$cluster[which(dengue_df_biannual_zeroes$total_cases>0)]
-dengue_df_biannual_at_least_one_case <- dengue_df_biannual[which(dengue_df_biannual$cluster %in% clusters_w_at_least_one_case_biannual),]
+dengue_df_biannaul_at_least_one_case <- dengue_df_biannual[which(dengue_df_biannual$cluster %in% clusters_w_at_least_one_case_biannual),]
 
 #remove PM
 dengue_df_biannual_no_pm <- dengue_df_biannual[!(dengue_df_biannual$cluster %in% 1),]
-dengue_df_biannual_no_pm <- dengue_df_biannual[complete.cases(dengue_df_biannual_no_pm),]
-
-#hist((log(incidence_data_yearly$incidence)*-1))
-#summary(test)
-#hist(unique(incidence_data_yearly$population))
-#summary(unique(incidence_data_yearly$population))
-#plot(predict(test, incidence_data_yearly)[!is.na(predict(test, incidence_data_yearly))], residuals(test))
-#plot(predict(test_popweight, incidence_data_yearly), residuals(test_popweight))
+dengue_df_biannual_no_pm <- dengue_df_biannual_no_pm[complete.cases(dengue_df_biannual_no_pm),]
 
 ###################
 ### leish data ####
 ###################
-### yearly data
-leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/biannual_leish_incidence_data_pop_adjusted.csv")
-leish_df_biannual$incidence <- (leish_df_biannual$biannual_cases+1)/leish_df_biannual$population #add one so 0's dont go to infinity when logged
-leish_df_biannual$year <- as.factor(leish_df_biannual$biannual_date)
 
-### add covariates
-covariates <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_biannual_covariates.csv")
-leish_df_biannual <- full_join(leish_df_biannual, covariates, by=c("cluster"="cluster", "biannual_date" = "biannual_date"))
+### biannaul data
+leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_biannual_full_dataset.csv")
 
-#urban area (to be able to take the log later)
+leish_df_biannual$biannual_date <- as.factor(leish_df_biannual$biannual_date)
+
+#cases + 1 so 0's dont go to infinity when logged
+leish_df_biannual$incidence <- (leish_df_biannual$biannual_cases+1)/leish_df_biannual$population
+
+#urban area + 0.001 so 0's dont go to infinity when logged
 leish_df_biannual$urban_area <- leish_df_biannual$urban_area + 0.0001
-
-#remove 16 and 66 (pop zero)
-leish_df_biannual <- leish_df_biannual[which(leish_df_biannual$cluster %in% c(1:15, 17:65, 67:70)),]
 
 #complete cases
 leish_df_biannual <- leish_df_biannual[complete.cases(leish_df_biannual),]
 
 # remove extreme outliers
 leish_df_biannual <- leish_df_biannual[which(leish_df_biannual$incidence < 0.5),]
+
+#fix road buffers colnames
+colnames(leish_df_biannual)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
 
 #check how many are always zero
 leish_df_biannual_zeroes <- leish_df_biannual  %>% 
@@ -748,8 +785,8 @@ leish_clusters_w_at_least_one_case_biannual <- leish_df_biannual$cluster[which(l
 leish_df_biannual_at_least_one_case <- leish_df_biannual[which(leish_df_biannual$cluster %in% leish_clusters_w_at_least_one_case_biannual),]
 
 #remove PM
-leish_df_biannual_no_pm <- leish_df_biannual[!(leish_df_biannual$cluster %in% 1),]
-leish_df_biannual_no_pm <- leish_df_biannual[complete.cases(leish_df_biannual_no_pm),]
+leish_df_yearly_no_pm <- leish_df_biannual[!(leish_df_biannual$cluster %in% 1),]
+leish_df_yearly_no_pm <- leish_df_biannual[complete.cases(leish_df_yearly_no_pm),]
 
 ```
 
@@ -786,7 +823,7 @@ onekm_biannual <- ggplot(onekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-onekm_biannual
+#onekm_biannual
 
 #fivekm
 fivekm_plotting <- dengue_df_biannual %>%
@@ -813,7 +850,7 @@ fivekm_biannual <- ggplot(fivekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-#fivekm_biannual
+fivekm_biannual
 
 #tenkm
 tenkm_plotting <- dengue_df_biannual %>%
@@ -853,23 +890,23 @@ dengue_df_biannual$onekm <- as.numeric(dengue_df_biannual$onekm)
 dengue_df_biannual$fivekm <- as.numeric(dengue_df_biannual$fivekm)
 dengue_df_biannual$tenkm <- as.numeric(dengue_df_biannual$tenkm)
 ### biannual model
-dengue_biannual_model <- fepois(incidence ~ i(biannual_date, onekm, ref = '2008-04-01') + mean_precip + mean_temp + urban_area | cluster + biannual_date, vcov = "twoway", data = dengue_df_biannual, weights=~population)
+dengue_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2009-04-01') + mean_precip + mean_temp + log(urban_area) | cluster + biannual_date, vcov = "twoway", data = dengue_df_biannual, weights=~population)
 #summary(dengue_biannual_model)
 
 df <- as.data.frame(dengue_biannual_model$coeftable)
-df <- df[1:41,]
+df <- df[1:45,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$biannual_date <- as.Date(c(unique(dengue_df_biannual$biannual_date)[c(1:16,18:42)]))
+df$biannual_date <- as.Date(c(unique(dengue_df_biannual$biannual_date)[c(1:18,20:46)]))
 df$rainy <- 0
-df$rainy[c(seq(1, 42, 2))] <- 1
+df$rainy[c(seq(1, 46, 2))] <- 1
 df$rainy <- as.character(df$rainy)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 dengue_biannual_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower), width=0, size=0.5) +
-  geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
-  geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
+  geom_vline(aes(xintercept=as.Date("2009-04-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2009-04-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('white', '#DC267F'), labels=c('Dry', 'Rainy')) + 
   xlab("Year") + ylab("log(biannual\ndengue incidence\nrate ratio)") + 
@@ -896,7 +933,7 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure3.pdf", d
 
 ## Yearly leish incidence
 
-Raw data showing yearly leishmaniasis incidence in treatment (<1km) and control (>1km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
+Raw data showing yearly leishmaniasis incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 ```{r, raw yearly data plots}
 vert_line_date <- as.Date('2008-01-01')
@@ -931,12 +968,15 @@ onekm_yearly_leish <- ggplot(onekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-onekm_yearly_leish
+#onekm_yearly_leish
 
 #fivekm
 fivekm_plotting <- leish_df_yearly %>%
   group_by(fivekm, year) %>%
   summarize(new_incidence = sum(yearly_cases)/sum(population))
+
+fivekm_plotting$year <- as.Date(fivekm_plotting$year)
+fivekm_plotting$fivekm <- as.character(fivekm_plotting$fivekm)
 
 fivekm_yearly_leish <- ggplot(fivekm_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
@@ -958,7 +998,7 @@ fivekm_yearly_leish <- ggplot(fivekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-#fivekm_yearly_leish
+fivekm_yearly_leish
 
 #tenkm
 tenkm_plotting <- leish_df_yearly %>%
@@ -999,14 +1039,14 @@ UPDATE (Jan 22nd): These results now include controls for yearly mean precipitat
 
 ```{r, main leish specification}
 ### yearly leish model
-leish_yearly_model <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + mean_precip + mean_temp + urban_area | cluster + year, vcov = "twoway", data = leish_df_yearly, weights=~population)
+leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_precip + mean_temp + log(urban_area) | cluster + year, vcov = "twoway", data = leish_df_yearly, weights=~population)
 #summary(leish_yearly_model)
 
 df <- as.data.frame(leish_yearly_model$coeftable)
-df <- df[1:20,]
+df <- df[1:22,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 leish_yearly_did_popadj <- ggplot(df) +
@@ -1039,7 +1079,7 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure2leish.pd
 
 ## Biannual leish model
 
-Raw data showing quarterly leishmaniasis incidence in treatment (<1km) and control (>1km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
+Raw data showing quarterly leishmaniasis incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
 
 UPDATE (Jan 22nd): These results now include controls for biannual mean precipitation, biannual mean temperature, and biannual urban area, with no noticeable impact (as expected).
 
@@ -1074,12 +1114,15 @@ onekm_biannual_leish <- ggplot(onekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-onekm_biannual_leish
+#onekm_biannual_leish
 
 #fivekm
 fivekm_plotting <- leish_df_biannual %>%
   group_by(fivekm, biannual_date) %>%
   summarize(new_incidence = sum(biannual_cases)/sum(population))
+
+fivekm_plotting$biannual_date <- as.Date(fivekm_plotting$biannual_date)
+fivekm_plotting$fivekm <- as.character(fivekm_plotting$fivekm)
 
 fivekm_biannaul_leish <- ggplot(fivekm_plotting) +
   geom_line(aes(x=biannual_date, y=new_incidence, colour=fivekm)) +
@@ -1101,7 +1144,7 @@ fivekm_biannaul_leish <- ggplot(fivekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-#fivekm_biannaul_leish
+fivekm_biannaul_leish
 
 #tenkm
 tenkm_plotting <- leish_df_biannual %>%
@@ -1135,15 +1178,15 @@ All the same as the description for the quarterly dengue model above, except tha
 
 ```{r, biannual leish model}
 ### biannual model
-leish_biannual_model <- fepois(incidence ~ i(biannual_date, onekm, ref = '2008-04-01') + mean_precip + mean_temp + urban_area | cluster + biannual_date, vcov = "twoway", data = leish_df_biannual, weights=~population)
+leish_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + log(urban_area) | cluster + biannual_date, vcov = "twoway", data = leish_df_biannual, weights=~population)
 #summary(leish_biannual_model)
 
 df <- as.data.frame(leish_biannual_model$coeftable)
-df <- df[1:41,]
+df <- df[1:45,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$biannual_date <- as.Date(c(unique(leish_df_biannual$biannual_date)[c(1:16,18:42)]))
+df$biannual_date <- as.Date(c(unique(leish_df_biannual$biannual_date)[c(1:16,18:46)]))
 df$rainy <- 0
-df$rainy[c(seq(1, 42, 2))] <- 1
+df$rainy[c(seq(1, 46, 2))] <- 1
 df$rainy <- as.character(df$rainy)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
@@ -1188,16 +1231,16 @@ leish_biannual_did_popadj + ggtitle("Leish biannually")
 ## Urban cover covariate sensitivity analysis
 
 ```{r, urban cover sensitivity}
-dengue_yearly_model_linear_urban <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_log_urban <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_linear_urban <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_log_urban <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_linear_urban$coeftable[1:19,],c(rep("Linear urban",19)))),
-  as.data.frame(cbind(dengue_yearly_model_log_urban$coeftable[1:19,],c(rep("Log urban",19)))))
+  as.data.frame(cbind(dengue_yearly_model_linear_urban$coeftable[1:22,],c(rep("Linear urban",22)))),
+  as.data.frame(cbind(dengue_yearly_model_log_urban$coeftable[1:22,],c(rep("Log urban",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Urban covariate')
-df$year <- c(seq(as.Date("2001-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1236,19 +1279,19 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S5.pdf", dengue
 ## Spatial boundary sensitivity analysis
 ```{r, spatial bounday sensitivity}
 # run multiple models with spatial boundary sensitivity
-dengue_yearly_model_1km <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_5km <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_10km <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_1km <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_5km <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_10km <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
 #summary(test1km)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_1km$coeftable[1:20,],c(rep("1km",20)))),
-  as.data.frame(cbind(dengue_yearly_model_5km$coeftable[1:20,],c(rep("5km",20)))),
-  as.data.frame(cbind(dengue_yearly_model_10km$coeftable[1:20,],c(rep("10km",20)))))
+  as.data.frame(cbind(dengue_yearly_model_1km$coeftable[1:22,],c(rep("1km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_5km$coeftable[1:22,],c(rep("5km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_10km$coeftable[1:22,],c(rep("10km",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1286,25 +1329,25 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure4.pdf", d
 
 ```{r, spatial bounday sensitivity v2, eval=F}
 ## Spatial boundary sensitivity analysis v2
-dengue_yearly_model_1km <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_5km <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_10km <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_20km <- fepois(incidence ~ i(year, twentykm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_30km <- fepois(incidence ~ i(year, thirtykm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_40km <- fepois(incidence ~ i(year, fortykm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_1km <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_5km <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_10km <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_20km <- fepois(incidence ~ i(year, twentykm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_30km <- fepois(incidence ~ i(year, thirtykm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_40km <- fepois(incidence ~ i(year, fortykm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
 #summary(dengue_yearly_model_1km)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_1km$coeftable[1:20,],c(rep("1km",20)))),
-  as.data.frame(cbind(dengue_yearly_model_5km$coeftable[1:20,],c(rep("5km",20)))),
-  as.data.frame(cbind(dengue_yearly_model_10km$coeftable[1:20,],c(rep("10km",20)))),
-  as.data.frame(cbind(dengue_yearly_model_20km$coeftable[1:20,],c(rep("20km",20)))),
-  as.data.frame(cbind(dengue_yearly_model_30km$coeftable[1:20,],c(rep("30km",20)))),
-  as.data.frame(cbind(dengue_yearly_model_40km$coeftable[1:20,],c(rep("40km",20)))))
+  as.data.frame(cbind(dengue_yearly_model_1km$coeftable[1:22,],c(rep("1km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_5km$coeftable[1:22,],c(rep("5km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_10km$coeftable[1:22,],c(rep("10km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_20km$coeftable[1:22,],c(rep("20km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_30km$coeftable[1:22,],c(rep("30km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_40km$coeftable[1:22,],c(rep("40km",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1342,16 +1385,16 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure4v2.pdf",
 
 ## Population weighting sensitivity analysis
 ```{r, pop weight sensitivity}
-dengue_yearly_model_unweighted <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly)
-dengue_yearly_model_weighted <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_unweighted <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly)
+dengue_yearly_model_weighted <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_unweighted$coeftable[1:20,],c(rep("No weighting",20)))),
-  as.data.frame(cbind(dengue_yearly_model_weighted$coeftable[1:20,],c(rep("Pop weighting",20)))))
+  as.data.frame(cbind(dengue_yearly_model_unweighted$coeftable[1:22,],c(rep("No weighting",22)))),
+  as.data.frame(cbind(dengue_yearly_model_weighted$coeftable[1:22,],c(rep("Pop weighting",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Weighting')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1386,16 +1429,16 @@ dengue_yearly_did_popweighting
 ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S4.pdf", dengue_yearly_did_popweighting, width = 10, height = 6, units = c("in"), device="pdf")
 
 
-leish_yearly_model_unweighted <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = leish_df_yearly)
-leish_yearly_model_weighted <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = leish_df_yearly, weights=~population)
+leish_yearly_model_unweighted <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = leish_df_yearly)
+leish_yearly_model_weighted <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = leish_df_yearly, weights=~population)
 
 df <- rbind(
-  as.data.frame(cbind(leish_yearly_model_unweighted$coeftable[1:20,],c(rep("No weighting",20)))),
-  as.data.frame(cbind(leish_yearly_model_weighted$coeftable[1:20,],c(rep("Pop weighting",20)))))
+  as.data.frame(cbind(leish_yearly_model_unweighted$coeftable[1:22,],c(rep("No weighting",22)))),
+  as.data.frame(cbind(leish_yearly_model_weighted$coeftable[1:22,],c(rep("Pop weighting",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Weighting')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1436,16 +1479,16 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S4_leish.pdf", 
 #### 1km boundary
 
 ```{r, pm sensitivity 1km}
-dengue_yearly_model_wpm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_wopm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_no_pm, weights=~population)
+dengue_yearly_model_wpm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_wopm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_no_pm, weights=~population)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_wpm$coeftable[1:20,],c(rep("Yes PM",20)))),
-  as.data.frame(cbind(dengue_yearly_model_wopm$coeftable[1:20,],c(rep("No PM",20)))))
+  as.data.frame(cbind(dengue_yearly_model_wpm$coeftable[1:22,],c(rep("Yes PM",22)))),
+  as.data.frame(cbind(dengue_yearly_model_wopm$coeftable[1:22,],c(rep("No PM",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Inclusion')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1484,16 +1527,16 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure5_1km.pdf
 #### 5km boundary
 
 ```{r, pm sensitivity 5km}
-dengue_yearly_model_wpm <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_wopm <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_no_pm, weights=~population)
+dengue_yearly_model_wpm <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_wopm <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_no_pm, weights=~population)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_wpm$coeftable[1:20,],c(rep("Yes PM",20)))),
-  as.data.frame(cbind(dengue_yearly_model_wopm$coeftable[1:20,],c(rep("No PM",20)))))
+  as.data.frame(cbind(dengue_yearly_model_wpm$coeftable[1:22,],c(rep("Yes PM",22)))),
+  as.data.frame(cbind(dengue_yearly_model_wopm$coeftable[1:22,],c(rep("No PM",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Inclusion')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1531,23 +1574,23 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure5_5km.pdf
 
 ## Base year sensitivity analysis
 ```{r, base year sensitivity}
-dengue_yearly_model_2008 <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_2007 <- fepois(incidence ~ i(year, onekm, ref = '2007-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_2006 <- fepois(incidence ~ i(year, onekm, ref = '2006-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_2008 <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_2007 <- fepois(incidence ~ i(year, fivekm, ref = '2007-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_2006 <- fepois(incidence ~ i(year, fivekm, ref = '2006-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
 #summary(test)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_2008$coeftable[1:20,],c(rep("2008",20)))),
-  as.data.frame(cbind(dengue_yearly_model_2007$coeftable[1:20,],c(rep("2007",20)))),
-  as.data.frame(cbind(dengue_yearly_model_2006$coeftable[1:20,],c(rep("2006",20)))))
+  as.data.frame(cbind(dengue_yearly_model_2008$coeftable[1:22,],c(rep("2008",22)))),
+  as.data.frame(cbind(dengue_yearly_model_2007$coeftable[1:22,],c(rep("2007",22)))),
+  as.data.frame(cbind(dengue_yearly_model_2006$coeftable[1:22,],c(rep("2006",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Year')
 df$year_date <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-                  seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"),
+                  seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"),
                   seq(as.Date("2000-01-01"), as.Date("2006-01-01"), by="year"),
-                  seq(as.Date("2008-01-01"), as.Date("2020-01-01"), by="year"),
+                  seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by="year"),
                   seq(as.Date("2000-01-01"), as.Date("2005-01-01"), by="year"),
-                  seq(as.Date("2007-01-01"), as.Date("2020-01-01"), by="year"))
+                  seq(as.Date("2007-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1588,26 +1631,26 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure6.pdf", d
 ```
 
 ```{r, base year w 2009 sensitivity, eval=F}
-dengue_yearly_model_2009 <- fepois(incidence ~ i(year, onekm, ref = '2009-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_2008 <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_2007 <- fepois(incidence ~ i(year, onekm, ref = '2007-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_2006 <- fepois(incidence ~ i(year, onekm, ref = '2006-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_2009 <- fepois(incidence ~ i(year, fivekm, ref = '2009-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_2008 <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_2007 <- fepois(incidence ~ i(year, fivekm, ref = '2007-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_2006 <- fepois(incidence ~ i(year, fivekm, ref = '2006-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_2009$coeftable[1:20,],c(rep("2009",20)))),
-  as.data.frame(cbind(dengue_yearly_model_2008$coeftable[1:20,],c(rep("2008",20)))),
-  as.data.frame(cbind(dengue_yearly_model_2007$coeftable[1:20,],c(rep("2007",20)))),
-  as.data.frame(cbind(dengue_yearly_model_2006$coeftable[1:20,],c(rep("2006",20)))))
+  as.data.frame(cbind(dengue_yearly_model_2009$coeftable[1:22,],c(rep("2009",22)))),
+  as.data.frame(cbind(dengue_yearly_model_2008$coeftable[1:22,],c(rep("2008",22)))),
+  as.data.frame(cbind(dengue_yearly_model_2007$coeftable[1:22,],c(rep("2007",22)))),
+  as.data.frame(cbind(dengue_yearly_model_2006$coeftable[1:22,],c(rep("2006",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Year')
 df$year_date <- c(seq(as.Date("2000-01-01"), as.Date("2008-01-01"), by="year"),
-                  seq(as.Date("2010-01-01"), as.Date("2020-01-01"), by="year"),
+                  seq(as.Date("2010-01-01"), as.Date("2022-01-01"), by="year"),
                   seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-                  seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"),
+                  seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"),
                   seq(as.Date("2000-01-01"), as.Date("2006-01-01"), by="year"),
-                  seq(as.Date("2008-01-01"), as.Date("2020-01-01"), by="year"),
+                  seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by="year"),
                   seq(as.Date("2000-01-01"), as.Date("2005-01-01"), by="year"),
-                  seq(as.Date("2007-01-01"), as.Date("2020-01-01"), by="year"))
+                  seq(as.Date("2007-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1653,22 +1696,22 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure6v2.pdf",
 ```{r, permute treatment test}
 #permute treatment dummy
 set.seed(98)
-dengue_df_yearly_permuted  <- transform(dengue_df_yearly, onekm = sample(onekm))   
+dengue_df_yearly_permuted  <- transform(dengue_df_yearly, fivekm = sample(fivekm))   
 #repeat for 1000 draws
 #for(i in 1:100){
 #}
 
 #build models
-dengue_yearly_model_baseline <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_permuted <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_permuted, weights=~population)
+dengue_yearly_model_baseline <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_permuted <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_permuted, weights=~population)
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_baseline$coeftable[1:20,],c(rep("Baseline",20)))),
-  as.data.frame(cbind(dengue_yearly_model_permuted$coeftable[1:20,],c(rep("Permuted",20)))))
+  as.data.frame(cbind(dengue_yearly_model_baseline$coeftable[1:22,],c(rep("Baseline",22)))),
+  as.data.frame(cbind(dengue_yearly_model_permuted$coeftable[1:22,],c(rep("Permuted",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Order')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
@@ -1705,72 +1748,51 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure7.pdf", d
 ```
 
 ## Buffer zone sensitivity analysis
-```{r, buffer zone sensitivity}
-# build treatment dummy where below 1km is 1, between 1km and 10km are thrown out, and above 10km is 0
-dengue_df_yearly_buffered <- dengue_df_yearly
-dengue_df_yearly_buffered$fivekm <- ifelse(dengue_df_yearly_buffered$fivekm>0, 2, 0)
-dengue_df_yearly_buffered$tenkm <- ifelse(dengue_df_yearly_buffered$tenkm>0, 3, 0)
-dengue_df_yearly_buffered$twentykm <- ifelse(dengue_df_yearly_buffered$twentykm>0, 4, 0)
-dengue_df_yearly_buffered$thirtykm <- ifelse(dengue_df_yearly_buffered$thirtykm>0, 5, 0)
-dengue_df_yearly_buffered$fortykm <- ifelse(dengue_df_yearly_buffered$fortykm>0, 6, 0)
-for(i in 1:dim(dengue_df_yearly_buffered)[1]){
-  dengue_df_yearly_buffered$all_cutoffs[i] <- ifelse(dengue_df_yearly_buffered$onekm[i]>0, 1, 0)
-  dengue_df_yearly_buffered$all_cutoffs[i] <- ifelse(dengue_df_yearly_buffered$fivekm[i]>1&&dengue_df_yearly_buffered$onekm[i]==0, 2, dengue_df_yearly_buffered$all_cutoffs[i])
-  dengue_df_yearly_buffered$all_cutoffs[i] <- ifelse(dengue_df_yearly_buffered$tenkm[i]>2&&dengue_df_yearly_buffered$fivekm[i]==0&&
-                                                            dengue_df_yearly_buffered$onekm[i]==0, 3, dengue_df_yearly_buffered$all_cutoffs[i])
-  dengue_df_yearly_buffered$all_cutoffs[i] <- ifelse(dengue_df_yearly_buffered$twentykm[i]>3&&dengue_df_yearly_buffered$tenkm[i]==0&&
-                                                            dengue_df_yearly_buffered$fivekm[i]==0&&dengue_df_yearly_buffered$onekm[i]==0, 4, 
-                                                          dengue_df_yearly_buffered$all_cutoffs[i])
-  dengue_df_yearly_buffered$all_cutoffs[i] <- ifelse(dengue_df_yearly_buffered$thirtykm[i]>4&&dengue_df_yearly_buffered$twentykm[i]==0&&
-                                                            dengue_df_yearly_buffered$tenkm[i]==0&&dengue_df_yearly_buffered$fivekm[i]==0&&
-                                                            dengue_df_yearly_buffered$onekm[i]==0, 5, dengue_df_yearly_buffered$all_cutoffs[i])
-  dengue_df_yearly_buffered$all_cutoffs[i] <- ifelse(dengue_df_yearly_buffered$fortykm[i]>5&&dengue_df_yearly_buffered$thirtykm[i]==0&&dengue_df_yearly_buffered$twentykm[i]==0&&
-                                                            dengue_df_yearly_buffered$tenkm[i]==0&&dengue_df_yearly_buffered$fivekm[i]==0&&
-                                                            dengue_df_yearly_buffered$onekm[i]==0, 6, dengue_df_yearly_buffered$all_cutoffs[i])
-}
-dengue_df_yearly_buffered_13 <- dengue_df_yearly_buffered[which(dengue_df_yearly_buffered$all_cutoffs %in% c(1,3,4,5,6,0)),]
-dengue_df_yearly_buffered_14 <- dengue_df_yearly_buffered[which(dengue_df_yearly_buffered$all_cutoffs %in% c(1,4,5,6,0)),]
-dengue_df_yearly_buffered_15 <- dengue_df_yearly_buffered[which(dengue_df_yearly_buffered$all_cutoffs %in% c(1,5,6,0)),]
-dengue_df_yearly_buffered_16 <- dengue_df_yearly_buffered[which(dengue_df_yearly_buffered$all_cutoffs %in% c(1,6,0)),]
-dengue_df_yearly_buffered_10 <- dengue_df_yearly_buffered[which(dengue_df_yearly_buffered$all_cutoffs %in% c(1,0)),]
-
+```{r, buffer zone sensitivity 5km}
+# build easily accessible buffer datasets for each buffer option
+dengue_df_yearly_buffered_23 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,0)),]
+dengue_df_yearly_buffered_24 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
+dengue_df_yearly_buffered_25 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,5,6,0)),]
+dengue_df_yearly_buffered_26 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,6,0)),]
+dengue_df_yearly_buffered_20 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,0)),]
 
 # run models
-dengue_yearly_model_1km <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
-dengue_yearly_model_1_5_buffer <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_13, weights=~population)
-dengue_yearly_model_1_10_buffer <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_14, weights=~population)
-dengue_yearly_model_1_20_buffer <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_15, weights=~population)
-dengue_yearly_model_1_30_buffer <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_16, weights=~population)
-dengue_yearly_model_1_40_buffer <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + urban_area + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_10, weights=~population)
+dengue_yearly_model_5km <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly)
+dengue_yearly_model_5_20_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_24)
+dengue_yearly_model_5_30_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_25)
+dengue_yearly_model_5_40_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_26)
+dengue_yearly_model_5_gt40_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_20)
+
 
 df <- rbind(
-  as.data.frame(cbind(dengue_yearly_model_1km$coeftable[1:20,],c(rep("1km",20)))),
-  #as.data.frame(cbind(test1_10_buffer$coeftable[1:20,],c(rep("10km_buffered",20)))),
-  as.data.frame(cbind(dengue_yearly_model_1_20_buffer$coeftable[1:20,],c(rep("20km_buffered",20)))),
-  as.data.frame(cbind(dengue_yearly_model_1_40_buffer$coeftable[1:20,],c(rep("40km_buffered",20)))))
+  as.data.frame(cbind(dengue_yearly_model_5km$coeftable[1:22,],c(rep("5km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_5_20_buffer$coeftable[1:22,],c(rep("20km_buffered",22)))),
+  as.data.frame(cbind(dengue_yearly_model_5_30_buffer$coeftable[1:22,],c(rep("30km_buffered",22)))),
+  as.data.frame(cbind(dengue_yearly_model_5_40_buffer$coeftable[1:22,],c(rep("40km_buffered",22)))),
+  as.data.frame(cbind(dengue_yearly_model_5_gt40_buffer$coeftable[1:22,],c(rep("40kmplus_buffered",22)))))
 
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2020-01-01"), by="year"))
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
-df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','20km_buffered','40km_buffered'))
+df$Cutoff <- factor(as.character(df$Cutoff), levels=c('5km','20km_buffered','30km_buffered','40km_buffered','40kmplus_buffered'))
 dengue_yearly_did_popadj_buffer_sens <- ggplot(df, aes(group=Cutoff)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Cutoff), position = position_dodge(width=250), width=0.1, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate, fill=Cutoff), color='black',position = position_dodge(width=250), size=3, shape=21) +
-  scale_color_manual(name="Treament, control", values=list('1km'="#648FFF",'20km_buffered'='#DC267F',
-                                                   '40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
-                     labels=list("1km"="<1km, >1km",
-                                 "20km_buffered"="<1km, >20km", "40km_buffered"="<1km, >40km"))+
-  scale_fill_manual(name="Treament, control", values=list('1km'="#648FFF",'20km_buffered'='#DC267F',
-                                                  '40km_buffered'='#FFB000'),#'40km_buffered'='#FFE518'), 
-                    labels=list("1km"="<1km, >1km",
-                                 "20km_buffered"="<1km, >20km", "40km_buffered"="<1km, >40km"))+
+  scale_color_manual(name="Treament, control", values=list('5km'="#648FFF",'20km_buffered'='#DC267F',
+                                                   '30km_buffered'='#FFB000','40km_buffered'='#FFE518','40kmplus_buffered'='purple4'), 
+                     labels=list("5km"="<5km, >5km", "20km_buffered"="<5km, >10km", 
+                                 "30km_buffered"="<5km, >20km", "40km_buffered"="<5km, >30km", "40kmplus_buffered"="<5km, >40km"))+
+  scale_fill_manual(name="Treament, control", values=list('5km'="#648FFF",'20km_buffered'='#DC267F',
+                                                   '30km_buffered'='#FFB000','40km_buffered'='#FFE518','40kmplus_buffered'='purple4'), 
+                     labels=list("5km"="<5km, >5km", "20km_buffered"="<5km, >10km", 
+                                 "30km_buffered"="<5km, >20km", "40km_buffered"="<5km, >30km", "40kmplus_buffered"="<5km, >40km"))+
   xlab("Year") + ylab("log(yearly\ndengue incidence\nrate ratio)") + 
   theme_bw()+
   #ylim(c(-0.02,0.22))+
