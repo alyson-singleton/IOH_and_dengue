@@ -9,7 +9,7 @@ output:
 ---
 ```{r setup, include=FALSE}
 # install packages, load libraries, set themes, knit formatting
-pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt)
+pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt,broom)
 theme_set(theme_bw())
 knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=F,
                       fig.height=5, fig.width=10)
@@ -60,7 +60,7 @@ center_lat_long <- center_lat_long %>%
 center_lat_long$fivekm <- ifelse(center_lat_long$fivekm>0, 2, 0)
 center_lat_long$tenkm <- ifelse(center_lat_long$tenkm>0, 3, 0)
 for(i in 1:dim(center_lat_long)[1]){
-  center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$onekm[i]>0, 1, 0)
+  center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$onekm[i]>0, 2, 0)
   center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$fivekm[i]>1&&center_lat_long$onekm[i]==0, 2, center_lat_long$all_cutoffs[i])
   center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$tenkm[i]>2&&center_lat_long$fivekm[i]==0&&center_lat_long$onekm[i]==0, 3, center_lat_long$all_cutoffs[i])
   #center_lat_long$all_cutoffs[i] <- min(center_lat_long$onekm[i],center_lat_long$fivekm[i],center_lat_long$tenkm[i])
@@ -91,11 +91,11 @@ fig1a <- ggplot() +
   geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
   geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=1) +
   geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs, line='grey'), pch=21, size = 2.7, alpha=1) + #colour='#25CED1',
-  scale_fill_manual(name= "Cutoff", values=c("0" = "#fffffc", "1" = "#ffcccc", "2" = "#41b6c4", "3" = "#225ea8"),
-                    labels=c("Control", "1km", "5km", "10km")) +
+  scale_fill_manual(name= "Legend", values=c("0" = "white", "2" = "#fccccc", "3" = "#225ea8"), #41b6c4 #fccccc
+                    labels=c("Control (>5km)", "Treated (<5km)", "Buffer (removed)")) +
   theme_minimal() +
   no_axis +
-  theme(legend.text=element_text(size=14),
+  theme(legend.text=element_text(size=12),
         legend.title=element_text(size=16),
         legend.position='right') +
   
@@ -152,64 +152,35 @@ vert_line_date <- as.Date('2008-01-01')
 ###################
 ### dengue data ###
 ###################
-
 ### yearly data
 dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
 dengue_df_yearly$year <- as.factor(dengue_df_yearly$year)
 
-#cases + 1 so 0's dont go to infinity when logged
+# cases + 1 so 0's dont go to infinity when logged
 dengue_df_yearly$incidence <- (dengue_df_yearly$yearly_cases+1)/dengue_df_yearly$population 
 
-#urban area + 0.001 so 0's dont go to infinity when logged
+# urban area + 0.001 so 0's dont go to infinity when logged
 dengue_df_yearly$urban_area <- dengue_df_yearly$urban_area + 0.001
 
-#complete cases
+# double check complete cases
 dengue_df_yearly <- dengue_df_yearly[complete.cases(dengue_df_yearly),]
 
-#remove extreme outliers
+# remove extreme outliers (all most likely due to inaccurate pop data)
 dengue_df_yearly <- dengue_df_yearly[which(dengue_df_yearly$incidence < 0.5),]
 
-#fix road buffers colnames
-colnames(dengue_df_yearly)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
-
-#check how many are always zero
+# check how many are always zero
 dengue_df_yearly_zeroes <- dengue_df_yearly %>% 
   group_by(cluster) %>% 
   summarize(total_cases = sum(yearly_cases))
 clusters_w_at_least_one_case <- dengue_df_yearly$cluster[which(dengue_df_yearly_zeroes$total_cases>0)]
 dengue_df_yearly_at_least_one_case <- dengue_df_yearly[which(dengue_df_yearly$cluster %in% clusters_w_at_least_one_case),]
-#write.csv(dengue_df_yearly_at_least_one_case, "~/Desktop/dengue_df_yearly_at_least_one_case.csv")
 
-#remove PM
+# remove PM
 dengue_df_yearly_no_pm <- dengue_df_yearly[!(dengue_df_yearly$cluster %in% 1),]
-dengue_df_yearly_no_pm <- dengue_df_yearly_no_pm[complete.cases(dengue_df_yearly_no_pm),]
-#write.csv(dengue_df_yearly_no_pm, "~/Desktop/dengue_df_yearly_no_pm.csv")
 
-# build all_cutoffs column to optionally create a buffer zone
-for(i in 1:dim(dengue_df_yearly)[1]){
-  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$onekm[i]==1, 1, 0)
-  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$fivekm[i]==1&&dengue_df_yearly$onekm[i]==0, 2, 
-                                            dengue_df_yearly$all_cutoffs[i])
-  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$tenkm[i]==1&&dengue_df_yearly$fivekm[i]==0&&
-                                              dengue_df_yearly$onekm[i]==0, 3, dengue_df_yearly$all_cutoffs[i])
-  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$twentykm[i]==1&&dengue_df_yearly$tenkm[i]==0&&
-                                              dengue_df_yearly$fivekm[i]==0&&dengue_df_yearly$onekm[i]==0, 4, 
-                                            dengue_df_yearly$all_cutoffs[i])
-  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$thirtykm[i]==1&&dengue_df_yearly$twentykm[i]==0&&
-                                              dengue_df_yearly$tenkm[i]==0&&dengue_df_yearly$fivekm[i]==0&&
-                                              dengue_df_yearly$onekm[i]==0, 5, dengue_df_yearly$all_cutoffs[i])
-  dengue_df_yearly$all_cutoffs[i] <- ifelse(dengue_df_yearly$fortykm[i]==1&&dengue_df_yearly$thirtykm[i]==0&&
-                                              dengue_df_yearly$twentykm[i]==0&&dengue_df_yearly$tenkm[i]==0&&
-                                              dengue_df_yearly$fivekm[i]==0&&dengue_df_yearly$onekm[i]==0, 6, 
-                                            dengue_df_yearly$all_cutoffs[i])
-}
-# build easily accessible buffer datasets for each buffer option
-# build treatment dummy where below 5km is 1, between 5km and 10km are thrown out, and above 10km is 0
-dengue_df_yearly_buffered_23 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,0)),]
-dengue_df_yearly_buffered_24 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
-dengue_df_yearly_buffered_25 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,5,6,0)),]
-dengue_df_yearly_buffered_26 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,6,0)),]
-dengue_df_yearly_buffered_20 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,0)),]
+# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
+dengue_df_yearly_buffered <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
+dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_buffered$cluster %in% 1),]
 
 ###################
 ### leish data ####
@@ -219,34 +190,30 @@ leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_
 
 leish_df_yearly$year <- as.factor(leish_df_yearly$year)
 
-#cases + 1 so 0's dont go to infinity when logged
+# cases + 1 so 0's dont go to infinity when logged
 leish_df_yearly$incidence <- (leish_df_yearly$yearly_cases+1)/leish_df_yearly$population
 
-#urban area + 0.001 so 0's dont go to infinity when logged
+# urban area + 0.001 so 0's dont go to infinity when logged
 leish_df_yearly$urban_area <- leish_df_yearly$urban_area + 0.0001
 
-#complete cases
+# double check complete cases
 leish_df_yearly <- leish_df_yearly[complete.cases(leish_df_yearly),]
 
 # remove extreme outliers
 leish_df_yearly <- leish_df_yearly[which(leish_df_yearly$incidence < 0.5),]
 
-#fix road buffers colnames
-colnames(leish_df_yearly)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
-
-#check how many are always zero
+# check how many are always zero
 leish_df_yearly_zeroes <- leish_df_yearly  %>% 
   group_by(cluster) %>% 
   summarize(total_cases = sum(yearly_cases))
 leish_clusters_w_at_least_one_case <- leish_df_yearly$cluster[which(leish_df_yearly_zeroes$total_cases>0)]
 leish_df_yearly_at_least_one_case <- leish_df_yearly[which(leish_df_yearly$cluster %in% leish_clusters_w_at_least_one_case),]
-#write.csv(leish_df_yearly_at_least_one_case, "~/Desktop/leish_df_yearly_at_least_one_case.csv")
 
-#remove PM
+# remove PM
 leish_df_yearly_no_pm <- leish_df_yearly[!(leish_df_yearly$cluster %in% 1),]
-leish_df_yearly_no_pm <- leish_df_yearly[complete.cases(leish_df_yearly_no_pm),]
-#write.csv(leish_df_yearly_no_pm, "~/Desktop/leish_df_yearly_no_pm.csv")
 
+# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
+leish_df_yearly_buffered <- leish_df_yearly[which(leish_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
 ```
 
 #### Dengue coverage
@@ -380,7 +347,7 @@ onekm_yearly <- ggplot(onekm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-onekm_yearly
+#onekm_yearly
 
 #fivekm
 fivekm_plotting <- dengue_df_yearly %>%
@@ -434,9 +401,9 @@ tenkm_yearly <- ggplot(tenkm_plotting) +
         legend.title=element_text(size=14),
         legend.position = "right",
         strip.text.x = element_text(size = 14))
-tenkm_yearly
+#tenkm_yearly
 
-#ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S2.pdf", onekm_yearly, width = 10, height = 6, units = c("in"), device="pdf")
+ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/S2.pdf", fivekm_yearly, width = 10, height = 6, units = c("in"), device="pdf")
 
 ```
 
@@ -620,30 +587,30 @@ all_cutoffs_yearly
 Each dot in this plot represents the beta coefficient for each year in the regression model, and the error bars display a 95% confidence interval. Each coefficient estimates the difference in yearly incidence between near and far healthcare centers for each year. If the hypothesis that the highway paving increased dengue transmission is correct, we should see the coefficients diverge from zero and become positive following 2008 (last year before hypothesized "shock"). Indeed, we see the coefficients diverge from zero starting in 2009 and generally increase over time. Additionally, all coefficients prior to 2009 are zero, which supports the parallel trends assumption. This model includes unit and year fixed effects, and standard errors are clustered at the unit and yearly levels (accounting for spatial and temporal autocorrelation). All results now include controls for yearly mean precipitation, yearly mean temperature, and yearly urban area, with no noticeable impact (as expected).
 
 ```{r, main specification}
-dengue_df_yearly$onekm <- as.numeric(dengue_df_yearly$onekm)
-dengue_df_yearly$fivekm <- as.numeric(dengue_df_yearly$fivekm)
-dengue_df_yearly$tenkm <- as.numeric(dengue_df_yearly$tenkm)
-
 ### yearly model
-dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_no_pm)
 #summary(dengue_yearly_model)
+#print(broom::tidy(dengue_yearly_model, exponentiate = TRUE, conf.int = TRUE), n=25)
 
 df <- as.data.frame(dengue_yearly_model$coeftable)
 df <- df[1:22,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- df$estimate+(1.96*(exp(df$std_error)-1))
+df$lower <- df$estimate-(1.96*(exp(df$std_error)-1))
+#df$upper <- df$estimate+1.96*df$std_error
+#df$lower <- df$estimate-1.96*df$std_error
 dengue_yearly_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("log(yearly\ndengue incidence\nrate ratio)") + 
+  xlab("Year") + ylab("Dengue\nincidence\nrate ratio") + 
   theme_bw()+
-  ylim(c(-2.5,4))+
+  #ylim(c(-2.5,4))+
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -671,7 +638,7 @@ ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure2.pdf", d
 
 ```
 
-```{r, magnitude of impact calculations, eval=F}
+```{r, magnitude of impact calculations ols, eval=F}
 #mean
 sum(coef(summary(dengue_yearly_model))[9:20])
 sum(coef(summary(dengue_yearly_model))[9:19])
@@ -712,6 +679,51 @@ sum(coef(summary(dengue_yearly_model))[9:20]*pop_1[,3])/sum(incidence_data_yearl
 #average yearly percent increase
 ```
 
+```{r, magnitude of impact calculations pois, eval=F}
+# to do: clean this up
+pop <- dengue_df_yearly %>%
+  group_by(year,fivekm) %>%
+  summarise(pop_sum = sum(population))
+mean(pop$pop_sum[which(pop$fivekm==1)],na.rm=T)
+pop_1 <- pop[which(pop$fivekm==1),]
+pop_1 <- pop_1[10:23,]
+pop_0 <- pop[which(pop$fivekm==0),]
+pop_0 <- pop_0[10:23,]
+pop_total <- pop %>%
+  group_by(year) %>%
+  summarise(pop_sum = sum(pop_sum))
+
+yearly_cases_df <- dengue_df_yearly %>%
+  group_by(year,fivekm) %>%
+  summarise(cases_sum = sum(yearly_cases))
+yearly_cases_df_1 <- yearly_cases_df[which(yearly_cases_df$fivekm==1),]
+yearly_cases_df_1 <- yearly_cases_df_1[10:23,]
+yearly_cases_df_0 <- yearly_cases_df[which(yearly_cases_df$fivekm==0),]
+yearly_cases_df_0 <- yearly_cases_df_0[10:23,]
+
+## try again, what about figuring out the proportion of IRR's attributable to paving?
+incidence_df <- dengue_df_yearly %>%
+  group_by(year,fivekm) %>%
+  summarise(incidence_avg = mean(incidence),
+            yearly_cases = sum(yearly_cases)) %>%
+  pivot_wider(names_from = fivekm, values_from = c(incidence_avg,yearly_cases))
+
+incidence_df$raw_IRR <- incidence_df$incidence_avg_1/incidence_df$incidence_avg_0
+incidence_df <- incidence_df[10:23,]
+incidence_df$model_IRR <- df$estimate[9:22] #mean
+incidence_df$model_IRR <- df$upper[9:22] #max
+incidence_df$model_IRR <- df$lower[9:22] #min
+
+incidence_df$attr_prop <- (incidence_df$model_IRR-1)/incidence_df$model_IRR
+incidence_df$attr_prop2 <- ((incidence_df$model_IRR-1)/incidence_df$model_IRR)*
+  (pop_1[,3]/(pop_0[,3]+pop_1[,3]))
+incidence_df$total_cases <- incidence_df$yearly_cases_1+incidence_df$yearly_cases_0
+incidence_df$attr_cases <- incidence_df$total_cases*incidence_df$attr_prop2
+sum(incidence_df$attr_cases)
+sum(incidence_df$attr_cases)/sum(yearly_cases_df[19:46,3])
+```
+
+
 ## Biannual dengue model
 
 Raw data showing biannual dengue incidence in treatment (<5km) and control (>5km) groups. Vertical line is at 2008 (last year before hypothesized "shock", i.e. the completed paving). 
@@ -722,25 +734,21 @@ vert_line_date <- as.Date('2008-01-01')
 ###################
 ### dengue data ###
 ###################
-
 ### biannual data
 dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
 dengue_df_biannual$biannual_date <- as.factor(dengue_df_biannual$biannual_date)
 
-#cases + 1 so 0's dont go to infinity when logged
+# cases + 1 so 0's dont go to infinity when logged
 dengue_df_biannual$incidence <- (dengue_df_biannual$biannual_cases+1)/dengue_df_biannual$population 
 
-#urban area + 0.001 so 0's dont go to infinity when logged
+# urban area + 0.001 so 0's dont go to infinity when logged
 dengue_df_biannual$urban_area <- dengue_df_biannual$urban_area + 0.001
 
-#complete cases
+# double check complete cases
 dengue_df_biannual <- dengue_df_biannual[complete.cases(dengue_df_biannual),]
 
-#remove extreme outliers
+# remove extreme outliers
 dengue_df_biannual <- dengue_df_biannual[which(dengue_df_biannual$incidence < 0.5),]
-
-#fix road buffers colnames
-colnames(dengue_df_biannual)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
 
 #check how many are always zero
 dengue_df_biannual_zeroes <- dengue_df_biannual %>% 
@@ -751,7 +759,9 @@ dengue_df_biannaul_at_least_one_case <- dengue_df_biannual[which(dengue_df_biann
 
 #remove PM
 dengue_df_biannual_no_pm <- dengue_df_biannual[!(dengue_df_biannual$cluster %in% 1),]
-dengue_df_biannual_no_pm <- dengue_df_biannual_no_pm[complete.cases(dengue_df_biannual_no_pm),]
+
+# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
+dengue_df_biannual_buffered <- dengue_df_biannual[which(dengue_df_biannual$all_cutoffs %in% c(1,2,4,5,6,0)),]
 
 ###################
 ### leish data ####
@@ -759,35 +769,32 @@ dengue_df_biannual_no_pm <- dengue_df_biannual_no_pm[complete.cases(dengue_df_bi
 
 ### biannaul data
 leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_biannual_full_dataset.csv")
-
 leish_df_biannual$biannual_date <- as.factor(leish_df_biannual$biannual_date)
 
-#cases + 1 so 0's dont go to infinity when logged
+# cases + 1 so 0's dont go to infinity when logged
 leish_df_biannual$incidence <- (leish_df_biannual$biannual_cases+1)/leish_df_biannual$population
 
-#urban area + 0.001 so 0's dont go to infinity when logged
+# urban area + 0.001 so 0's dont go to infinity when logged
 leish_df_biannual$urban_area <- leish_df_biannual$urban_area + 0.0001
 
-#complete cases
+# double check complete cases
 leish_df_biannual <- leish_df_biannual[complete.cases(leish_df_biannual),]
 
 # remove extreme outliers
 leish_df_biannual <- leish_df_biannual[which(leish_df_biannual$incidence < 0.5),]
 
-#fix road buffers colnames
-colnames(leish_df_biannual)[5:13] <- c("onekm", "twokm","threekm", "fourkm", "fivekm", "tenkm", "twentykm", "thirtykm", "fortykm")
-
-#check how many are always zero
+# check how many are always zero
 leish_df_biannual_zeroes <- leish_df_biannual  %>% 
   group_by(cluster) %>% 
   summarize(total_cases = sum(biannual_cases))
 leish_clusters_w_at_least_one_case_biannual <- leish_df_biannual$cluster[which(leish_df_biannual_zeroes$total_cases>0)]
 leish_df_biannual_at_least_one_case <- leish_df_biannual[which(leish_df_biannual$cluster %in% leish_clusters_w_at_least_one_case_biannual),]
 
-#remove PM
-leish_df_yearly_no_pm <- leish_df_biannual[!(leish_df_biannual$cluster %in% 1),]
-leish_df_yearly_no_pm <- leish_df_biannual[complete.cases(leish_df_yearly_no_pm),]
+# remove PM
+leish_df_biannual_no_pm <- leish_df_biannual[!(leish_df_biannual$cluster %in% 1),]
 
+# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
+leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cutoffs %in% c(1,2,4,5,6,0)),]
 ```
 
 ```{r, raw biannual dengue data plots}
@@ -1039,7 +1046,7 @@ UPDATE (Jan 22nd): These results now include controls for yearly mean precipitat
 
 ```{r, main leish specification}
 ### yearly leish model
-leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_precip + mean_temp + log(urban_area) | cluster + year, vcov = "twoway", data = leish_df_yearly, weights=~population)
+leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_precip + mean_temp + log(urban_area) | cluster + year, vcov = "twoway", data = leish_df_yearly_buffered)
 #summary(leish_yearly_model)
 
 df <- as.data.frame(leish_yearly_model$coeftable)
@@ -1757,11 +1764,11 @@ dengue_df_yearly_buffered_26 <- dengue_df_yearly[which(dengue_df_yearly$all_cuto
 dengue_df_yearly_buffered_20 <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,0)),]
 
 # run models
-dengue_yearly_model_5km <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly)
-dengue_yearly_model_5_20_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_24)
-dengue_yearly_model_5_30_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_25)
-dengue_yearly_model_5_40_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_26)
-dengue_yearly_model_5_gt40_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_20)
+dengue_yearly_model_5km <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly, weights=~population)
+dengue_yearly_model_5_20_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_24, weights=~population)
+dengue_yearly_model_5_30_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_25, weights=~population)
+dengue_yearly_model_5_40_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_26, weights=~population)
+dengue_yearly_model_5_gt40_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban_area) + mean_precip + mean_temp | cluster + year, vcov = "twoway", data = dengue_df_yearly_buffered_20, weights=~population)
 
 
 df <- rbind(

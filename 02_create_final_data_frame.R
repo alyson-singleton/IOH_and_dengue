@@ -67,6 +67,25 @@ for (i in 1:length(boundary_files)){
   boundary_dummy_vars <- left_join(boundary_dummy_vars, boundary_csv, by = "cluster")
 }
 
+# build all_cutoffs column to optionally create a buffer zone
+for(i in 1:dim(boundary_dummy_vars)[1]){
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$onekm[i]==1, 1, 0)
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$fivekm[i]==1&&boundary_dummy_vars$onekm[i]==0, 2, 
+                                               boundary_dummy_vars$all_cutoffs[i])
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$tenkm[i]==1&&boundary_dummy_vars$fivekm[i]==0&&
+                                                 boundary_dummy_vars$onekm[i]==0, 3, boundary_dummy_vars$all_cutoffs[i])
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$twentykm[i]==1&&boundary_dummy_vars$tenkm[i]==0&&
+                                                 boundary_dummy_vars$fivekm[i]==0&&boundary_dummy_vars$onekm[i]==0, 4, 
+                                               boundary_dummy_vars$all_cutoffs[i])
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$thirtykm[i]==1&&boundary_dummy_vars$twentykm[i]==0&&
+                                                 boundary_dummy_vars$tenkm[i]==0&&boundary_dummy_vars$fivekm[i]==0&&
+                                                 boundary_dummy_vars$onekm[i]==0, 5, boundary_dummy_vars$all_cutoffs[i])
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$fortykm[i]==1&&boundary_dummy_vars$thirtykm[i]==0&&
+                                                 boundary_dummy_vars$twentykm[i]==0&&boundary_dummy_vars$tenkm[i]==0&&
+                                                 boundary_dummy_vars$fivekm[i]==0&&boundary_dummy_vars$onekm[i]==0, 6, 
+                                               boundary_dummy_vars$all_cutoffs[i])
+}
+
 #link buffer data to case data
 dengue_data_complete_time_steps$cluster <- as.numeric(dengue_data_complete_time_steps$cluster)
 dengue_data_w_buffers <- full_join(dengue_data_complete_time_steps, boundary_dummy_vars, by='cluster')
@@ -157,19 +176,20 @@ write.csv(dengue_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway
 dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
   group_by(year,cluster) %>%
   summarise(yearly_cases = sum(monthly_cases),
-            `1km`=max(`1km`),
-            `2km`=max(`2km`),
-            `3km`=max(`3km`),
-            `4km`=max(`4km`),
-            `5km`=max(`5km`),
-            `10km`=max(`10km`),
-            `20km`=max(`20km`),
-            `30km`=max(`30km`),
-            `40km`=max(`40km`),
+            onekm=max(onekm),
+            twokm=max(twokm),
+            threekm=max(threekm),
+            fourkm=max(fourkm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            twentykm=max(twentykm),
+            thirtykm=max(thirtykm),
+            fortykm=max(fortykm),
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area))
+            urban_area = mean(urban_area),
+            all_cutoffs = max(all_cutoffs))
 write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
 
 ## group biannually
@@ -183,19 +203,20 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
   fill(biannual_date) %>%
   group_by(biannual_date,cluster) %>%
   summarize(biannual_cases = sum(monthly_cases),
-            `1km`=max(`1km`),
-            `2km`=max(`2km`),
-            `3km`=max(`3km`),
-            `4km`=max(`4km`),
-            `5km`=max(`5km`),
-            `10km`=max(`10km`),
-            `20km`=max(`20km`),
-            `30km`=max(`30km`),
-            `40km`=max(`40km`),
+            onekm=max(onekm),
+            twokm=max(twokm),
+            threekm=max(threekm),
+            fourkm=max(fourkm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            twentykm=max(twentykm),
+            thirtykm=max(thirtykm),
+            fortykm=max(fortykm),
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area))
+            urban_area = mean(urban_area),
+            all_cutoffs = max(all_cutoffs))
 write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
 
 ################################
@@ -252,19 +273,20 @@ write.csv(leish_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/
 leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
   group_by(year,cluster) %>%
   summarise(yearly_cases = sum(monthly_cases),
-            `1km`=max(`1km`),
-            `2km`=max(`2km`),
-            `3km`=max(`3km`),
-            `4km`=max(`4km`),
-            `5km`=max(`5km`),
-            `10km`=max(`10km`),
-            `20km`=max(`20km`),
-            `30km`=max(`30km`),
-            `40km`=max(`40km`),
+            onekm=max(onekm),
+            twokm=max(twokm),
+            threekm=max(threekm),
+            fourkm=max(fourkm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            twentykm=max(twentykm),
+            thirtykm=max(thirtykm),
+            fortykm=max(fortykm),
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area))
+            urban_area = mean(urban_area),
+            all_cutoffs = max(all_cutoffs))
 write.csv(leish_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_yearly_full_dataset.csv")
 
 ## group biannually
@@ -278,19 +300,20 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
   fill(biannual_date) %>%
   group_by(biannual_date,cluster) %>%
   summarize(biannual_cases = sum(monthly_cases),
-            `1km`=max(`1km`),
-            `2km`=max(`2km`),
-            `3km`=max(`3km`),
-            `4km`=max(`4km`),
-            `5km`=max(`5km`),
-            `10km`=max(`10km`),
-            `20km`=max(`20km`),
-            `30km`=max(`30km`),
-            `40km`=max(`40km`),
+            onekm=max(onekm),
+            twokm=max(twokm),
+            threekm=max(threekm),
+            fourkm=max(fourkm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            twentykm=max(twentykm),
+            thirtykm=max(thirtykm),
+            fortykm=max(fortykm),
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area))
+            urban_area = mean(urban_area),
+            all_cutoffs = max(all_cutoffs))
 write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_biannual_full_dataset.csv")
 
 #################################
