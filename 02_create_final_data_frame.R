@@ -147,23 +147,27 @@ temp_monthly_mdd_long <- temp_monthly %>%
 temp_monthly_mdd_long$year <- format(as.Date(temp_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 
 ### urban area data
-urban_area <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_urban_area_mapbiomas_2022.csv")
-urban_area <- urban_area[,c(2:5)]
-urban_area <- urban_area[which(urban_area$class==24),]
-urban_area <- urban_area[,c(1,3,4)]
-colnames(urban_area) <- c("urban_area", "cluster", "year")
+mapbiomas_areas <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_mapbiomas.csv")
+mapbiomas_areas <- mapbiomas_areas[,c(2:5)]
+mapbiomas_areas <- mapbiomas_areas[which(mapbiomas_areas$class %in% c(15,18,21,24)),]
+mapbiomas_areas$class <- ifelse(mapbiomas_areas$class %in% c(15,18,21),"ag","urban")
+mapbiomas_areas <- mapbiomas_areas %>%
+  group_by(layer, year, class) %>%
+  summarize(area = sum(area)) %>%
+  pivot_wider(names_from = class, values_from = area)
+mapbiomas_areas[is.na(mapbiomas_areas)] <- 0
+colnames(mapbiomas_areas) <- c("cluster", "year", "ag", "urban")
 
 #link all covariates together
 covariates <- left_join(precip_monthly_mdd_long,temp_monthly_mdd_long, by=c("cluster"="cluster", "month" = "month", "year" = "year"))
-urban_area$year <- as.character(urban_area$year)
-covariates <- full_join(covariates,urban_area, by=c("cluster"="cluster", "year" = "year"))
-covariates$urban_area[which(is.na(covariates$urban_area))] <- 0
+mapbiomas_areas$year <- as.character(mapbiomas_areas$year)
+covariates <- full_join(covariates,mapbiomas_areas, by=c("cluster"="cluster", "year" = "year"))
 covariates$month <- as.Date(covariates$month)
 write.csv(covariates, "~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_monthly_covariates.csv")
 
 #link to monthly case data
 covariates$month <- as.Date(covariates$month)
-covariates <- covariates[,c(1:3,5:6)] #drop extra year column
+covariates <- covariates[,c(1:3,5:7)] #drop extra year column
 dengue_data_w_covariates_monthly <- full_join(dengue_data_w_pop, covariates, by=c("cluster"="cluster", "month" = "month"))
 dengue_data_w_covariates_monthly <- dengue_data_w_covariates_monthly[complete.cases(dengue_data_w_covariates_monthly),]
 write.csv(dengue_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_monthly_full_dataset.csv")
@@ -188,7 +192,8 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area),
+            urban = max(urban),
+            ag = max(ag),
             all_cutoffs = max(all_cutoffs))
 write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
 
@@ -215,7 +220,8 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area),
+            urban = max(urban),
+            ag = max(ag),
             all_cutoffs = max(all_cutoffs))
 write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
 
@@ -285,7 +291,8 @@ leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area),
+            urban = max(urban),
+            ag = max(ag),
             all_cutoffs = max(all_cutoffs))
 write.csv(leish_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_yearly_full_dataset.csv")
 
@@ -312,7 +319,8 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
             population = max(population),
             mean_temp = mean(mean_temp),
             mean_precip = mean(mean_precip),
-            urban_area = mean(urban_area),
+            urban = max(urban),
+            ag = max(ag),
             all_cutoffs = max(all_cutoffs))
 write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_biannual_full_dataset.csv")
 
