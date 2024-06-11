@@ -74,17 +74,24 @@ for(i in 1:dim(boundary_dummy_vars)[1]){
                                                boundary_dummy_vars$all_cutoffs[i])
   boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$tenkm[i]==1&&boundary_dummy_vars$fivekm[i]==0&&
                                                  boundary_dummy_vars$onekm[i]==0, 3, boundary_dummy_vars$all_cutoffs[i])
-  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$twentykm[i]==1&&boundary_dummy_vars$tenkm[i]==0&&
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$fifteenkm[i]==1&&boundary_dummy_vars$tenkm[i]==0&&
                                                  boundary_dummy_vars$fivekm[i]==0&&boundary_dummy_vars$onekm[i]==0, 4, 
                                                boundary_dummy_vars$all_cutoffs[i])
-  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$thirtykm[i]==1&&boundary_dummy_vars$twentykm[i]==0&&
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$twentykm[i]==1&&boundary_dummy_vars$fifteenkm[i]==0&&
                                                  boundary_dummy_vars$tenkm[i]==0&&boundary_dummy_vars$fivekm[i]==0&&
                                                  boundary_dummy_vars$onekm[i]==0, 5, boundary_dummy_vars$all_cutoffs[i])
-  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$fortykm[i]==1&&boundary_dummy_vars$thirtykm[i]==0&&
-                                                 boundary_dummy_vars$twentykm[i]==0&&boundary_dummy_vars$tenkm[i]==0&&
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$thirtykm[i]==1&&boundary_dummy_vars$twentykm[i]==0&&
+                                                 boundary_dummy_vars$fifteenkm[i]==0&&boundary_dummy_vars$tenkm[i]==0&&
                                                  boundary_dummy_vars$fivekm[i]==0&&boundary_dummy_vars$onekm[i]==0, 6, 
                                                boundary_dummy_vars$all_cutoffs[i])
+  boundary_dummy_vars$all_cutoffs[i] <- ifelse(boundary_dummy_vars$fortykm[i]==1&&boundary_dummy_vars$thirtykm[i]==0&&
+                                                 boundary_dummy_vars$twentykm[i]==0&&boundary_dummy_vars$fifteenkm[i]==0&&
+                                                 boundary_dummy_vars$tenkm[i]==0&&boundary_dummy_vars$fivekm[i]==0&&
+                                                 boundary_dummy_vars$onekm[i]==0, 7, 
+                                               boundary_dummy_vars$all_cutoffs[i])
 }
+
+write.csv(boundary_dummy_vars,  "~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars/boundary_dummy_vars.csv")
 
 #link buffer data to case data
 dengue_data_complete_time_steps$cluster <- as.numeric(dengue_data_complete_time_steps$cluster)
@@ -186,6 +193,7 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
             fourkm=max(fourkm),
             fivekm=max(fivekm),
             tenkm=max(tenkm),
+            fifteenkm=max(fifteenkm),
             twentykm=max(twentykm),
             thirtykm=max(thirtykm),
             fortykm=max(fortykm),
@@ -214,6 +222,7 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
             fourkm=max(fourkm),
             fivekm=max(fivekm),
             tenkm=max(tenkm),
+            fifteenkm=max(fifteenkm),
             twentykm=max(twentykm),
             thirtykm=max(thirtykm),
             fortykm=max(fortykm),
@@ -285,6 +294,7 @@ leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
             fourkm=max(fourkm),
             fivekm=max(fivekm),
             tenkm=max(tenkm),
+            fifteenkm=max(fifteenkm),
             twentykm=max(twentykm),
             thirtykm=max(thirtykm),
             fortykm=max(fortykm),
@@ -313,6 +323,7 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
             fourkm=max(fourkm),
             fivekm=max(fivekm),
             tenkm=max(tenkm),
+            fifteenkm=max(fifteenkm),
             twentykm=max(twentykm),
             thirtykm=max(thirtykm),
             fortykm=max(fortykm),
