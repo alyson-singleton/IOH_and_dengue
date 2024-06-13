@@ -89,7 +89,7 @@ center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
 center_lat_long$clust <- as.character(center_lat_long$clust)
 fig1a <- ggplot() +
   geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
-  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=1) +
+  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
   geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs, line='grey'), pch=21, size = 2.7, alpha=1) + #colour='#25CED1',
   scale_fill_manual(name= "Legend", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
                     labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
@@ -99,15 +99,16 @@ fig1a <- ggplot() +
         legend.title=element_text(size=14),
         legend.position='none') +
   guides(fill=guide_legend(override.aes=list(shape=21))) +
-  annotation_scale(location = "bl",height = unit(0.15, "cm")) +
-  annotation_north_arrow(location = "tl",style = north_arrow_orienteering(text_size = 8), 
-                         height = unit(1, "cm"), width = unit(1, "cm"))
+  annotation_scale(location = "bl",height = unit(0.1, "cm")) +
+  annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
+                         height = unit(0.7, "cm"), width = unit(0.7, "cm"))
 fig1a
 fig1_legend <- get_legend(fig1a)
 
-ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure1.pdf", fig1a, width = 8, height = 8, units = c("in"), device="pdf")
+#ggsave("~/Desktop/doctorate/ch2 mdd highway/presentation_figures/Figure1.pdf", fig1a, width = 8, height = 8, units = c("in"), device="pdf")
 ```
-```{r, fig1}
+
+```{r, fig1all}
 #fivekm
 dengue_raw_plotting <- dengue_df_yearly_buffered %>%
   group_by(fivekm, year) %>%
@@ -120,11 +121,11 @@ fig1b <- ggplot(dengue_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   #labs(color="Model Type") +
-  #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Yearly\nincidence") + 
+  ggtitle("Dengue incidence") +
+  xlab("Year") + ylab("") + 
   scale_color_manual(name = "Treatment", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
   theme_bw()+
-  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+  theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title=element_text(size=14),
         axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
@@ -145,20 +146,20 @@ leish_raw_plotting <- leish_df_yearly_buffered %>%
 
 leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
 leish_raw_plotting$fivekm <- as.character(leish_raw_plotting$fivekm)
-
 fig1c <- ggplot(leish_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  scale_y_continuous(labels = function(x) round(x, 3)) +
   #labs(color="Model Type") +
-  #ggtitle("B. straminea") +
-  xlab("Year") + ylab("Yearly\nincidence") + 
+  ggtitle("Leish incidence") +
+  xlab("Year") + ylab("") + 
   scale_color_manual(name = "Treatment", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
   theme_bw()+
-  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+  theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title=element_text(size=14),
         axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
+        axis.text.y=element_text(size=8),
         axis.title.x=element_text(size=12),
         axis.text.x=element_text(size=10),
         axis.text = element_text(size=10),
@@ -175,13 +176,13 @@ fig1all <- grid.arrange(fig1a, fig1b, fig1c, fig1_legend,
                         heights=c(3,3,1))
 
 fig1all <- as_ggplot(fig1all) +                                
-  draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.122, 0.846), y = c(0.99, 0.99)) 
+  draw_plot_label(label = c("A", "B", "C"), size = 14,
+                  x = c(0.01, 0.48, 0.48), y = c(1, 1, 0.57)) 
 
 #fig1all <- annotate_figure(fig1all, left = textGrob("AUC (out of sample)", rot = 90, vjust = 1, gp = gpar(cex = 1.7)))
 fig1all
 
-ggsave("Fig1.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
+ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
 
 ```
 
@@ -677,20 +678,20 @@ df <- df[1:22,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$estimate <- exp(df$estimate)-1
+df$estimate <- exp(df$estimate)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 #df$upper <- df$estimate+1.96*df$std_error
 #df$lower <- df$estimate-1.96*df$std_error
 dengue_yearly_did_popadj <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
+  geom_hline(aes(yintercept=1), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
-  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(x=as.Date("2008-01-01"), y=1), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1,5.2)) +
+  #scale_y_continuous(labels = scales::percent, limits=c(-1,5.5)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -739,6 +740,15 @@ yearly_cases_df_1 <- yearly_cases_df[which(yearly_cases_df$fivekm==1),]
 yearly_cases_df_1 <- yearly_cases_df_1[10:23,]
 yearly_cases_df_0 <- yearly_cases_df[which(yearly_cases_df$fivekm==0),]
 yearly_cases_df_0 <- yearly_cases_df_0[10:23,]
+
+#IRRs
+dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+df <- as.data.frame(dengue_yearly_model$coeftable)
+df <- df[1:22,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$estimate <- exp(df$estimate)
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
 
 ## try again, what about figuring out the proportion of IRR's attributable to paving?
 incidence_df <- dengue_df_yearly %>%
