@@ -58,7 +58,7 @@ dengue_data_complete_time_steps <- dengue_data_linked %>%
 
 boundary_files <- list.files(path="~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars", pattern="csv", all.files=FALSE, full.names=TRUE,recursive=TRUE)
 boundary_dummy_vars <- as.data.frame(c(1:70)); colnames(boundary_dummy_vars) = c('cluster')
-for (i in 1:length(boundary_files)){
+for (i in 2:length(boundary_files)){
   boundary_csv <- read.csv(boundary_files[i])
   boundary_csv <- boundary_csv[,c(2,4)]
   boundary_csv$isInsideBuffer[boundary_csv$isInsideBuffer == 'true'] <- 1
@@ -334,6 +334,107 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
 write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_biannual_full_dataset.csv")
+
+################################
+### preprocess malaria data 
+### (abbreviated from above, need to run lines above for this to work)
+################################
+
+## keep malaria data only (in this case include both B55.1--CL--and--B55.2--ML)
+malaria_data <- case_data[which(case_data$DIAGNOSTIC=="B51"),]
+
+## remove cases listed as being from outside madre de dios
+mdd_districts <- unique(malaria_data$UBIGEO)[1:11]
+malaria_data <- malaria_data[which(malaria_data$UBIGEO %in% mdd_districts),]
+
+## group into months
+malaria_data$FECHA_INI <- as.Date(malaria_data$FECHA_INI)
+monthly_malaria_data <- malaria_data %>% 
+  group_by(month = lubridate::floor_date(FECHA_INI, 'month'), e_salud = E_SALUD) %>%
+  summarize(monthly_cases = n())
+
+## link to cluster ids and group into healthcare center clusters (loaded from above)
+malaria_data_linked <- left_join(linked_ids_codes, monthly_malaria_data, by = 'e_salud')
+malaria_data_linked <- malaria_data_linked %>%
+  group_by(cluster = clust, month = month) %>%
+  summarize(monthly_cases = sum(monthly_cases))
+
+## add zeroes to cluster-months with no recorded cases
+full_months <- data.frame(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
+colnames(full_months) <- 'month'
+malaria_data_linked$cluster <- as.vector(malaria_data_linked$cluster)
+malaria_data_complete_time_steps <- malaria_data_linked %>%
+  complete(month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"), 
+           fill = list(monthly_cases = 0)) %>%
+  as.data.frame()
+
+#link buffer data to case data (loaded from above)
+malaria_data_complete_time_steps$cluster <- as.numeric(malaria_data_complete_time_steps$cluster)
+malaria_data_w_buffers <- full_join(malaria_data_complete_time_steps, boundary_dummy_vars, by='cluster')
+
+#build year column for linking to yearly population data
+malaria_data_w_buffers$year <- format(as.Date(malaria_data_w_buffers$month, format="%Y-%m-%d"),"%Y")
+malaria_data_w_buffers$year <- format(as.Date(malaria_data_w_buffers$year, format="%Y"),"%Y-01-01")
+malaria_data_w_buffers$year <- as.Date(malaria_data_w_buffers$year)
+
+#link population data (loaded from above)
+malaria_data_w_pop <- full_join(malaria_data_w_buffers, adjusted_diresa_pop, by=c('cluster'='cluster', 'year'='year'))
+
+#link to covariate data (loaded from above)
+malaria_data_w_covariates_monthly <- full_join(malaria_data_w_pop, covariates, by=c("cluster"="cluster", "month" = "month"))
+malaria_data_w_covariates_monthly <- malaria_data_w_covariates_monthly[complete.cases(malaria_data_w_covariates_monthly),]
+write.csv(malaria_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/malaria_monthly_full_dataset.csv")
+
+## group yearly
+malaria_data_w_covariates_yearly <- malaria_data_w_covariates_monthly %>%
+  group_by(year,cluster) %>%
+  summarise(yearly_cases = sum(monthly_cases),
+            onekm=max(onekm),
+            twokm=max(twokm),
+            threekm=max(threekm),
+            fourkm=max(fourkm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            fifteenkm=max(fifteenkm),
+            twentykm=max(twentykm),
+            thirtykm=max(thirtykm),
+            fortykm=max(fortykm),
+            population = max(population),
+            mean_temp = mean(mean_temp),
+            mean_precip = mean(mean_precip),
+            urban = max(urban),
+            ag = max(ag),
+            all_cutoffs = max(all_cutoffs))
+write.csv(malaria_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/malaria_yearly_full_dataset.csv")
+
+## group biannually
+malaria_data_w_covariates_biannual <- malaria_data_w_covariates_monthly 
+malaria_data_w_covariates_biannual$month_wo_year <- format(as.Date(malaria_data_w_covariates_biannual$month, format="%Y-%m-%d"),"%m")
+malaria_data_w_covariates_biannual$biannual_index <- ifelse(malaria_data_w_covariates_biannual$month_wo_year %in% c('01', '02', '03', 10, 11, 12), 1, 0)
+malaria_data_w_covariates_biannual$biannual_date <- ifelse(malaria_data_w_covariates_biannual$month_wo_year==10 | malaria_data_w_covariates_biannual$month_wo_year=='04', 
+                                                         as.character(malaria_data_w_covariates_biannual$month), NA)
+malaria_data_w_covariates_biannual$biannual_date <- as.Date(malaria_data_w_covariates_biannual$biannual_date, format="%Y-%m-%d")
+malaria_data_w_covariates_biannual <- malaria_data_w_covariates_biannual %>% 
+  fill(biannual_date) %>%
+  group_by(biannual_date,cluster) %>%
+  summarize(biannual_cases = sum(monthly_cases),
+            onekm=max(onekm),
+            twokm=max(twokm),
+            threekm=max(threekm),
+            fourkm=max(fourkm),
+            fivekm=max(fivekm),
+            tenkm=max(tenkm),
+            fifteenkm=max(fifteenkm),
+            twentykm=max(twentykm),
+            thirtykm=max(thirtykm),
+            fortykm=max(fortykm),
+            population = max(population),
+            mean_temp = mean(mean_temp),
+            mean_precip = mean(mean_precip),
+            urban = max(urban),
+            ag = max(ag),
+            all_cutoffs = max(all_cutoffs))
+write.csv(malaria_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/malaria_biannual_full_dataset.csv")
 
 #################################
 ## SCRATCH
