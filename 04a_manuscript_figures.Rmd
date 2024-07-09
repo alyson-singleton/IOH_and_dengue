@@ -202,16 +202,26 @@ for(i in 1:dim(center_lat_long)[1]){
   center_lat_long$all_cutoffs[i] <- ifelse(center_lat_long$tenkm[i]>2&&center_lat_long$fivekm[i]==0&&center_lat_long$onekm[i]==0, 3, center_lat_long$all_cutoffs[i])
 }
 
-districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/Madre_de_Dios.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
+mdd_region <- st_union(districts$geometry)
 
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/peru_roads_important.shp")
+rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_rivers2.shp")
+rivers <- st_as_sf(rivers, crs=4326) 
+rivers$geometry <- st_transform(rivers$geometry, "EPSG:4326")
+
+roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_roads.shp")
+roads <- st_as_sf(roads) 
+roads$geometry <- st_transform(roads$geometry, 4326)
+roads_mdd <- st_covers(mdd_region,roads$geometry, sparse = FALSE)
+roads_mdd <- roads[roads_mdd[1,],]
+
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/peru_roads_important.shp")
 highway <- highway[which(highway$ref=="PE-30C"),]
 highway <- st_as_sf(highway) 
 highway$geometry <- st_transform(highway$geometry, 4326)
 
-mdd_region <- st_union(districts$geometry)
 highway_mdd <- st_covers(mdd_region,highway$geometry, sparse = FALSE)
 highway_mdd <- highway[highway_mdd[1,],]
 
@@ -224,16 +234,19 @@ no_axis <- theme(axis.title=element_blank(),
 center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
 center_lat_long$clust <- as.character(center_lat_long$clust)
 fig1a <- ggplot() +
-  geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = rivers, aes(geometry = geometry), colour='lightblue', linewidth=0.2) +
+  geom_sf(data = roads_mdd, aes(geometry = geometry), colour='#626262', linewidth=0.5) +
   geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
   geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs, line='grey'), pch=21, size = 2.7, alpha=1) + #colour='#25CED1',
   scale_fill_manual(name= "Legend", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
                     labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
+  scale_colour_manual(name="") +
   theme_minimal() +
   no_axis +
   theme(legend.text=element_text(size=12),
         legend.title=element_text(size=14),
-        legend.position='none') +
+        legend.position='bottom') +
   guides(fill=guide_legend(override.aes=list(shape=21))) +
   annotation_scale(location = "bl",height = unit(0.1, "cm")) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
