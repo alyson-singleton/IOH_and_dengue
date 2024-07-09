@@ -173,10 +173,250 @@ leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cuto
 ```
 
 ```{r, SFig S1}
-#case data coverage
+#####################
+## Sup Fig 1a
+#####################
+dengue_df_yearly_buffered$case_yn <- ifelse(dengue_df_yearly_buffered$yearly_cases>0, 1, 0)
+dengue_coverage_yearly <- dengue_df_yearly_buffered %>%
+  group_by(year, fivekm) %>%
+  summarize(coverage = sum(case_yn))
+
+dengue_coverage_yearly$fivekm <- as.character(dengue_coverage_yearly$fivekm)
+dengue_coverage_yearly <- dengue_coverage_yearly[0:42,]
+dengue_coverage_yearly$year <- format(as.Date(dengue_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
+
+sfig1a <- ggplot(dengue_coverage_yearly) +
+  geom_col(aes(x= year, y=coverage, fill=fivekm), width=0.5, color="white", position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Legend", values=c('#648FFF', '#E04490'), labels=c('Far (>10km)', 'Near (<5km)'),) +
+  geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
+  xlab("Year") + ylab("# units w/\ndengue\ncase") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14))
+sfig1a
+sfig1_legend <- get_legend(sfig1a)
+
+#####################
+## Sup Fig 1b
+#####################
+leish_df_yearly_buffered$case_yn <- ifelse(leish_df_yearly_buffered$yearly_cases>0, 1, 0)
+leish_coverage_yearly <- leish_df_yearly_buffered %>%
+  group_by(year, fivekm) %>%
+  summarize(coverage = sum(case_yn))
+
+leish_coverage_yearly$fivekm <- as.character(leish_coverage_yearly$fivekm)
+leish_coverage_yearly <- leish_coverage_yearly[0:42,]
+leish_coverage_yearly$year <- format(as.Date(leish_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
+
+sfig1b <- ggplot(leish_coverage_yearly) +
+  geom_col(aes(x= year, y=coverage, fill=fivekm), color="white", width=0.5, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Treatment", values=c('#648FFF', '#E04490'), labels=c('Far (>10km)', 'Near (<5km)'),) +
+  geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
+  xlab("Year") + ylab("# units w/\nleish\ncase") + 
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        #axis.title=element_text(size=20),
+        axis.title.y=element_text(size=12, angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=12),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14))
+sfig1b
+
+#####################
+## SFig 1all
+#####################
+
+fig1all <- grid.arrange(sfig1a, sfig1b, sfig1_legend,
+                        ncol = 1, nrow = 3,
+                        layout_matrix = rbind(c(1),c(2),c(3)), 
+                        heights=c(3,3,1))
+
+fig1all <- as_ggplot(fig1all) +                                
+  draw_plot_label(label = c("A", "B"), size = 14,
+                  x = c(0.05, 0.05), y = c(1, 0.58)) 
+fig1all
+
+ggsave("SFig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 7, units="in", device = "pdf")
+
 ```
 
 ```{r, SFig S2}
+#####################
+## SFig 2
+#####################
 #map of all 100 healthcare centers
+center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_name_latlong.csv")
+#center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/cluster_centroids_70.csv")
+
+## health center locations figure
+#center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/e_salud_key_with_lat_long.csv")
+center_lat_long <- data.frame(center_lat_long)
+center_lat_long <- center_lat_long %>%
+  mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
+  sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
+#center_lat_long <- st_transform(center_lat_long$geometry, 4326)
+
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
+districts <- st_as_sf(districts) 
+districts$geometry <- st_transform(districts$geometry, 4326)
+
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/peru_roads_important.shp")
+highway <- highway[which(highway$ref=="PE-30C"),]
+highway <- st_as_sf(highway) 
+highway$geometry <- st_transform(highway$geometry, 4326)
+
+mdd_region <- st_union(districts$geometry)
+highway_mdd <- st_covers(mdd_region,highway$geometry, sparse = FALSE)
+highway_mdd <- highway[highway_mdd[1,],]
+
+no_axis <- theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank(),
+                 panel.grid.major = element_blank())
+
+# Plot MdD
+sfig2 <- ggplot() +
+  geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
+  geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.6) + #colour='#25CED1',
+  # scale_fill_manual(name= "Legend", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
+  #                   labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
+  theme_minimal() +
+  no_axis +
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=14),
+        legend.position='none') +
+  guides(fill=guide_legend(override.aes=list(shape=21))) +
+  annotation_scale(location = "bl",height = unit(0.1, "cm")) +
+  annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
+                         height = unit(0.7, "cm"), width = unit(0.7, "cm"))
+sfig2
+
+ggsave("SFig2.pdf", plot=sfig2, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 5, height = 5, units = c("in"), device="pdf")
 ```
 
+```{r, SFig S3}
+#####################
+## SFig 3
+#####################
+#map of all 100 healthcare centers
+#center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_name_latlong.csv")
+center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/cluster_centroids_70.csv")
+
+## health center locations figure
+#center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/e_salud_key_with_lat_long.csv")
+center_lat_long <- data.frame(center_lat_long)
+center_lat_long <- center_lat_long %>%
+  mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
+  sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
+#center_lat_long <- st_transform(center_lat_long$geometry, 4326)
+
+cachement_areas <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/diresa_nn_raster_0.0sens.shp")
+cachement_areas <- st_as_sf(cachement_areas)
+
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
+districts <- st_as_sf(districts) 
+districts$geometry <- st_transform(districts$geometry, 4326)
+
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/peru_roads_important.shp")
+highway <- highway[which(highway$ref=="PE-30C"),]
+highway <- st_as_sf(highway) 
+highway$geometry <- st_transform(highway$geometry, 4326)
+
+mdd_region <- st_union(districts$geometry)
+highway_mdd <- st_covers(mdd_region,highway$geometry, sparse = FALSE)
+highway_mdd <- highway[highway_mdd[1,],]
+
+no_axis <- theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank(),
+                 panel.grid.major = element_blank())
+
+# Plot MdD
+sfig3 <- ggplot() +
+  geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
+  geom_sf(data = cachement_areas, aes(geometry = geometry), fill = 'lightgrey', color='black', alpha=0.5) +
+  geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.6) + #colour='#25CED1',
+  # scale_fill_manual(name= "Legend", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
+  #                   labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
+  theme_minimal() +
+  no_axis +
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=14),
+        legend.position='none') +
+  guides(fill=guide_legend(override.aes=list(shape=21))) +
+  annotation_scale(location = "bl",height = unit(0.1, "cm")) +
+  annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
+                         height = unit(0.7, "cm"), width = unit(0.7, "cm"))
+sfig3
+
+ggsave("SFig3.pdf", plot=sfig3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 5, height = 5, units = c("in"), device="pdf")
+```
+
+```{r, SFig S4}
+#####################
+## SFig 4
+#####################
+```
+
+```{r, SFig S5}
+#####################
+## SFig 5
+#####################
+### precip data
+precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_precipitation_monthly_mean.csv")
+precip_monthly <- precip_monthly[,c(2:278)]
+precip_monthly <- precip_monthly[,c(277,1:276)]
+colnames(precip_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
+colnames(precip_monthly)[1] <- "cluster"
+precip_monthly_mdd_long <- precip_monthly %>%
+  pivot_longer(cols = c(2:277), 
+               names_to = "month", 
+               values_to = "mean_precip")
+precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
+
+#look at precip to inform rainy season/biannual split
+precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
+precip_monthly_all <- precip_monthly_mdd_long %>%
+  group_by(month, year) %>%
+  summarize(mean_precip = mean(mean_precip)) 
+precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
+sfig5 <- ggplot(precip_monthly_all) +
+  geom_line(aes(x=month_wo_year,y=mean_precip,group=year), color="black", alpha=0.7) +
+  geom_hline(yintercept=mean(precip_monthly_all$mean_precip), color='red', linetype="dashed") +
+  geom_vline(xintercept=04, color='red', linetype="dashed") +
+  geom_vline(xintercept=10, color='red', linetype="dashed") +
+  xlab("Month") + ylab("Mean monthly\nprecip") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14))
+
+sfig5
+
+ggsave("SFig5.pdf", plot=sfig5, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 5, units = c("in"), device="pdf")
+```
