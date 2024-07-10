@@ -247,7 +247,7 @@ fig1a <- ggplot() +
   no_axis +
   theme(legend.text=element_text(size=12),
         legend.title=element_text(size=14),
-        legend.position='bottom') +
+        legend.position='none') +
   guides(fill=guide_legend(override.aes=list(shape=21))) +
   annotation_scale(location = "bl",height = unit(0.1, "cm")) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
