@@ -235,13 +235,14 @@ center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
 center_lat_long$clust <- as.character(center_lat_long$clust)
 fig1a <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
-  geom_sf(data = rivers, aes(geometry = geometry), colour='lightblue', linewidth=0.2) +
-  geom_sf(data = roads_mdd, aes(geometry = geometry), colour='#626262', linewidth=0.5) +
-  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
-  geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs, line='grey'), pch=21, size = 2.7, alpha=1) + #colour='#25CED1',
-  scale_fill_manual(name= "Legend", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
+  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = "line") +
+  geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
+  geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs), pch=21, size = 2.7, alpha=1) + #colour='#25CED1',
+  scale_fill_manual(name= "", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
                     labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
-  scale_colour_manual(name="") +
+  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+                     labels=c('Dirt Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
   theme(legend.text=element_text(size=12),
