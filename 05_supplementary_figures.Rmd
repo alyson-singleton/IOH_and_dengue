@@ -62,7 +62,7 @@ dengue_df_yearly_at_least_one_case <- dengue_df_yearly[which(dengue_df_yearly$cl
 dengue_df_yearly_no_pm <- dengue_df_yearly[!(dengue_df_yearly$cluster %in% 1),]
 
 # build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-dengue_df_yearly_buffered <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,0)),]
+dengue_df_yearly_buffered <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
 dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_buffered$cluster %in% 1),]
 
 ###################
@@ -97,7 +97,7 @@ leish_df_yearly_at_least_one_case <- leish_df_yearly[which(leish_df_yearly$clust
 leish_df_yearly_no_pm <- leish_df_yearly[!(leish_df_yearly$cluster %in% 1),]
 
 # build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-leish_df_yearly_buffered <- leish_df_yearly[which(leish_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,0)),]
+leish_df_yearly_buffered <- leish_df_yearly[which(leish_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
 leish_df_yearly_buffered_no_pm <- leish_df_yearly_buffered[!(leish_df_yearly_buffered$cluster %in% 1),]
 ```
 
@@ -271,16 +271,26 @@ center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 #center_lat_long <- st_transform(center_lat_long$geometry, 4326)
 
-districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/Madre_de_Dios.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
+mdd_region <- st_union(districts$geometry)
 
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/peru_roads_important.shp")
+rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_rivers2.shp")
+rivers <- st_as_sf(rivers, crs=4326) 
+rivers$geometry <- st_transform(rivers$geometry, "EPSG:4326")
+
+roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_roads.shp")
+roads <- st_as_sf(roads) 
+roads$geometry <- st_transform(roads$geometry, 4326)
+roads_mdd <- st_covers(mdd_region,roads$geometry, sparse = FALSE)
+roads_mdd <- roads[roads_mdd[1,],]
+
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/peru_roads_important.shp")
 highway <- highway[which(highway$ref=="PE-30C"),]
 highway <- st_as_sf(highway) 
 highway$geometry <- st_transform(highway$geometry, 4326)
 
-mdd_region <- st_union(districts$geometry)
 highway_mdd <- st_covers(mdd_region,highway$geometry, sparse = FALSE)
 highway_mdd <- highway[highway_mdd[1,],]
 
@@ -291,11 +301,13 @@ no_axis <- theme(axis.title=element_blank(),
 
 # Plot MdD
 sfig2 <- ggplot() +
-  geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
-  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
-  geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.6) + #colour='#25CED1',
-  # scale_fill_manual(name= "Legend", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
-  #                   labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = "line") +
+  geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
+  geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
+  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+                     labels=c('Dirt Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
   theme(legend.text=element_text(size=12),
@@ -329,19 +341,28 @@ center_lat_long <- center_lat_long %>%
 cachement_areas <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/diresa_nn_raster_0.0sens.shp")
 cachement_areas <- st_as_sf(cachement_areas)
 
-districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/Madre_de_Dios.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
+mdd_region <- st_union(districts$geometry)
 
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/peru_roads_important.shp")
+rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_rivers2.shp")
+rivers <- st_as_sf(rivers, crs=4326) 
+rivers$geometry <- st_transform(rivers$geometry, "EPSG:4326")
+
+roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_roads.shp")
+roads <- st_as_sf(roads) 
+roads$geometry <- st_transform(roads$geometry, 4326)
+roads_mdd <- st_covers(mdd_region,roads$geometry, sparse = FALSE)
+roads_mdd <- roads[roads_mdd[1,],]
+
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/peru_roads_important.shp")
 highway <- highway[which(highway$ref=="PE-30C"),]
 highway <- st_as_sf(highway) 
 highway$geometry <- st_transform(highway$geometry, 4326)
 
-mdd_region <- st_union(districts$geometry)
 highway_mdd <- st_covers(mdd_region,highway$geometry, sparse = FALSE)
 highway_mdd <- highway[highway_mdd[1,],]
-
 no_axis <- theme(axis.title=element_blank(),
                  axis.text=element_blank(),
                  axis.ticks=element_blank(),
@@ -349,12 +370,14 @@ no_axis <- theme(axis.title=element_blank(),
 
 # Plot MdD
 sfig3 <- ggplot() +
-  geom_sf(data=districts, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
-  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = "line") +
+  geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
   geom_sf(data = cachement_areas, aes(geometry = geometry), fill = 'lightgrey', color='black', alpha=0.5) +
-  geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.6) + #colour='#25CED1',
-  # scale_fill_manual(name= "Legend", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
-  #                   labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
+  geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
+  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+                     labels=c('Dirt Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
   theme(legend.text=element_text(size=12),
@@ -373,6 +396,70 @@ ggsave("SFig3.pdf", plot=sfig3, "~/Desktop/doctorate/ch2 mdd highway/supplementa
 #####################
 ## SFig 4
 #####################
+
+## main specification
+dengue_yearly_model_main <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+## population weighting
+dengue_yearly_model_pop_weight <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm, weights=~population)
+## no Puerto Maldonado
+dengue_yearly_model_no_PM <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm)
+## changing the spatial boundary delineating treatment and control groups
+dengue_yearly_model_onekm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+dengue_yearly_model_tenkm <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+## changing the buffer zone size between treatment and control groups
+dengue_df_yearly_no_buffer <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,0)),]
+dengue_yearly_model_no_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_no_buffer)
+dengue_df_yearly_buffer_bigger <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,5,6,0)),]
+dengue_yearly_model_buffer_bigger <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffer_bigger)
+
+df <- rbind(
+  as.data.frame(cbind(dengue_yearly_model_no_PM$coeftable[1:22,],c(rep("No PM",22)))),
+  as.data.frame(cbind(dengue_yearly_model_pop_weight$coeftable[1:22,],c(rep("Pop weight no PM",22)))),
+  as.data.frame(cbind(dengue_yearly_model_onekm$coeftable[1:22,],c(rep("1km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_tenkm$coeftable[1:22,],c(rep("10km",22)))),
+  as.data.frame(cbind(dengue_yearly_model_no_buffer$coeftable[1:22,],c(rep("No buffer",22)))),
+  as.data.frame(cbind(dengue_yearly_model_buffer_bigger$coeftable[1:22,],c(rep("Big buffer",22)))),
+  as.data.frame(cbind(dengue_yearly_model_main$coeftable[1:22,],c(rep("Main",22)))))
+
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Model')
+df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
+             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
+df$estimate <- as.numeric(df$estimate)
+df$std_error <- as.numeric(df$std_error)
+df$estimate <- exp(df$estimate)-1
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+df$Model <- factor(as.character(df$Model), levels=c('No PM', 'Pop weight no PM','1km','10km','No buffer', 'Big buffer','Main'))
+sfig4 <- ggplot(df, aes(group=Model)) +
+  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Model), width=0.1, linewidth=0.5, alpha=0.9) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate, fill=Model), color='black', size=3, shape=21, alpha=0.6) +
+  scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='forestgreen', 'Big buffer'='#648FFF','Main'="#785EF0"),
+                     labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)','Main model'))+
+  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='forestgreen', 'Big buffer'='#648FFF','Main'="#785EF0"),
+                    labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer\n(<5km v >5km)', 'Large buffer\n(<5km v >20km)','Main model'))+
+  xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
+  theme_bw()+
+  scale_y_continuous(labels = scales::percent) +
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=12),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=12),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=10),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
+sfig4
+
+ggsave("SFig4.pdf", plot=sfig4, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 6, units = c("in"), device="pdf")
+
 ```
 
 ```{r, SFig S5}
