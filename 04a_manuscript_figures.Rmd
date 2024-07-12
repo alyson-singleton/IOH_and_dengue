@@ -565,38 +565,52 @@ ggsave("Fig3.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 #####################
 ## Fig 4a
 #####################
+
 ### aggregated data (treatment)
 dengue_df_agg <- dengue_df_yearly
 dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
 dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
-# 
-# ### aggregated model
-# dengue_yearly_agg_model <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
-# summary(dengue_yearly_agg_model)
-# 
-# df <- as.data.frame(dengue_yearly_agg_model$coeftable)
-# df <- df[5,]
-# colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-# df$estimate <- exp(df$estimate)
-# df$upper <- df$estimate+1.96*df$std_error
-# df$lower <- df$estimate-1.96*df$std_error
-# remove in between units
-# dengue_df_yearly_1km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(1,2,3,4,5,6,7,0)),]
-# dengue_df_yearly_5km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(2,3,4,5,6,7,0)),]
-# dengue_df_yearly_10km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(3,4,5,6,7,0)),]
-# dengue_df_yearly_15km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(4,5,6,7,0)),]
-# dengue_df_yearly_20km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(5,6,7,0)),]
-# dengue_df_yearly_30km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(6,7,0)),]
-# dengue_df_yearly_40km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(7,0)),]
 
-# use same control group entire time
+## bootstrap to get more conservative standard errors
+treatment_col_names <- c('onekm','fivekm','tenkm','fifteenkm','twentykm','thirtykm')
+std_error_stor <- c()
+for(j in 1:5){
+  #build control and treatment groups for each distance subgroup
+  dengue_df_yearly_0s <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(6,7,0)),] #same control group each time
+  dengue_df_yearly_1s <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(j)),] #loop through each distance group
+  
+  for(k in 1:1000){
+    # sample cluster ids
+    set.seed(k)
+    dengue_df_yearly_sample0s <- sample(dengue_df_yearly_0s$cluster,length(unique(dengue_df_yearly_0s$cluster)),replace=T)
+    dengue_df_yearly_sample1s <- sample(dengue_df_yearly_1s$cluster,length(unique(dengue_df_yearly_1s$cluster)),replace=T)
+    ids_to_pull <- c(dengue_df_yearly_sample0s,dengue_df_yearly_sample1s)
+    
+    # build new dataset
+    dengue_df_yearly_boot <- c()
+    for(i in ids_to_pull) {
+      og_rows_associated_w_id_i <- dengue_df_agg[which(dengue_df_agg$cluster == i),]
+      dengue_df_yearly_boot <- rbind(dengue_df_yearly_boot, og_rows_associated_w_id_i)
+    }
+    
+    #run model
+    col_name <- treatment_col_names[j]
+    dengue_yearly_model_boot <- fepois(as.formula(paste0("incidence ~ year_binary*", col_name, "+ log(urban) + log(ag) + mean_precip + mean_temp | cluster + year")), 
+                                           vcov = "cluster", 
+                                           data = dengue_df_yearly_boot)
+    
+    #store standard error
+    std_error <- coeftable(dengue_yearly_model_boot)[5,2]
+    std_error_stor <- c(std_error_stor,std_error)
+  }
+}
+
+# create datasets to run aggregated models
 dengue_df_yearly_1km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(1,6,7,0)),]
 dengue_df_yearly_5km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(2,6,7,0)),]
 dengue_df_yearly_10km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(3,6,7,0)),]
 dengue_df_yearly_15km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(4,6,7,0)),]
 dengue_df_yearly_20km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(5,6,7,0)),]
-#dengue_df_yearly_30km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(6,7,0)),]
-#dengue_df_yearly_40km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(7,0)),]
 
 # run models
 dengue_yearly_model_1km <- fepois(incidence ~ year_binary*onekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_1km)
@@ -604,36 +618,32 @@ dengue_yearly_model_5km <- fepois(incidence ~ year_binary*fivekm + log(urban) + 
 dengue_yearly_model_10km <- fepois(incidence ~ year_binary*tenkm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_10km)
 dengue_yearly_model_15km <- fepois(incidence ~ year_binary*fifteenkm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_15km)
 dengue_yearly_model_20km <- fepois(incidence ~ year_binary*twentykm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_20km)
-dengue_yearly_model_30km <- fepois(incidence ~ year_binary*thirtykm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_30km)
 
 df <- as.data.frame(rbind(dengue_yearly_model_1km$coeftable[5,],
                           dengue_yearly_model_5km$coeftable[5,],
                           dengue_yearly_model_10km$coeftable[5,],
                           dengue_yearly_model_15km$coeftable[5,],
                           dengue_yearly_model_20km$coeftable[5,]))
-                          #dengue_yearly_model_30km$coeftable[5,]))
-df$Cutoff <- c('1km','5km','10km', '15km','20km')#,'30km')
+
+df$Cutoff <- c('1km','5km','10km', '15km','20km')
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
-#df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-#             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
+df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','5km','10km', '15km','20km'))
 df$estimate <- as.numeric(df$estimate)
-df$std_error <- as.numeric(df$std_error)
 df$estimate <- exp(df$estimate)-1
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','5km','10km', '15km','20km'))#,'30km'))
 
-# df <- df %>%
-#   group_by(Cutoff) %>%
-#   summarize(estimate = mean(estimate),
-#             upper = mean(upper),
-#             lower = mean(lower))
+# replace analytic standard errors w bootstrapped estimates
+df$std_error_boot <- c(mean(std_error_stor[1:1000]),
+                       mean(std_error_stor[1001:2000]),
+                       mean(std_error_stor[2001:3000]),
+                       mean(std_error_stor[3001:4000]),
+                       mean(std_error_stor[4001:5000]))
 
-dengue_yearly_did_het_dist <- ggplot(df, aes(group=Cutoff)) +
+df$upper <- df$estimate+1.96*df$std_error_boot
+df$lower <- df$estimate-1.96*df$std_error_boot
+
+fig4a <- ggplot(df, aes(group=Cutoff)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=Cutoff, ymax=upper, ymin=lower, color=Cutoff), width=0, linewidth=0.7) +
-  #geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
-  #geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3, shape=21) +
   scale_color_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
                                                    '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
@@ -659,7 +669,7 @@ dengue_yearly_did_het_dist <- ggplot(df, aes(group=Cutoff)) +
         legend.title=element_text(size=12),
         legend.position = "",
         strip.text.x = element_text(size = 12))
-dengue_yearly_did_het_dist
+fig4a
 
 #####################
 ## Fig 4b
@@ -673,16 +683,26 @@ center_lat_long <- left_join(cluster_ids, boundary_dummy_vars, by='cluster')
 center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
-districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/Madre_de_Dios.shp")
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/Madre_de_Dios.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
+mdd_region <- st_union(districts$geometry)
 
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/peru_shapefiles/peru_roads_important.shp")
+rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_rivers2.shp")
+rivers <- st_as_sf(rivers, crs=4326) 
+rivers$geometry <- st_transform(rivers$geometry, "EPSG:4326")
+
+roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_roads.shp")
+roads <- st_as_sf(roads) 
+roads$geometry <- st_transform(roads$geometry, 4326)
+roads_mdd <- st_covers(mdd_region,roads$geometry, sparse = FALSE)
+roads_mdd <- roads[roads_mdd[1,],]
+
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/peru_roads_important.shp")
 highway <- highway[which(highway$ref=="PE-30C"),]
 highway <- st_as_sf(highway) 
 highway$geometry <- st_transform(highway$geometry, 4326)
 
-mdd_region <- st_union(districts$geometry)
 highway_mdd <- st_covers(mdd_region,highway$geometry, sparse = FALSE)
 highway_mdd <- highway[highway_mdd[1,],]
 
@@ -696,15 +716,16 @@ center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
 center_lat_long$all_cutoffs <- ifelse(center_lat_long$all_cutoffs %in% c('0','6','7'),'0',center_lat_long$all_cutoffs)
 center_lat_long$all_cutoffs <- factor(center_lat_long$all_cutoffs, levels=c('1','2','3','4','5','0'))
 fig4b <- ggplot() +
-  geom_sf(data = districts, fill='#ffffff', color='#626262', size=.1, show.legend = FALSE) +
-  geom_sf(data = highway_mdd, aes(geometry = geometry), colour='black', linewidth=0.7) +
-  geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs, color=all_cutoffs), pch=21, size = 3, stroke=0.5) + #colour='#25CED1',
+  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = FALSE) +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = FALSE) +
+  geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = FALSE) +
+  geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs), pch=21, size = 3, stroke=0.5) + #colour='#25CED1',
   scale_fill_manual(name= "Legend", values=list('1'="#DC267F",'2'='#FF7900','3'='#FFB000',
-                                                '4'='#648FFF','5'='#785EF0','0'='darkgrey'), 
+                                                '4'='#648FFF','5'='#785EF0','0'='lightgrey'), 
                     labels=c("1km", "5km", "10km", "15km", "20km", "Control")) +
-  scale_color_manual(name= "Legend", values=list('1'="#DC267F",'2'='#FF7900','3'='#FFB000',
-                                                 '4'='#648FFF','5'='#785EF0','0'='darkgrey'), 
-                     labels=c("1km", "5km", "10km", "15km", "20km", "Control")) +
+  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+                     labels=c('Dirt Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
   theme(legend.text=element_text(size=10),
@@ -715,13 +736,12 @@ fig4b <- ggplot() +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
                          height = unit(0.7, "cm"), width = unit(0.7, "cm"))
 fig4b
-#legend <- get_legend(fig1a)
 
 #####################
 ## Fig 4all
 #####################
 
-fig4all <- grid.arrange(dengue_yearly_did_het_dist, fig4b,                     
+fig4all <- grid.arrange(fig4a, fig4b,                     
                         ncol = 2, nrow = 1,
                         layout_matrix = rbind(c(1,1,1,2,2,2,2)))#,heights=c(7,1))
 
@@ -732,106 +752,4 @@ fig4all <- as_ggplot(fig4all) +
 fig4all
 
 ggsave("Fig4.pdf", plot=fig4all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
-```
-
-```{r, Fig4 Bootstrapping}
-#####################
-## Fig 4 Bootstrapping
-#####################
-### aggregated data (treatment)
-dengue_df_agg <- dengue_df_yearly
-dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
-dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
-
-# use same control group entire time
-dengue_df_yearly_1km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(1,6,7,0)),]
-dengue_df_yearly_1km_0s <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(6,7,0)),]
-dengue_df_yearly_1km_1s <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(1)),]
-
-# sample
-dengue_df_yearly_1km_sample0s <- sample(dengue_df_yearly_1km_0s$cluster,length(unique(dengue_df_yearly_1km_0s$cluster)),replace=T)
-dengue_df_yearly_1km_sample1s <- sample(dengue_df_yearly_1km_1s$cluster,length(unique(dengue_df_yearly_1km_1s$cluster)),replace=T)
-ids_to_pull <- c(dengue_df_yearly_1km_sample0s,dengue_df_yearly_1km_sample1s)
-
-# build new dataset
-dengue_df_yearly_1km_new <- c()
-for(i in ids_to_pull) {
-  og_rows_associated_w_id_i <- dengue_df_yearly_1km[which(dengue_df_yearly_1km$cluster == i),]
-  dengue_df_yearly_1km_new <- rbind(dengue_df_yearly_1km_new, og_rows_associated_w_id_i)
-}
-
-#run model
-dengue_yearly_model_1km <- fepois(incidence ~ year_binary*onekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_1km_new)
-
-
-
-dengue_df_yearly_5km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(2,6,7,0)),]
-dengue_df_yearly_10km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(3,6,7,0)),]
-dengue_df_yearly_15km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(4,6,7,0)),]
-dengue_df_yearly_20km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(5,6,7,0)),]
-#dengue_df_yearly_30km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(6,7,0)),]
-#dengue_df_yearly_40km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(7,0)),]
-
-# run models
-dengue_yearly_model_1km <- fepois(incidence ~ year_binary*onekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_1km)
-dengue_yearly_model_5km <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_5km)
-dengue_yearly_model_10km <- fepois(incidence ~ year_binary*tenkm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_10km)
-dengue_yearly_model_15km <- fepois(incidence ~ year_binary*fifteenkm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_15km)
-dengue_yearly_model_20km <- fepois(incidence ~ year_binary*twentykm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_20km)
-dengue_yearly_model_30km <- fepois(incidence ~ year_binary*thirtykm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_30km)
-
-df <- as.data.frame(rbind(dengue_yearly_model_1km$coeftable[5,],
-                          dengue_yearly_model_5km$coeftable[5,],
-                          dengue_yearly_model_10km$coeftable[5,],
-                          dengue_yearly_model_15km$coeftable[5,],
-                          dengue_yearly_model_20km$coeftable[5,]))
-                          #dengue_yearly_model_30km$coeftable[5,]))
-df$Cutoff <- c('1km','5km','10km', '15km','20km')#,'30km')
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
-#df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-#             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$estimate <- as.numeric(df$estimate)
-df$std_error <- as.numeric(df$std_error)
-df$estimate <- exp(df$estimate)-1
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','5km','10km', '15km','20km'))#,'30km'))
-
-# df <- df %>%
-#   group_by(Cutoff) %>%
-#   summarize(estimate = mean(estimate),
-#             upper = mean(upper),
-#             lower = mean(lower))
-
-dengue_yearly_did_het_dist <- ggplot(df, aes(group=Cutoff)) +
-  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
-  geom_errorbar(aes(x=Cutoff, ymax=upper, ymin=lower, color=Cutoff), width=0, linewidth=0.7) +
-  #geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
-  #geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3, shape=21) +
-  scale_color_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
-                                                   '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
-                     #labels=list("1km"="<5km, >5km", "5km"="<5km, >10km", 
-                    #             "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
-  scale_fill_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
-                                                   '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
-                     #labels=list("1km"="<5km, >5km", "5km"="<5km, >10km", 
-                      #           "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
-  xlab("") + ylab("Percent\nchange\ndengue\nincidence") + 
-  theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1,9.8)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=14),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=10),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "",
-        strip.text.x = element_text(size = 12))
-dengue_yearly_did_het_dist
 ```
