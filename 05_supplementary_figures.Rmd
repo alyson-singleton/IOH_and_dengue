@@ -62,7 +62,7 @@ dengue_df_yearly_at_least_one_case <- dengue_df_yearly[which(dengue_df_yearly$cl
 dengue_df_yearly_no_pm <- dengue_df_yearly[!(dengue_df_yearly$cluster %in% 1),]
 
 # build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-dengue_df_yearly_buffered <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
+dengue_df_yearly_buffered <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
 dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_buffered$cluster %in% 1),]
 
 ###################
@@ -97,7 +97,7 @@ leish_df_yearly_at_least_one_case <- leish_df_yearly[which(leish_df_yearly$clust
 leish_df_yearly_no_pm <- leish_df_yearly[!(leish_df_yearly$cluster %in% 1),]
 
 # build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-leish_df_yearly_buffered <- leish_df_yearly[which(leish_df_yearly$all_cutoffs %in% c(1,2,4,5,6,0)),]
+leish_df_yearly_buffered <- leish_df_yearly[which(leish_df_yearly$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
 leish_df_yearly_buffered_no_pm <- leish_df_yearly_buffered[!(leish_df_yearly_buffered$cluster %in% 1),]
 ```
 
@@ -439,7 +439,7 @@ sfig4 <- ggplot(df, aes(group=Model)) +
   scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='forestgreen', 'Big buffer'='#648FFF','Main'="#785EF0"),
                      labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)','Main model'))+
   scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='forestgreen', 'Big buffer'='#648FFF','Main'="#785EF0"),
-                    labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer\n(<5km v >5km)', 'Large buffer\n(<5km v >20km)','Main model'))+
+                    labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)','Main model'))+
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
   scale_y_continuous(labels = scales::percent) +
@@ -506,4 +506,48 @@ sfig5 <- ggplot(precip_monthly_all) +
 sfig5
 
 ggsave("SFig5.pdf", plot=sfig5, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 5, units = c("in"), device="pdf")
+```
+
+```{r, SFig S6}
+#####################
+## SFig 6
+#####################
+# Permutation Inference Analysis
+
+### aggregated data (treatment)
+dengue_df_agg <- dengue_df_yearly_buffered
+dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
+dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
+
+# Full (randomize treatment across clusters and years)
+permuted_effects_stor_full <- c()
+for(i in 1:1000){
+  set.seed(i)
+  dengue_df_yearly_permuted_full  <- transform(dengue_df_agg, fivekm = sample(fivekm))
+  dengue_yearly_model_permuted_full <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+                                              vcov = "cluster", 
+                                              data = dengue_df_yearly_permuted_full)
+  permuted_effect_est_full <- coeftable(dengue_yearly_model_permuted_full)[6,1]
+  permuted_effects_stor_full <- c(permuted_effects_stor_full, permuted_effect_est_full)
+}
+hist(permuted_effects_stor_full)
+
+# Block (randomize treatment across clusters but maintain temporal structure)
+permuted_effects_stor_block <- c()
+for(i in 1:10){
+  set.seed(i)
+  for(k in 1:65){
+    
+  }
+  dengue_df_yearly_permuted_block  <- transform(dengue_df_agg, fivekm = sample(fivekm))
+  dengue_yearly_model_permuted_block <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+                                               vcov = "cluster", 
+                                               data = dengue_df_yearly_permuted_block)
+  permuted_effect_est_block <- coeftable(dengue_yearly_model_permuted_block)[6,1]
+  permuted_effects_stor_block <- c(permuted_effects_stor_block, permuted_effect_est_block)
+}
+hist(permuted_effects_stor_block)
+
+# Within (randomly assign the years that are flagged as treated within the districts that are truly part of the treatment group)
+
 ```
