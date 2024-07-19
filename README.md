@@ -1,2 +1,4 @@
 # Interoceanic Highway and Dengue
-Code written by Aly Singleton
+Code written by Alyson L. Singleton.
+
+Preprint to be submitted soon.
