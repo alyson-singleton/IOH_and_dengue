@@ -174,7 +174,7 @@ leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cuto
 
 ```{r, SFig S1}
 #####################
-## Sup Fig 1a
+## SFig 1a
 #####################
 dengue_df_yearly_buffered$case_yn <- ifelse(dengue_df_yearly_buffered$yearly_cases>0, 1, 0)
 dengue_coverage_yearly <- dengue_df_yearly_buffered %>%
@@ -187,9 +187,9 @@ dengue_coverage_yearly$year <- format(as.Date(dengue_coverage_yearly$year, forma
 
 sfig1a <- ggplot(dengue_coverage_yearly) +
   geom_col(aes(x= year, y=coverage, fill=fivekm), width=0.5, color="white", position = position_dodge(width = 0.5)) +
-  scale_fill_manual(name = "Legend", values=c('#648FFF', '#E04490'), labels=c('Far (>10km)', 'Near (<5km)'),) +
+  scale_fill_manual(name = "", values=c('#648FFF', '#E04490'), labels=c('Far (>10km)', 'Near (<5km)'),) +
   geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
-  xlab("Year") + ylab("# units w/\ndengue\ncase") + 
+  xlab("") + ylab("# units w/\ndengue\ncase") + 
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -206,7 +206,7 @@ sfig1a
 sfig1_legend <- get_legend(sfig1a)
 
 #####################
-## Sup Fig 1b
+## SFig 1b
 #####################
 leish_df_yearly_buffered$case_yn <- ifelse(leish_df_yearly_buffered$yearly_cases>0, 1, 0)
 leish_coverage_yearly <- leish_df_yearly_buffered %>%
@@ -241,17 +241,17 @@ sfig1b
 ## SFig 1all
 #####################
 
-fig1all <- grid.arrange(sfig1a, sfig1b, sfig1_legend,
-                        ncol = 1, nrow = 3,
-                        layout_matrix = rbind(c(1),c(2),c(3)), 
-                        heights=c(3,3,1))
+sfig1all <- grid.arrange(sfig1a, sfig1b, sfig1_legend,
+                         ncol = 1, nrow = 3,
+                         layout_matrix = rbind(c(1),c(2),c(3)), 
+                         heights=c(3,3,1))
 
-fig1all <- as_ggplot(fig1all) +                                
+sfig1all <- as_ggplot(sfig1all) +                                
   draw_plot_label(label = c("A", "B"), size = 14,
                   x = c(0.05, 0.05), y = c(1, 0.58)) 
-fig1all
+sfig1all
 
-ggsave("SFig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 7, units="in", device = "pdf")
+ggsave("SFig1.pdf", plot=sfig1all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 7, units="in", device = "pdf")
 
 ```
 
@@ -519,10 +519,21 @@ dengue_df_agg <- dengue_df_yearly_buffered
 dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
 dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
 
+# main specification aggregated effect estimate (for comparison)
+dengue_yearly_model_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+                                  vcov = "cluster", 
+                                  data = dengue_df_agg)
+dengue_yearly_model_agg_effect_est <- coeftable(dengue_yearly_model_agg)[5,1]
+dengue_yearly_model_agg_effect_est <- exp(dengue_yearly_model_agg_effect_est) - 1
+  
+#####################
+## SFig 6a
+#####################
+
 # Full (randomize treatment across clusters and years)
 permuted_effects_stor_full <- c()
 for(i in 1:1000){
-  set.seed(i)
+  set.seed(i*10)
   dengue_df_yearly_permuted_full  <- transform(dengue_df_agg, fivekm = sample(fivekm))
   dengue_yearly_model_permuted_full <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
                                               vcov = "cluster", 
@@ -530,24 +541,120 @@ for(i in 1:1000){
   permuted_effect_est_full <- coeftable(dengue_yearly_model_permuted_full)[6,1]
   permuted_effects_stor_full <- c(permuted_effects_stor_full, permuted_effect_est_full)
 }
-hist(permuted_effects_stor_full)
+
+permuted_effects_stor_full <- exp(permuted_effects_stor_full) - 1
+sfig6a <- ggplot() +
+  geom_histogram(aes(permuted_effects_stor_full), binwidth = 0.03, fill="grey") +
+  geom_vline(xintercept=dengue_yearly_model_agg_effect_est, color='red') +
+  xlab("Bootstrapped effect estimate") + ylab("") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14))
+sfig6a
+
+#####################
+## SFig 6b
+#####################
 
 # Block (randomize treatment across clusters but maintain temporal structure)
+# run through each cluster and randomly assign in or out of treatment (using derived probabilities)
+dengue_df_yearly_permuted_block <- dengue_df_agg
 permuted_effects_stor_block <- c()
-for(i in 1:10){
+for(i in 1:1000){
   set.seed(i)
-  for(k in 1:65){
-    
+  prob_1 <- length(which(dengue_df_agg$fivekm==1))/length(dengue_df_agg$fivekm)
+  #randomly assign treatment to each spatial unit
+  for(k in 1:length(unique(dengue_df_agg$cluster))){
+    random_treatment <- rbinom(1, 1, prob_1)
+    dengue_df_yearly_permuted_block$fivekm[which(dengue_df_yearly_permuted_block$cluster==k)] <- if (random_treatment==1) {rep(1,15)} else {rep(0,15)}
   }
-  dengue_df_yearly_permuted_block  <- transform(dengue_df_agg, fivekm = sample(fivekm))
   dengue_yearly_model_permuted_block <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
                                                vcov = "cluster", 
                                                data = dengue_df_yearly_permuted_block)
-  permuted_effect_est_block <- coeftable(dengue_yearly_model_permuted_block)[6,1]
+  permuted_effect_est_block <- coeftable(dengue_yearly_model_permuted_block)[5,1]
   permuted_effects_stor_block <- c(permuted_effects_stor_block, permuted_effect_est_block)
 }
-hist(permuted_effects_stor_block)
+
+permuted_effects_stor_block <- exp(permuted_effects_stor_block) - 1
+sfig6b <- ggplot() +
+  geom_histogram(aes(permuted_effects_stor_block), binwidth = 0.03, fill="grey") +
+  geom_vline(xintercept=dengue_yearly_model_agg_effect_est, color='red') +
+  xlab("Bootstrapped effect estimate") + ylab("") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14))
+sfig6b
+
+#####################
+## SFig 6c
+#####################
 
 # Within (randomly assign the years that are flagged as treated within the districts that are truly part of the treatment group)
+dengue_df_yearly_permuted_within <- dengue_df_agg
+permuted_effects_stor_within <- c()
+for(i in 1:1000){
+  set.seed(i)
+  #randomly assign treatment to each spatial unit
+  for(k in 1:length(unique(dengue_df_agg$cluster))){
+    #random_treatment <- rbinom(1, 1, prob_1)
+    dengue_df_yearly_permuted_within$year_binary[which(dengue_df_yearly_permuted_within$cluster==k)] <- sample(c(0,rep(1,14)))#sample(c(rep(0,7),rep(1,8)))
+  }
+  dengue_yearly_model_permuted_within <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+                                               vcov = "cluster", 
+                                               data = dengue_df_yearly_permuted_within)
+  permuted_effect_est_within <- coeftable(dengue_yearly_model_permuted_within)[5,1]
+  permuted_effects_stor_within <- c(permuted_effects_stor_within, permuted_effect_est_within)
+}
+
+permuted_effects_stor_within <- exp(permuted_effects_stor_within) - 1
+sfig6c <- ggplot() +
+  geom_histogram(aes(permuted_effects_stor_within), binwidth = 0.03, fill="grey") +
+  geom_vline(xintercept=dengue_yearly_model_agg_effect_est, color='red') +
+  xlab("Bootstrapped effect estimate") + ylab("") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14))
+sfig6c
+
+#####################
+## SFig 6all
+#####################
+
+sfig6all <- grid.arrange(sfig6a, sfig6b, sfig6c,
+                         nrow = 1)
+
+sfig6all <- as_ggplot(sfig6all) +                                
+  draw_plot_label(label = c("A", "B","C"), size = 13,
+                  x = c(0.00, 0.335, 0.675), y = c(1, 1, 1)) 
+sfig6all
+
+ggsave("SFig6.pdf", plot=sfig6all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 5, units="in", device = "pdf")
 
 ```
