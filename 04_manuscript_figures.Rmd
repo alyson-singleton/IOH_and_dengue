@@ -135,7 +135,7 @@ dengue_df_biannaul_at_least_one_case <- dengue_df_biannual[which(dengue_df_biann
 dengue_df_biannual_no_pm <- dengue_df_biannual[!(dengue_df_biannual$cluster %in% 1),]
 
 # build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-dengue_df_biannual_buffered <- dengue_df_biannual[which(dengue_df_biannual$all_cutoffs %in% c(1,2,4,5,6,0)),]
+dengue_df_biannual_buffered <- dengue_df_biannual[which(dengue_df_biannual$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
 
 ###################
 ### leish data ####
@@ -169,7 +169,7 @@ leish_df_biannual_at_least_one_case <- leish_df_biannual[which(leish_df_biannual
 leish_df_biannual_no_pm <- leish_df_biannual[!(leish_df_biannual$cluster %in% 1),]
 
 # build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cutoffs %in% c(1,2,4,5,6,0)),]
+leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
 ```
 
 ```{r, Fig1}
@@ -365,7 +365,7 @@ dengue_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.5)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -418,7 +418,7 @@ dengue_biannual_did_agg <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.5)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -451,6 +451,45 @@ fig2all
 ggsave("Fig2.pdf", plot=fig2all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
 ```
 
+```{r, attributable cases}
+### aggregated data (treatment)
+dengue_df_agg <- dengue_df_yearly_buffered
+dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
+dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
+
+### aggregated model
+dengue_yearly_agg_model <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
+summary(dengue_yearly_agg_model)
+
+df <- as.data.frame(dengue_yearly_agg_model$coeftable)
+df <- df[5,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$estimate <- exp(df$estimate)
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+
+## build df w information needed for IRR/attributable cases calculations
+incidence_df <- dengue_df_agg %>%
+  group_by(year_binary,fivekm) %>%
+  summarise(incidence_avg = mean(incidence),
+            yearly_cases = sum(yearly_cases),
+            pop_sum = sum(population)) %>%
+  pivot_wider(names_from = fivekm, values_from = c(incidence_avg,yearly_cases,pop_sum))
+
+# get IRR from model
+model_IRR <- df$estimate #mean
+model_IRR <- df$upper #max
+model_IRR <- df$lower #min
+
+# calculate attributable proportion, attributable number of cases, prop of total cases since paving
+attr_prop <- ((model_IRR-1)/model_IRR)*
+  (incidence_df$pop_sum_1[2]/(incidence_df$pop_sum_0[2]+incidence_df$pop_sum_1[2]))
+attr_prop
+attr_cases <- incidence_df$yearly_cases_1[2]*attr_prop
+attr_cases
+attr_cases/sum(incidence_df$yearly_cases_0[2]+incidence_df$yearly_cases_1[2])
+```
+
 ```{r, Fig3}
 #####################
 ## Fig 3a
@@ -476,7 +515,7 @@ leish_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\nleish\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.5)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -511,7 +550,7 @@ summary(leish_biannual_agg_model_dry)
 leish_biannual_agg_model_rainy <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_rainy)
 summary(leish_biannual_agg_model_rainy)
 
-df <- as.data.frame(rbind(leish_biannual_agg_model_rainy$coeftable[5,],
+df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable[5,],
                           leish_biannual_agg_model_rainy$coeftable[5,]))
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$estimate <- exp(df$estimate)-1
@@ -529,7 +568,7 @@ leish_biannual_did_agg <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.5)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -753,3 +792,39 @@ fig4all
 
 ggsave("Fig4.pdf", plot=fig4all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
 ```
+
+```{r, Table1}
+#####################
+## Build aggregated model
+#####################
+dengue_df_agg <- dengue_df_yearly_buffered
+dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
+dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
+
+leish_df_agg <- leish_df_yearly_buffered
+leish_df_agg <- leish_df_agg[which(as.Date(leish_df_agg$year) > '2007-01-01'),]
+leish_df_agg$year_binary <- ifelse(as.Date(leish_df_agg$year) > '2008-01-01',1,0)
+
+# main specification aggregated effect estimate (for comparison)
+dengue_yearly_model_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+                                  vcov = "cluster", 
+                                  data = dengue_df_agg)
+
+leish_yearly_model_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+                                  vcov = "cluster", 
+                                  data = leish_df_agg)
+
+#####################
+## Table 1
+#####################
+table1 <- etable(dengue_yearly_model_agg,dengue_biannual_agg_model_dry,dengue_biannual_agg_model_rainy, 
+                 leish_yearly_model_agg,leish_biannual_agg_model_dry,leish_biannual_agg_model_rainy, digits = 2)
+table1 <- table1[c(3:8,9:12,16,15,14),2:7]
+table1[13,] <- c(rep(65,6))
+colnames(table1) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
+rownames(table1) <- c("log(Urban)", "log(Ag)", "Mean Precip", "Mean Temp", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "Cor^2", "N", "Clusters")
+table1 <- table1[c(5:6,1:4,7:13),]
+table1
+write.csv(table1, "~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/table1.csv")
+```
+
