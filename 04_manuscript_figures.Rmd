@@ -242,18 +242,19 @@ fig1a <- ggplot() +
   scale_fill_manual(name= "", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
                     labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
   scale_color_manual(name="", values=c('#626262','black','lightblue'),
-                     labels=c('Dirt Roads','Highway','Rivers')) +
+                     labels=c('Unpaved Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
   theme(legend.text=element_text(size=12),
         legend.title=element_text(size=14),
-        legend.position='none') +
+        legend.position='bottom') +
   guides(fill=guide_legend(override.aes=list(shape=21))) +
   annotation_scale(location = "bl",height = unit(0.1, "cm")) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
                          height = unit(0.7, "cm"), width = unit(0.7, "cm"))
 fig1a
 fig1_legend <- get_legend(fig1a)
+fig1a <- fig1a + theme(legend.position = "none")
 
 #####################
 ## Fig 1b
@@ -345,7 +346,6 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 ### yearly model
 dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
 #summary(dengue_yearly_model)
-#print(broom::tidy(dengue_yearly_model, exponentiate = TRUE, conf.int = TRUE), n=25)
 
 df <- as.data.frame(dengue_yearly_model$coeftable)
 df <- df[1:22,]
@@ -355,8 +355,7 @@ df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
 df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
-#df$upper <- df$estimate+1.96*df$std_error
-#df$lower <- df$estimate-1.96*df$std_error
+
 dengue_yearly_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
@@ -365,7 +364,7 @@ dengue_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -418,7 +417,7 @@ dengue_biannual_did_agg <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -515,7 +514,7 @@ leish_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\nleish\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -568,7 +567,7 @@ leish_biannual_did_agg <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,7.3)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -694,7 +693,7 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
                       #           "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
   xlab("") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1,9.8)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1,7.5)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),

@@ -20,6 +20,10 @@ head(case_data)
 
 ## keep dengue data only (in this case do not include A97.1--alarm--or A97.2--severe)
 dengue_data <- case_data[which(case_data$DIAGNOSTIC=="A97.0"),]
+table(dengue_data$TIPO_DX)
+
+## remove "descartado" cases (options are D/C/P)
+dengue_data <- dengue_data[which(dengue_data$TIPO_DX=="C" | dengue_data$TIPO_DX=="P"),]
 
 ## remove cases listed as being from outside madre de dios
 mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
@@ -241,6 +245,10 @@ write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highwa
 
 ## keep leish data only (in this case include both B55.1--CL--and--B55.2--ML)
 leish_data <- case_data[which(case_data$DIAGNOSTIC=="B55.1" | case_data$DIAGNOSTIC=="B55.2"),]
+table(leish_data$TIPO_DX)
+
+## remove "descartado" cases (options are D/C/P)
+leish_data <- leish_data[which(leish_data$TIPO_DX=="C" | leish_data$TIPO_DX=="P"),]
 
 ## remove cases listed as being from outside madre de dios
 mdd_districts <- unique(leish_data$UBIGEO)[1:11]
@@ -342,6 +350,10 @@ write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway
 
 ## keep malaria data only (in this case include both B55.1--CL--and--B55.2--ML)
 malaria_data <- case_data[which(case_data$DIAGNOSTIC=="B51"),]
+table(malaria_data$TIPO_DX)
+
+## remove "descartado" cases (options are D/C/P)
+malaria_data <- malaria_data[which(malaria_data$TIPO_DX=="C" | malaria_data$TIPO_DX=="P"),]
 
 ## remove cases listed as being from outside madre de dios
 mdd_districts <- unique(malaria_data$UBIGEO)[1:11]
