@@ -463,7 +463,7 @@ summary(dengue_yearly_agg_model)
 df <- as.data.frame(dengue_yearly_agg_model$coeftable)
 df <- df[5,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$estimate <- exp(df$estimate)
+df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 

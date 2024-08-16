@@ -10,7 +10,7 @@ output:
 
 ```{r setup, include=FALSE}
 # install packages, load libraries, set themes, knit formatting
-pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot, ggspatial)
+pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot, ggspatial, directlabels, scales)
 theme_set(theme_bw())
 knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=F,
                       fig.height=5, fig.width=10)
@@ -674,7 +674,7 @@ ggsave("SFig4.pdf", plot=sfig4all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 
 ```{r, SFig S5}
 #####################
-## SFig 5
+## SFig 5a
 #####################
 ### precip data
 precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_precipitation_monthly_mean.csv")
@@ -694,12 +694,12 @@ precip_monthly_all <- precip_monthly_mdd_long %>%
   group_by(month, year) %>%
   summarize(mean_precip = mean(mean_precip)) 
 precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
-sfig5 <- ggplot(precip_monthly_all) +
+sfig5a <- ggplot(precip_monthly_all) +
   geom_line(aes(x=month_wo_year,y=mean_precip,group=year), color="black", alpha=0.7) +
   geom_hline(yintercept=mean(precip_monthly_all$mean_precip), color='red', linetype="dashed") +
   geom_vline(xintercept=04, color='red', linetype="dashed") +
   geom_vline(xintercept=10, color='red', linetype="dashed") +
-  xlab("Month") + ylab("Mean monthly\nprecip") + 
+  xlab("Month") + ylab("Mean\nmonthly\nprecip") + 
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -713,9 +713,214 @@ sfig5 <- ggplot(precip_monthly_all) +
         legend.position = "none",
         strip.text.x = element_text(size = 14))
 
-sfig5
+sfig5a
 
-ggsave("SFig5.pdf", plot=sfig5, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 5, units = c("in"), device="pdf")
+#####################
+## SFig 5b
+#####################
+dengue_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_monthly_full_dataset.csv")
+dengue_monthly <- dengue_monthly %>%
+  group_by(month, year) %>%
+  summarize(mean_cases = mean(monthly_cases))
+dengue_monthly$month_wo_year <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%m")
+dengue_monthly$year_wo_month <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%Y")
+
+sfig5b <- ggplot(dengue_monthly) +
+  geom_line(aes(x=month_wo_year,y=mean_cases,group=year), color='black', alpha=0.7) +
+  #geom_hline(yintercept=mean(dengue_monthly$mean_cases), color='red', linetype="dashed") +
+  geom_vline(xintercept=04, color='red', linetype="dashed") +
+  geom_vline(xintercept=10, color='red', linetype="dashed") +
+  xlab("Month") + ylab("Mean\nmonthly\ndengue\ncases") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14)) +
+  geom_text_repel(
+    data = subset(dengue_monthly, (month_wo_year == 12 & year_wo_month %in% c('2019','2022','2010','2020','2012','2009','2013','2015'))),
+    aes(x = month_wo_year, y = mean_cases, label = year_wo_month), 
+    color='slategrey',
+    point.size = NA,
+    min.segment.length = 0,
+    size = 2.5,
+    hjust = 'right',
+    direction = "y",
+    nudge_x = 0.8,
+    segment.color = 'slategrey',
+    segment.alpha = 0.7,
+    #segment.curvature = -0.1,
+    #segment.ncp = 3,
+    #segment.angle = 20,
+    point.padding = 0.1,
+    show.legend = FALSE,
+    angle = 0,
+    arrow = arrow(length = unit(0.01, "npc")),
+    expand = expansion(mult = 0.4)
+  )
+
+
+sfig5b
+
+#####################
+## SFig 5all
+#####################
+sfig5all <- grid.arrange(sfig5a, sfig5b,
+                         ncol = 1, nrow = 2,
+                         layout_matrix = rbind(c(1),c(2)), 
+                         heights=c(1,1))
+
+sfig5all <- as_ggplot(sfig5all) +                                
+  draw_plot_label(label = c("A", "B"), size = 14,
+                  x = c(0.04, 0.04), y = c(1, 0.50)) 
+sfig5all
+
+ggsave("SFig5.pdf", plot=sfig5all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 8, units="in", device = "pdf")
 ```
 
+```{r, SFig S6}
+#####################
+## SFig 6a
+#####################
+#population
+dengue_df_yearly_pop <- dengue_df_yearly_buffered %>%
+  group_by(year,fivekm) %>%
+  summarise(pop_sum = sum(population))
+
+dengue_df_yearly_pop_no_pm <- dengue_df_yearly_buffered_no_pm %>%
+  group_by(year,fivekm) %>%
+  summarise(pop_sum = sum(population))
+dengue_df_yearly_pop_no_pm$fivekm <- ifelse(dengue_df_yearly_pop_no_pm$fivekm==1,2,0)
+dengue_df_yearly_pop_no_pm <- dengue_df_yearly_pop_no_pm[which(dengue_df_yearly_pop_no_pm$fivekm==2),]
+
+dengue_df_yearly_pop <- rbind(dengue_df_yearly_pop, dengue_df_yearly_pop_no_pm)
+
+dengue_df_yearly_pop$fivekm <- as.character(dengue_df_yearly_pop$fivekm)
+dengue_df_yearly_pop$year <- as.Date(dengue_df_yearly_pop$year)
+
+sfig6a <- ggplot(dengue_df_yearly_pop) +
+  geom_line(aes(x=year, y=pop_sum, color=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  ggtitle("Population") +
+  xlab("Year") + ylab("") + 
+  scale_color_manual(name = "Treatment", values=c("#648FFF","#E04490", "#FFD218"), labels=c('Far (>10km)', 'Near (<5km)', 'Near no PM (<5km)'),) +
+  scale_y_continuous(labels = label_number(suffix = "k", scale = 1e-3)) +
+  theme_bw()+
+  theme(plot.title = element_text(size=12, face="bold"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=14),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=12),
+        axis.text.x=element_text(size=10),
+        axis.text = element_text(size=10),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=10),
+        legend.position = "none",
+        strip.text.x = element_text(size = 10))
+sfig6a
+
+#####################
+## SFig 6b
+#####################
+#urban area
+dengue_df_yearly_urban <- dengue_df_yearly_buffered %>%
+  group_by(year,fivekm) %>%
+  summarise(urban_sum = sum(urban))
+
+dengue_df_yearly_urban_no_pm <- dengue_df_yearly_buffered_no_pm %>%
+  group_by(year,fivekm) %>%
+  summarise(urban_sum = sum(urban))
+dengue_df_yearly_urban_no_pm$fivekm <- ifelse(dengue_df_yearly_urban_no_pm$fivekm==1,2,0)
+dengue_df_yearly_urban_no_pm <- dengue_df_yearly_urban_no_pm[which(dengue_df_yearly_urban_no_pm$fivekm==2),]
+
+dengue_df_yearly_urban <- rbind(dengue_df_yearly_urban, dengue_df_yearly_urban_no_pm)
+
+dengue_df_yearly_urban$fivekm <- as.character(dengue_df_yearly_urban$fivekm)
+dengue_df_yearly_urban$year <- as.Date(dengue_df_yearly_urban$year)
+
+sfig6b <- ggplot(dengue_df_yearly_urban) +
+  geom_line(aes(x=year, y=urban_sum, color=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  ggtitle("Urban Area") +
+  xlab("Year") + ylab("") + 
+  scale_color_manual(name = "Treatment", values=c("#648FFF","#E04490", "#FFD218"), labels=c('Far (>10km)', 'Near (<5km)', 'Near no PM (<5km)'),) +
+  theme_bw()+
+  theme(plot.title = element_text(size=12, face="bold"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=14),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=13),
+        axis.title.x=element_text(size=12),
+        axis.text.x=element_text(size=10),
+        axis.text = element_text(size=10),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=10),
+        legend.position = "none",
+        strip.text.x = element_text(size = 10))
+sfig6b
+
+#####################
+## SFig 6c
+#####################
+#agricultural area
+dengue_df_yearly_ag <- dengue_df_yearly_buffered %>%
+  group_by(year,fivekm) %>%
+  summarise(ag_sum = sum(ag))
+
+dengue_df_yearly_ag_no_pm <- dengue_df_yearly_buffered_no_pm %>%
+  group_by(year,fivekm) %>%
+  summarise(ag_sum = sum(ag))
+dengue_df_yearly_ag_no_pm$fivekm <- ifelse(dengue_df_yearly_ag_no_pm$fivekm==1,2,0)
+dengue_df_yearly_ag_no_pm <- dengue_df_yearly_ag_no_pm[which(dengue_df_yearly_ag_no_pm$fivekm==2),]
+
+dengue_df_yearly_ag <- rbind(dengue_df_yearly_ag, dengue_df_yearly_ag_no_pm)
+
+dengue_df_yearly_ag$fivekm <- as.character(dengue_df_yearly_ag$fivekm)
+dengue_df_yearly_ag$year <- as.Date(dengue_df_yearly_ag$year)
+
+sfig6c <- ggplot(dengue_df_yearly_ag) +
+  geom_line(aes(x=year, y=ag_sum, color=fivekm)) +
+  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  ggtitle("Agricultural Area") +
+  xlab("Year") + ylab("") + 
+  scale_color_manual(name = "Treatment", values=c("#648FFF","#E04490", "#FFD218"), labels=c('Far (>10km)', 'Near (<5km)', 'Near no PM (<5km)'),) +
+  theme_bw()+
+  theme(plot.title = element_text(size=12, face="bold"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=14),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=12),
+        axis.text.x=element_text(size=10),
+        axis.text = element_text(size=10),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=10),
+        legend.position = "bottom",
+        strip.text.x = element_text(size = 10))
+sfig6c
+
+#####################
+## SFig 6all
+#####################
+
+sfig6all <- grid.arrange(sfig6a, sfig6b, sfig6c,
+                         ncol = 1, nrow = 3,
+                         layout_matrix = rbind(c(1),c(2),c(3)), 
+                         heights=c(1,1,1))
+
+sfig6all <- as_ggplot(sfig6all) +                                
+  draw_plot_label(label = c("A", "B", "C"), size = 14,
+                  x = c(0.01, 0.01, 0.01), y = c(1, 0.667, 0.334)) 
+sfig6all
+
+ggsave("SFig6.pdf", plot=sfig6all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 7, height = 10, units="in", device = "pdf")
+
+```
 
