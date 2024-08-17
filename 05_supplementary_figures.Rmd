@@ -920,7 +920,7 @@ sfig6all <- as_ggplot(sfig6all) +
                   x = c(0.01, 0.01, 0.01), y = c(1, 0.667, 0.334)) 
 sfig6all
 
-ggsave("SFig6.pdf", plot=sfig6all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 7, height = 10, units="in", device = "pdf")
+ggsave("SFig6.pdf", plot=sfig6all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 6, height = 9, units="in", device = "pdf")
 
 ```
 
