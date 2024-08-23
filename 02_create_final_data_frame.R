@@ -97,6 +97,13 @@ for(i in 1:dim(boundary_dummy_vars)[1]){
 
 write.csv(boundary_dummy_vars,  "~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars/boundary_dummy_vars.csv")
 
+# add cost mapping
+cost_mapping <- read.csv("~/Downloads/hcfc_dist2.csv")
+cost_mapping <- cost_mapping[,2:3]
+colnames(cost_mapping) <- c("cluster", "cost")
+cost_mapping <- left_join(cost_mapping, boundary_dummy_vars, by="cluster")
+cost_mapping$cost_adjusted <- cost_mapping$cost/30*60
+
 #link buffer data to case data
 dengue_data_complete_time_steps$cluster <- as.numeric(dengue_data_complete_time_steps$cluster)
 dengue_data_w_buffers <- full_join(dengue_data_complete_time_steps, boundary_dummy_vars, by='cluster')

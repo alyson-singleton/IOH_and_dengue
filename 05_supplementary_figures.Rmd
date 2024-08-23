@@ -215,6 +215,12 @@ dengue_coverage_yearly <- dengue_df_yearly %>%
   group_by(year, fivekm) %>%
   summarize(coverage = sum(case_yn))
 
+## to determine dengue districution before paving
+# dengue_coverage_yearly <- dengue_df_yearly %>%
+#   group_by(year, cluster) %>%
+#   summarize(coverage = sum(case_yn),
+#             fivekm = max(fivekm))
+
 dengue_coverage_yearly$fivekm <- as.character(dengue_coverage_yearly$fivekm)
 dengue_coverage_yearly <- dengue_coverage_yearly[0:42,]
 dengue_coverage_yearly$year <- format(as.Date(dengue_coverage_yearly$year, format="%Y-%m-%d"),"%Y")
