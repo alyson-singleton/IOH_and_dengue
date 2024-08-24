@@ -1095,7 +1095,7 @@ sfig7all <- grid.arrange(dengue_biannual_did_popadj, leish_biannual_did_popadj, 
 
 sfig7all <- as_ggplot(sfig7all) +                                
   draw_plot_label(label = c("A", "B"), size = 14,
-                  x = c(0.08, 0.08), y = c(1, 0.58)) 
+                  x = c(0.07, 0.07), y = c(1, 0.58)) 
 sfig7all
 
 ggsave("SFig8.pdf", plot=sfig7all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 10, units="in", device = "pdf")
