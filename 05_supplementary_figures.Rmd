@@ -335,12 +335,12 @@ no_axis <- theme(axis.title=element_blank(),
                  panel.grid.major = element_blank())
 
 sfig2a <- ggplot() +
-  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
-  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = "line") +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
   geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#648FFF', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
-  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+  scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
                      labels=c('Unpaved Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
@@ -368,13 +368,13 @@ cachement_areas <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/building_sp
 cachement_areas <- st_as_sf(cachement_areas)
 
 sfig2b <- ggplot() +
-  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
-  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = "line") +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
   geom_sf(data = cachement_areas, aes(geometry = geometry), fill = 'lightgrey', color='black', alpha=0.5) +
   geom_sf(data = cluster_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
-  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+  scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
                      labels=c('Unpaved Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
@@ -930,3 +930,173 @@ ggsave("SFig6.pdf", plot=sfig6all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 
 ```
 
+```{r, STable2}
+#####################
+## Build aggregated datasets
+#####################
+dengue_df_agg <- dengue_df_yearly_buffered
+dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
+dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
+dengue_df_agg_biannual <- dengue_df_biannual_buffered
+dengue_df_agg_biannual <- dengue_df_agg_biannual[which(as.Date(dengue_df_biannual_buffered$biannual_date) > '2006-10-01'),]
+dengue_df_agg_biannual$biannual_binary <- ifelse(as.Date(dengue_df_agg_biannual$biannual_date) > '2008-04-01',1, 0)
+dengue_df_agg_biannual$month <- format(as.Date(dengue_df_agg_biannual$biannual_date), "%m")
+dengue_df_agg_biannual_dry <- dengue_df_agg_biannual[which(dengue_df_agg_biannual$month == "04"),]
+dengue_df_agg_biannual_rainy <- dengue_df_agg_biannual[which(dengue_df_agg_biannual$month == "10"),]
+
+leish_df_agg <- leish_df_yearly_buffered
+leish_df_agg <- leish_df_agg[which(as.Date(leish_df_agg$year) > '2007-01-01'),]
+leish_df_agg$year_binary <- ifelse(as.Date(leish_df_agg$year) > '2008-01-01',1,0)
+leish_df_agg_biannual <- leish_df_biannual_buffered
+leish_df_agg_biannual <- leish_df_agg_biannual[which(as.Date(leish_df_biannual_buffered$biannual_date) > '2006-10-01'),]
+leish_df_agg_biannual$biannual_binary <- ifelse(as.Date(leish_df_agg_biannual$biannual_date) > '2008-04-01',1, 0)
+leish_df_agg_biannual$month <- format(as.Date(leish_df_agg_biannual$biannual_date), "%m")
+leish_df_agg_biannual_dry <- leish_df_agg_biannual[which(leish_df_agg_biannual$month == "04"),]
+leish_df_agg_biannual_rainy <- leish_df_agg_biannual[which(leish_df_agg_biannual$month == "10"),]
+
+#####################
+## Build aggregated models
+#####################
+dengue_yearly_model_agg_quad <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + year, 
+                                  vcov = "cluster", 
+                                  data = dengue_df_agg)
+dengue_biannual_agg_model_dry_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_dry)
+dengue_biannual_agg_model_rainy_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_rainy)
+
+leish_yearly_model_agg_quad <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + year, 
+                                  vcov = "cluster", 
+                                  data = leish_df_agg)
+
+leish_biannual_agg_model_dry_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_dry)
+leish_biannual_agg_model_rainy_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_rainy)
+
+#####################
+## STable 2
+#####################
+stable2 <- etable(dengue_yearly_model_agg_quad,dengue_biannual_agg_model_dry_quad,dengue_biannual_agg_model_rainy_quad, 
+                 leish_yearly_model_agg_quad,leish_biannual_agg_model_dry_quad,leish_biannual_agg_model_rainy_quad, digits = 2)
+stable2 <- stable2[c(3:8,9:12,16,15,14),2:7]
+stable2[13,] <- c(rep(65,6))
+colnames(stable2) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
+rownames(stable2) <- c("log(Urban)", "log(Ag)", "Mean Precip", "Mean Temp", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "Cor^2", "N", "Clusters")
+stable2 <- stable2[c(5:6,1:4,7:13),]
+stable2
+write.csv(stable2, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable2.csv")
+```
+
+```{r, STable3}
+dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + year, vcov = "cluster", data = leish_df_yearly_buffered)
+
+#####################
+## STable 3
+#####################
+stable3 <- etable(dengue_yearly_model, leish_yearly_model, digits = 2)
+stable3 <- stable3[c(3:10,37,11:31,35,34,36),2:3]
+stable3[33,] <- c(rep(65,2))
+stable3[9,] <- c("----","----")
+colnames(stable3) <- c('Dengue Yearly', 'Leish Yearly')
+rownames(stable3) <- c("5km x 2000", "5km x 2001", "5km x 2002", "5km x 2003", "5km x 2004", "5km x 2005", "5km x 2006", "5km x 2007", "5km x 2008", "5km x 2009", "5km x 2010", "5km x 2011", "5km x 2012", "5km x 2013", "5km x 2014", "5km x 2015", "5km x 2016", "5km x 2017", "5km x 2018", "5km x 2019", "5km x 2020", "5km x 2021", "5km x 2022", "log(Urban)", "log(Ag)", "Mean Precip", "Mean Temp", "FEs", "Cluster", "Year", "Cor^2", "N", "Clusters")
+stable3
+write.csv(stable3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable3.csv")
+```
+
+```{r, SFig S7}
+### biannual model
+dengue_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + biannual_date , vcov = "cluster", data = dengue_df_biannual_buffered)
+#summary(dengue_biannual_model)
+
+df <- as.data.frame(dengue_biannual_model$coeftable)
+df <- df[1:45,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$biannual_date <- as.Date(c(unique(dengue_df_biannual$biannual_date)[c(1:16,18:46)]))
+df$rainy <- 0
+df$rainy[c(seq(2, 16, 2), seq(17, 45, 2))] <- 1
+df$rainy <- as.character(df$rainy)
+df$estimate <- exp(df$estimate)-1
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+dengue_biannual_did_popadj <- ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  xlab("Biannual time period") + ylab("Percent\nchange\ndengue\nincidence") + 
+  theme_bw()+
+  scale_y_continuous(labels = scales::percent, limits=c(-2,10)) +
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "bottom",
+        strip.text.x = element_text(size = 12))
+dengue_biannual_did_popadj
+sfig7_legend <- get_legend(dengue_biannual_did_popadj)
+dengue_biannual_did_popadj <- dengue_biannual_did_popadj + theme(legend.position = "none")
+
+### biannual model
+leish_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + biannual_date, vcov = "cluster", data = leish_df_biannual_buffered)
+#summary(leish_biannual_model)
+
+df <- as.data.frame(leish_biannual_model$coeftable)
+df <- df[1:45,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$biannual_date <- as.Date(c(unique(leish_df_biannual$biannual_date)[c(1:16,18:46)]))
+df$rainy <- 0
+df$rainy[c(seq(2, 16, 2), seq(17, 45, 2))] <- 1
+df$rainy <- as.character(df$rainy)
+df$estimate <- exp(df$estimate)-1
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+leish_biannual_did_popadj <- ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  xlab("Biannual time period") + ylab("Percent\nchange\nleish\nincidence") + 
+  theme_bw()+
+  scale_y_continuous(labels = scales::percent, limits=c(-2,10)) +
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=14,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 12))
+leish_biannual_did_popadj
+
+#####################
+## SFig 7all
+#####################
+
+sfig7all <- grid.arrange(dengue_biannual_did_popadj, leish_biannual_did_popadj, sfig7_legend,
+                         ncol = 1, nrow = 3,
+                         layout_matrix = rbind(c(1),c(2),c(3)), 
+                         heights=c(3,3,1))
+
+sfig7all <- as_ggplot(sfig7all) +                                
+  draw_plot_label(label = c("A", "B"), size = 14,
+                  x = c(0.08, 0.08), y = c(1, 0.58)) 
+sfig7all
+
+ggsave("SFig8.pdf", plot=sfig7all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 10, units="in", device = "pdf")
+```

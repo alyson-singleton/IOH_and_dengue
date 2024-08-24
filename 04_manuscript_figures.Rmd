@@ -234,14 +234,14 @@ no_axis <- theme(axis.title=element_blank(),
 center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
 center_lat_long$clust <- as.character(center_lat_long$clust)
 fig1a <- ggplot() +
-  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
-  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = "line") +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
   geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs), pch=21, size = 2.7, alpha=1) + #colour='#25CED1',
   scale_fill_manual(name= "", values=c("0" = "#648FFF", "2" = "#E04490", "3" = "#ffffff"), #41b6c4 #fccccc
                     labels=c("Control (>10km)", "Treated (<5km)", "Buffer (removed)")) +
-  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+  scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
                      labels=c('Unpaved Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
@@ -396,7 +396,7 @@ dengue_df_agg_biannual_rainy <- dengue_df_agg_biannual[which(dengue_df_agg_biann
 dengue_biannual_agg_model_dry <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_dry)
 summary(dengue_biannual_agg_model_dry)
 
-dengue_biannual_agg_model_rainy <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_rainy, weights=~population)
+dengue_biannual_agg_model_rainy <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_rainy)
 summary(dengue_biannual_agg_model_rainy)
 
 df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable[5,],
@@ -754,15 +754,15 @@ center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
 center_lat_long$all_cutoffs <- ifelse(center_lat_long$all_cutoffs %in% c('0','6','7'),'0',center_lat_long$all_cutoffs)
 center_lat_long$all_cutoffs <- factor(center_lat_long$all_cutoffs, levels=c('1','2','3','4','5','0'))
 fig4b <- ggplot() +
-  geom_sf(data = mdd_region, fill='#ffffff', color='#626262', size=.15, show.legend = FALSE) +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = FALSE) +
-  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#626262'), linewidth=0.5, show.legend = FALSE) +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = FALSE) +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = FALSE) +
   geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs), pch=21, size = 3, stroke=0.5) + #colour='#25CED1',
   scale_fill_manual(name= "Legend", values=list('1'="#DC267F",'2'='#FF7900','3'='#FFB000',
                                                 '4'='#648FFF','5'='#785EF0','0'='lightgrey'), 
                     labels=c("1km", "5km", "10km", "15km", "20km", "Control")) +
-  scale_color_manual(name="", values=c('#626262','black','lightblue'),
+  scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
                      labels=c('Dirt Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
@@ -826,4 +826,6 @@ table1 <- table1[c(5:6,1:4,7:13),]
 table1
 write.csv(table1, "~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/table1.csv")
 ```
+
+
 
