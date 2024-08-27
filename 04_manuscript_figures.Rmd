@@ -344,7 +344,7 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 #####################
 
 ### yearly model
-dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+dengue_yearly_model <- feglm(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, family = "poisson", vcov = "cluster", data = dengue_df_yearly_buffered)
 #summary(dengue_yearly_model)
 
 df <- as.data.frame(dengue_yearly_model$coeftable)
@@ -352,9 +352,12 @@ df <- df[1:22,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
+#exp(confint(dengue_yearly_model, se = "cluster"))
 
 dengue_yearly_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
@@ -364,7 +367,8 @@ dengue_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
+  #ylim(c(-1.5,3))+
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -402,9 +406,11 @@ summary(dengue_biannual_agg_model_rainy)
 df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable[5,],
                           dengue_biannual_agg_model_rainy$coeftable[5,]))
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
 df$rainy <- c("Dry","Rainy")
 
 dengue_biannual_did_agg <- ggplot(df) +
@@ -417,7 +423,8 @@ dengue_biannual_did_agg <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
+  #ylim(c(-1.5,3))+
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -443,7 +450,7 @@ fig2all <- grid.arrange(dengue_yearly_did_popadj, dengue_biannual_did_agg,
 
 fig2all <- as_ggplot(fig2all) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.122, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.133, 0.846), y = c(0.99, 0.99)) 
 
 fig2all
 
@@ -503,9 +510,12 @@ df <- df[1:22,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
 df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
+
 leish_yearly_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
@@ -514,7 +524,8 @@ leish_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\nleish\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
+  #ylim(c(-1.2,15))+
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -552,9 +563,11 @@ summary(leish_biannual_agg_model_rainy)
 df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable[5,],
                           leish_biannual_agg_model_rainy$coeftable[5,]))
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
 df$rainy <- c("Dry","Rainy")
 
 leish_biannual_did_agg <- ggplot(df) +
@@ -567,7 +580,8 @@ leish_biannual_did_agg <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,6.0)) +
+  #ylim(c(-1.2,15))+
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -592,7 +606,7 @@ fig3all <- grid.arrange(leish_yearly_did_popadj, leish_biannual_did_agg,
 
 fig3all <- as_ggplot(fig3all) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.122, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.133, 0.846), y = c(0.99, 0.99)) 
 
 fig3all
 
@@ -667,7 +681,6 @@ df$Cutoff <- c('1km','5km','10km', '15km','20km')
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
 df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','5km','10km', '15km','20km'))
 df$estimate <- as.numeric(df$estimate)
-df$estimate <- exp(df$estimate)-1
 
 # replace analytic standard errors w bootstrapped estimates
 df$std_error_boot <- c(mean(std_error_stor[1:1000]),
@@ -676,15 +689,18 @@ df$std_error_boot <- c(mean(std_error_stor[1:1000]),
                        mean(std_error_stor[3001:4000]),
                        mean(std_error_stor[4001:5000]))
 
-df$upper <- df$estimate+1.96*df$std_error_boot
-df$lower <- df$estimate-1.96*df$std_error_boot
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
 
 fig4a <- ggplot(df, aes(group=Cutoff)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=Cutoff, ymax=upper, ymin=lower, color=Cutoff), width=0, linewidth=0.7) +
   geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3, shape=21) +
   scale_color_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
-                                                   '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
+                                                   ' 15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
                      #labels=list("1km"="<5km, >5km", "5km"="<5km, >10km", 
                     #             "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
   scale_fill_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
@@ -693,7 +709,7 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
                       #           "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
   xlab("") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1,7.5)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1,19)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),

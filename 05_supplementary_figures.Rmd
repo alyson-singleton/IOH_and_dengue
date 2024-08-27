@@ -442,11 +442,13 @@ df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
 df$estimate <- as.numeric(df$estimate)
 df$std_error <- as.numeric(df$std_error)
-df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
 df$Model <- factor(as.character(df$Model), levels=c('No PM', 'Pop weight no PM','1km','10km','No buffer', 'Big buffer', 'Confirmed cases', 'Main'))
-sfig3 <- ggplot(df, aes(group=Model)) +
+sfig3a <- ggplot(df, aes(group=Model)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Model), width=0.1, linewidth=0.5, alpha=0.8) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
@@ -464,7 +466,7 @@ sfig3 <- ggplot(df, aes(group=Model)) +
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title=element_text(size=18),
         axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=12),
+        axis.text.y=element_text(size=10),
         axis.title.x=element_text(size=12),
         axis.text.x=element_text(size=12),
         axis.text = element_text(size=12),
@@ -472,9 +474,55 @@ sfig3 <- ggplot(df, aes(group=Model)) +
         legend.title=element_text(size=10),
         legend.position = "right",
         strip.text.x = element_text(size = 12))
-sfig3
+sfig3a
+sfig3_legend <- get_legend(sfig3a)
+sfig3a <- sfig3a + theme(legend.position = "none")
 
-ggsave("SFig3.pdf", plot=sfig3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 6, units = c("in"), device="pdf")
+df_limits <- df
+df_limits$upper <- ifelse(df$upper>8, 7.99,df$upper)
+sfig3b <- ggplot(df_limits, aes(group=Model)) +
+  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Model), width=0.1, linewidth=0.5, alpha=0.8) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate, fill=Model), color='black', size=3, shape=21, alpha=0.6) +
+  scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='forestgreen', 'Big buffer'='#648FFF','Confirmed cases'="#785EF0", 'Main' = "#2b175e"),
+                     labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Confirmed cases', 'Main model'))+
+  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='forestgreen', 'Big buffer'='#648FFF','Confirmed cases'="#785EF0", 'Main' = "#2b175e"),
+                    labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Confirmed cases', 'Main model'))+
+  xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
+  theme_bw()+
+  scale_y_continuous(labels = scales::percent, limits=c(-1,8)) +
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=12),
+        axis.title.x=element_text(size=12),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=12),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=10),
+        legend.position = "none",
+        strip.text.x = element_text(size = 12))
+sfig3b
+
+#####################
+## SFig 3all
+#####################
+
+sfig3all <- grid.arrange(sfig3a, sfig3b, sfig3_legend,
+                         ncol = 4, nrow = 2,
+                         layout_matrix = rbind(c(1,1,1,3),c(2,2,2,3)), 
+                         heights=c(1,1))
+
+sfig3all <- as_ggplot(sfig3all) +                                
+  draw_plot_label(label = c("A", "B"), size = 14,
+                  x = c(0.115, 0.115), y = c(0.99, 0.49)) 
+sfig3all
+
+ggsave("SFig3.pdf", plot=sfig3all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 10, units = c("in"), device="pdf")
 
 ```
 
@@ -1013,9 +1061,11 @@ df$biannual_date <- as.Date(c(unique(dengue_df_biannual$biannual_date)[c(1:16,18
 df$rainy <- 0
 df$rainy[c(seq(2, 16, 2), seq(17, 45, 2))] <- 1
 df$rainy <- as.character(df$rainy)
-df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
 dengue_biannual_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
@@ -1026,7 +1076,7 @@ dengue_biannual_did_popadj <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Biannual time period") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-2,10)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-2,23)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1055,9 +1105,11 @@ df$biannual_date <- as.Date(c(unique(leish_df_biannual$biannual_date)[c(1:16,18:
 df$rainy <- 0
 df$rainy[c(seq(2, 16, 2), seq(17, 45, 2))] <- 1
 df$rainy <- as.character(df$rainy)
-df$estimate <- exp(df$estimate)-1
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
 leish_biannual_did_popadj <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
@@ -1068,7 +1120,7 @@ leish_biannual_did_popadj <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Biannual time period") + ylab("Percent\nchange\nleish\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-2,10)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-2,23)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -1095,8 +1147,8 @@ sfig7all <- grid.arrange(dengue_biannual_did_popadj, leish_biannual_did_popadj, 
 
 sfig7all <- as_ggplot(sfig7all) +                                
   draw_plot_label(label = c("A", "B"), size = 14,
-                  x = c(0.07, 0.07), y = c(1, 0.58)) 
+                  x = c(0.192, 0.192), y = c(0.99, 0.56)) 
 sfig7all
 
-ggsave("SFig8.pdf", plot=sfig7all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 10, units="in", device = "pdf")
+ggsave("SFig8.pdf", plot=sfig7all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 10, units="in", device = "pdf")
 ```
