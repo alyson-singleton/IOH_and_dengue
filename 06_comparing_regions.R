@@ -5,6 +5,8 @@ library(ggplot2)
 library(plm)
 library(fixest)
 library(cowplot)
+library(geojsonsf)
+library(cowplot)
 
 #add back in arial font
 library(showtext)
@@ -218,3 +220,184 @@ region_comp_fig <- ggplot(regional_groupings_case_data) +
 region_comp_fig
 
 ggsave("SFig7.pdf", plot=region_comp_fig, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 6, units="in", device = "pdf")
+
+#######################
+#### map ##############
+#######################
+
+# road shapefile (add brazil and bolivia roads?)
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
+highway <- highway[which(highway$ref %in% c("PE-30C","PE-30A")),] #"PE-3S"
+#highway2 <- highway[which(highway$name %in% c("Carretera Longitudinal de la Sierra Sur")),]
+#highway <- rbind(highway1,highway2)
+highway <- st_as_sf(highway) 
+highway$geometry <- st_transform(highway$geometry, 4326)
+
+highway_mdd_cusco <- st_covers(peru_three_dept,highway$geometry, sparse = FALSE)
+highway_mdd_cusco <- highway[highway_mdd_cusco[1,],]
+
+# roads
+peru_roads <- st_covers(peru,americas_roads$geometry, sparse = FALSE)
+brazil_norte_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/norte-latest-free.shp/gis_osm_roads_free_1.shp")
+brazil_norte_roads_primary <- brazil_norte_roads[which(brazil_norte_roads$fclass == 'primary'),]
+brazil_norte_roads_primary_estrada <- brazil_norte_roads[which(brazil_norte_roads$name == 'Estrada do Pacífico'),]
+brazil_norte_roads_primary_bool <- st_covers(brazil_acre,brazil_norte_roads_primary_estrada$geometry, sparse = FALSE)
+brazil_norte_roads_primary_estrada <- brazil_norte_roads_primary_estrada[brazil_norte_roads_primary_bool[1,],]
+
+bolivia_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bolivia-latest-free.shp/gis_osm_roads_free_1.shp")
+
+# peru department shapefiles
+peru <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/per_admbnda_adm1_ign_20200714.shp")
+peru <- st_as_sf(peru) 
+peru$geometry <- st_transform(peru$geometry, 4326)
+peru_three_dept <- peru[which(peru$ADM1_ES %in% c("Loreto", "Cusco", "Madre de Dios")),]
+peru_three_dept <- st_union(peru_three_dept$geometry)
+peru_extra_depts <- peru[which(peru$ADM1_ES %in% c("Loreto", "Cusco")),]
+peru_extra_depts <- peru_extra_depts[,c(3,14)]
+mdd_peru <- peru[which(peru$ADM1_ES %in% c("Madre de Dios")),]
+peru_outline <- st_union(peru$geometry)
+#peru_outline$geometry <- st_transform(peru_outline$geometry, 4326)
+
+# bolivia pando shapefile
+bolivia <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bol_adm_gb2014_shp/bol_admbnda_adm1_gov_2020514.shp")
+bolivia <- st_as_sf(bolivia) 
+bolivia$geometry <- st_transform(bolivia$geometry, 4326)
+bolivia_pando <- bolivia[which(bolivia$ADM1_ES %in% c("Pando")),]
+bolivia_pando <- bolivia_pando[,c(1,11)]
+
+# brazil acre shapefile
+#brazil <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/BR_Municipios_2021.shp")
+brazil <- st_read("~/Desktop/doctorate/hfi_threshold/brazil_municipality_yearly_hfi_max.csv", geometry_column = ".geo")
+brazil_acre <- brazil[brazil$SIGLA_UF=="AC",]
+brazil_acre <- st_as_sf(data.frame(brazil_acre, geometry=geojson_sf(brazil_acre$.geo)))
+brazil_acre$geometry <- st_transform(brazil_acre$geometry, 4326)
+brazil_acre <- st_union(brazil_acre$geometry)
+
+sfig8 <- ggdraw() + 
+  draw_plot(ggplot() +
+              geom_sf(data = peru_extra_depts, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = bolivia_pando, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = brazil_acre, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = mdd_peru, fill='darkgrey', color='#a6a6a6', size=.5, show.legend = FALSE) +
+              geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
+              geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='darkred', linewidth=0.7, show.legend = "line") +
+              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='darkred', linewidth=0.7, show.legend = "line") +
+              #geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#648FFF', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
+              #scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
+              #                   labels=c('Unpaved Roads','Highway','Rivers')) +
+              theme_minimal() +
+              #annotate("text", x = 8, y=5, label= "boat") + 
+              #annotate("text", x = 4, y=5, label = "ship") +
+              no_axis +
+              theme(legend.text=element_text(size=12),
+                    legend.title=element_text(size=14),
+                    legend.position='none'),
+            0, 0, 1, 1) +
+  draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "A. Madre de Dios, Peru")) +
+              geom_line(aes(x=year, y=incidence)) +
+              #facet_wrap(~region, scales = "free_y") +
+              geom_vline(xintercept=2008,linetype='dashed', color="red") +
+              ggtitle("Madre de Dios, Peru") +
+              xlab("Year") + ylab("") + 
+              theme_classic()+
+              theme(plot.title = element_text(size=12, face="bold"),
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=14),
+                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=10),
+                    axis.title.x=element_text(size=12),
+                    axis.text.x=element_text(size=10),
+                    axis.text = element_text(size=10),
+                    legend.text=element_text(size=10),
+                    legend.title=element_text(size=10),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 10)),
+            0.05, 0.4, 0.22, 0.22) +
+  draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "G. Cusco, Peru")) +
+              geom_line(aes(x=year, y=incidence)) +
+              #facet_wrap(~region, scales = "free_y") +
+              geom_vline(xintercept=2008,linetype='dashed', color="red") +
+              ggtitle("Cusco, Peru") +
+              xlab("Year") + ylab("") + 
+              theme_classic()+
+              theme(plot.title = element_text(size=12, face="bold"),
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=14),
+                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=10),
+                    axis.title.x=element_text(size=12),
+                    axis.text.x=element_text(size=10),
+                    axis.text = element_text(size=10),
+                    legend.text=element_text(size=10),
+                    legend.title=element_text(size=10),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 10)),
+            0.1, 0.1, 0.22, 0.22) +
+  draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "H. Loreto, Peru")) +
+              geom_line(aes(x=year, y=incidence)) +
+              #facet_wrap(~region, scales = "free_y") +
+              geom_vline(xintercept=2008,linetype='dashed', color="red") +
+              ggtitle("Loreto, Peru") +
+              xlab("Year") + ylab("") + 
+              theme_classic()+
+              theme(plot.title = element_text(size=12, face="bold"),
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=14),
+                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=10),
+                    axis.title.x=element_text(size=12),
+                    axis.text.x=element_text(size=10),
+                    axis.text = element_text(size=10),
+                    legend.text=element_text(size=10),
+                    legend.title=element_text(size=10),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 10)),
+            0.05, 0.75, 0.22, 0.22) +
+  draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "B. Acre, Brazil")) +
+              geom_line(aes(x=year, y=incidence)) +
+              #facet_wrap(~region, scales = "free_y") +
+              geom_vline(xintercept=2008,linetype='dashed', color="red") +
+              ggtitle("Acre, Brazil") +
+              xlab("Year") + ylab("") + 
+              theme_classic()+
+              theme(plot.title = element_text(size=12, face="bold"),
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=14),
+                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=10),
+                    axis.title.x=element_text(size=12),
+                    axis.text.x=element_text(size=10),
+                    axis.text = element_text(size=10),
+                    legend.text=element_text(size=10),
+                    legend.title=element_text(size=10),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 10)),
+            0.69, 0.55, 0.22, 0.22) +
+  draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "C. Pando, Bolivia")) +
+              geom_line(aes(x=year, y=incidence)) +
+              #facet_wrap(~region, scales = "free_y") +
+              geom_vline(xintercept=2008,linetype='dashed', color="red") +
+              ggtitle("Pando, Bolivia") +
+              xlab("Year") + ylab("") + 
+              theme_classic()+
+              xlim(2000,2022)+
+              theme(plot.title = element_text(size=12, face="bold"),
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=14),
+                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=10),
+                    axis.title.x=element_text(size=12),
+                    axis.text.x=element_text(size=10),
+                    axis.text = element_text(size=10),
+                    legend.text=element_text(size=10),
+                    legend.title=element_text(size=10),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 10)),
+            0.7, 0.1, 0.22, 0.22) +
+  draw_line(x = c(0.68,0.74), y = c(0.4,0.3)) + #pando,bolivia 
+  draw_line(x = c(0.73,0.6), y = c(0.745,0.5)) + #acre,brazil 
+  draw_line(x = c(0.19,0.45), y = c(0.95,0.75)) + #loreto,peru 
+  draw_line(x = c(0.235,0.585), y = c(0.6,0.36)) + #mdd,peru 
+  draw_line(x = c(0.235,0.52), y = c(0.3,0.34)) #cusco,peru 
+
+sfig8

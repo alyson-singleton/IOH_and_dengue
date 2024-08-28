@@ -306,22 +306,22 @@ center_lat_long <- center_lat_long %>%
   mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
-districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/Madre_de_Dios.shp")
+districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/Madre_de_Dios.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
 mdd_region <- st_union(districts$geometry)
 
-rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_rivers2.shp")
+rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/mdd_rivers2.shp")
 rivers <- st_as_sf(rivers, crs=4326) 
 rivers$geometry <- st_transform(rivers$geometry, "EPSG:4326")
 
-roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/mdd_roads.shp")
+roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/mdd_roads.shp")
 roads <- st_as_sf(roads) 
 roads$geometry <- st_transform(roads$geometry, 4326)
 roads_mdd <- st_covers(mdd_region,roads$geometry, sparse = FALSE)
 roads_mdd <- roads[roads_mdd[1,],]
 
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/peru_shapefiles/peru_roads_important.shp")
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
 highway <- highway[which(highway$ref=="PE-30C"),]
 highway <- st_as_sf(highway) 
 highway$geometry <- st_transform(highway$geometry, 4326)
