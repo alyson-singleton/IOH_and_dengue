@@ -273,15 +273,15 @@ brazil_acre <- st_as_sf(data.frame(brazil_acre, geometry=geojson_sf(brazil_acre$
 brazil_acre$geometry <- st_transform(brazil_acre$geometry, 4326)
 brazil_acre <- st_union(brazil_acre$geometry)
 
-sfig8 <- ggdraw() + 
+sfig2 <- ggdraw() + 
   draw_plot(ggplot() +
               geom_sf(data = peru_extra_depts, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = bolivia_pando, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = brazil_acre, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
-              geom_sf(data = mdd_peru, fill='darkgrey', color='#a6a6a6', size=.5, show.legend = FALSE) +
+              geom_sf(data = mdd_peru, fill='#EEEEEE', color='#a6a6a6', size=.5, show.legend = FALSE) +
               geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
-              geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='darkred', linewidth=0.7, show.legend = "line") +
-              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='darkred', linewidth=0.7, show.legend = "line") +
+              geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
               #geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#648FFF', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
               #scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
               #                   labels=c('Unpaved Roads','Highway','Rivers')) +
@@ -298,75 +298,79 @@ sfig8 <- ggdraw() +
               #facet_wrap(~region, scales = "free_y") +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Madre de Dios, Peru") +
-              xlab("Year") + ylab("") + 
+              xlab("Year") + ylab("Dengue\nincidence") + 
               theme_classic()+
+              xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
                     plot.subtitle = element_text(hjust=0.5, size=22),
                     axis.title=element_text(size=14),
-                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-                    axis.text.y=element_text(size=10),
-                    axis.title.x=element_text(size=12),
-                    axis.text.x=element_text(size=10),
+                    axis.title.y=element_text(size=10,angle=90, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=8),
+                    axis.title.x=element_text(size=10),
+                    axis.text.x=element_text(size=8),
+                    axis.text = element_text(size=10),
+                    legend.text=element_text(size=10),
+                    legend.title=element_text(size=10),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 10)),
+            0.1, 0.07, 0.22, 0.22) +
+  draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "G. Cusco, Peru")) +
+              geom_line(aes(x=year, y=incidence)) +
+              #facet_wrap(~region, scales = "free_y") +
+              geom_vline(xintercept=2008,linetype='dashed', color="red") +
+              ggtitle("Cusco, Peru") +
+              xlab("Year") + ylab("Dengue\nincidence") + 
+              theme_classic()+
+              xlim(2000,2022)+
+              theme(plot.title = element_text(size=12, face="bold"),
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=14),
+                    axis.title.y=element_text(size=10,angle=90, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=8),
+                    axis.title.x=element_text(size=10),
+                    axis.text.x=element_text(size=8),
                     axis.text = element_text(size=10),
                     legend.text=element_text(size=10),
                     legend.title=element_text(size=10),
                     legend.position = "none",
                     strip.text.x = element_text(size = 10)),
             0.05, 0.4, 0.22, 0.22) +
-  draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "G. Cusco, Peru")) +
-              geom_line(aes(x=year, y=incidence)) +
-              #facet_wrap(~region, scales = "free_y") +
-              geom_vline(xintercept=2008,linetype='dashed', color="red") +
-              ggtitle("Cusco, Peru") +
-              xlab("Year") + ylab("") + 
-              theme_classic()+
-              theme(plot.title = element_text(size=12, face="bold"),
-                    plot.subtitle = element_text(hjust=0.5, size=22),
-                    axis.title=element_text(size=14),
-                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-                    axis.text.y=element_text(size=10),
-                    axis.title.x=element_text(size=12),
-                    axis.text.x=element_text(size=10),
-                    axis.text = element_text(size=10),
-                    legend.text=element_text(size=10),
-                    legend.title=element_text(size=10),
-                    legend.position = "none",
-                    strip.text.x = element_text(size = 10)),
-            0.1, 0.1, 0.22, 0.22) +
   draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "H. Loreto, Peru")) +
               geom_line(aes(x=year, y=incidence)) +
               #facet_wrap(~region, scales = "free_y") +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Loreto, Peru") +
-              xlab("Year") + ylab("") + 
+              xlab("Year") + ylab("Dengue\nincidence") + 
               theme_classic()+
+              xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
                     plot.subtitle = element_text(hjust=0.5, size=22),
                     axis.title=element_text(size=14),
-                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-                    axis.text.y=element_text(size=10),
-                    axis.title.x=element_text(size=12),
-                    axis.text.x=element_text(size=10),
+                    axis.title.y=element_text(size=10,angle=90, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=8),
+                    axis.title.x=element_text(size=10),
+                    axis.text.x=element_text(size=8),
                     axis.text = element_text(size=10),
                     legend.text=element_text(size=10),
                     legend.title=element_text(size=10),
                     legend.position = "none",
                     strip.text.x = element_text(size = 10)),
-            0.05, 0.75, 0.22, 0.22) +
+            0.03, 0.75, 0.22, 0.22) +
   draw_plot(ggplot(regional_groupings_case_data %>% filter(region == "B. Acre, Brazil")) +
               geom_line(aes(x=year, y=incidence)) +
               #facet_wrap(~region, scales = "free_y") +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Acre, Brazil") +
-              xlab("Year") + ylab("") + 
+              xlab("Year") + ylab("Dengue\nincidence") + 
               theme_classic()+
+              xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
                     plot.subtitle = element_text(hjust=0.5, size=22),
                     axis.title=element_text(size=14),
-                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-                    axis.text.y=element_text(size=10),
-                    axis.title.x=element_text(size=12),
-                    axis.text.x=element_text(size=10),
+                    axis.title.y=element_text(size=10,angle=90, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=8),
+                    axis.title.x=element_text(size=10),
+                    axis.text.x=element_text(size=8),
                     axis.text = element_text(size=10),
                     legend.text=element_text(size=10),
                     legend.title=element_text(size=10),
@@ -378,26 +382,33 @@ sfig8 <- ggdraw() +
               #facet_wrap(~region, scales = "free_y") +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Pando, Bolivia") +
-              xlab("Year") + ylab("") + 
+              xlab("Year") + ylab("Dengue\nincidence") + 
               theme_classic()+
               xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
                     plot.subtitle = element_text(hjust=0.5, size=22),
                     axis.title=element_text(size=14),
-                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-                    axis.text.y=element_text(size=10),
-                    axis.title.x=element_text(size=12),
-                    axis.text.x=element_text(size=10),
+                    axis.title.y=element_text(size=10,angle=90, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=8),
+                    axis.title.x=element_text(size=10),
+                    axis.text.x=element_text(size=8),
                     axis.text = element_text(size=10),
                     legend.text=element_text(size=10),
                     legend.title=element_text(size=10),
                     legend.position = "none",
                     strip.text.x = element_text(size = 10)),
             0.7, 0.1, 0.22, 0.22) +
-  draw_line(x = c(0.68,0.74), y = c(0.4,0.3)) + #pando,bolivia 
-  draw_line(x = c(0.73,0.6), y = c(0.745,0.5)) + #acre,brazil 
-  draw_line(x = c(0.19,0.45), y = c(0.95,0.75)) + #loreto,peru 
-  draw_line(x = c(0.235,0.585), y = c(0.6,0.36)) + #mdd,peru 
-  draw_line(x = c(0.235,0.52), y = c(0.3,0.34)) #cusco,peru 
+  draw_line(x = c(0.68,0.76), y = c(0.4,0.3)) + #pando,bolivia 
+  draw_line(x = c(0.68,0.6), y = c(0.66,0.52)) + #acre,brazil 
+  draw_line(x = c(0.2,0.45), y = c(0.95,0.75)) + #loreto,peru 
+  draw_line(x = c(0.31,0.585), y = c(0.27,0.35)) + #mdd,peru 
+  draw_line(x = c(0.27,0.51), y = c(0.5,0.37)) #cusco,peru 
 
-sfig8
+sfig2 <- sfig2 +                                
+  draw_plot_label(label = c("Peru", "Brazil", "Bolivia"), size = 14, color = "darkred",
+                  x = c(0.35, 0.53, 0.7), y = c(0.6, 0.62, 0.4)) +                                
+  draw_plot_label(label = c("Interoceanic\nHighway"), size = 8, color = "red",
+                  x = c(0.58), y = c(0.5)) 
+sfig2
+
+ggsave("SFig2.pdf", plot=sfig2, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 11.29, height = 7.29, units="in", device = "pdf")

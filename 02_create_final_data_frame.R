@@ -31,8 +31,17 @@ dengue_data <- dengue_data[which(dengue_data$UBIGEO %in% mdd_districts),]
 
 ## group into months
 dengue_data$FECHA_INI <- as.Date(dengue_data$FECHA_INI)
-monthly_dengue_data <- dengue_data %>% 
-  group_by(month = lubridate::floor_date(FECHA_INI, 'month'), e_salud = E_SALUD) %>%
+dengue_data_test <- dengue_data
+dengue_data_test$SEMANA <- ifelse(dengue_data$SEMANA==53,52,dengue_data$SEMANA)
+dengue_data_test <- dengue_data_test %>%
+  mutate(month = lubridate::month(as.Date(paste0(ANO, "-", SEMANA, "-", 1), format = "%Y-%U-%u")),
+         month_2 = lubridate::floor_date(FECHA_INI, 'month'), e_salud = E_SALUD)
+dengue_data_test$month_3 <- format(dengue_data_test$month_2, "%m")
+table(dengue_data_test$month==as.numeric(dengue_data_test$month_3))
+dengue_data_no_match <- dengue_data_test[which(dengue_data_test$month != as.numeric(dengue_data_test$month_3)),]
+dengue_data_test$month_date <- as.Date(paste0(dengue_data_test$ANO, "-", dengue_data_test$month, "-", 01), format = "%Y-%m-%d")
+monthly_dengue_data <- dengue_data_test %>% 
+  group_by(month = month_date, e_salud = E_SALUD) %>%
   summarize(monthly_cases = n())
 
 ## merge e_salud codes and cluster ids
@@ -215,6 +224,7 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
 write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
+write.csv(dengue_data_w_covariates_yearly, "~/Desktop/dengue_yearly_full_dataset.csv")
 
 ## group biannually
 dengue_data_w_covariates_biannual <- dengue_data_w_covariates_monthly 
@@ -243,6 +253,7 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
+write.csv(dengue_data_w_covariates_biannual, "~/Desktop/dengue_biannual_full_dataset.csv")
 write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
 
 ################################
