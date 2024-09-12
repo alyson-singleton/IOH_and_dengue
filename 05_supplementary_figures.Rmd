@@ -323,7 +323,7 @@ stable3 <- etable(dengue_yearly_model_agg_quad,dengue_biannual_agg_model_dry_qua
 stable3 <- stable3[c(3:8,9:12,16,15,14),2:7]
 stable3[13,] <- c(rep(65,6))
 colnames(stable3) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
-rownames(stable3) <- c("log(Urban)", "log(Ag)", "Mean Precip", "Mean Temp", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "Cor^2", "N", "Clusters")
+rownames(stable3) <- c("log(Urban)", "log(Ag)", "Mean Precip^2", "Mean Temp^2", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "Cor^2", "N", "Clusters")
 stable3 <- stable3[c(5:6,1:4,7:13),]
 stable3
 write.csv(stable3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable3.csv")
