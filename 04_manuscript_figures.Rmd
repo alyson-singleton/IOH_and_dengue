@@ -36,7 +36,6 @@ vert_line_date <- as.Date('2008-01-01')
 ###################
 ### yearly data
 dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
-dengue_df_yearly <- read.csv("~/Desktop/dengue_yearly_full_dataset.csv")
 dengue_df_yearly$year <- as.factor(dengue_df_yearly$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -71,7 +70,6 @@ dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_
 ###################
 ### yearly data
 leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_yearly_full_dataset.csv")
-
 leish_df_yearly$year <- as.factor(leish_df_yearly$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -110,7 +108,6 @@ vert_line_date <- as.Date('2008-01-01')
 ###################
 ### biannual data
 dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
-dengue_df_biannual <- read.csv("~/Desktop/dengue_biannual_full_dataset.csv")
 dengue_df_biannual$biannual_date <- as.factor(dengue_df_biannual$biannual_date)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -265,16 +262,9 @@ mdd_map <- mdd_map + theme(legend.position = "none")
 
 fig1a <- ggdraw() + 
     draw_plot(ggplot() +
-              #geom_sf(data = peru_extra_depts, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
-              #geom_sf(data = bolivia_pando, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = peru_outline, fill=NA, color='#3b3b3b', size=.001, show.legend = FALSE) +
               geom_sf(data = peru_depts, fill=NA, color='#3b3b3b', size=.001, show.legend = FALSE) +
               geom_sf(data = mdd_peru, fill='#cfcfcf', color='#3b3b3b', size=.001, show.legend = FALSE) +
-              #geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
-              #geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
-              #geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#648FFF', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
-              #scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
-              #                   labels=c('Unpaved Roads','Highway','Rivers')) +
               theme_minimal() +
               no_axis +
               theme(legend.text=element_text(size=12),
@@ -374,8 +364,6 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 
 ### yearly model
 dengue_yearly_model <- feglm(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, family = "poisson", vcov = "cluster", data = dengue_df_yearly_buffered)
-#summary(dengue_yearly_model)
-
 df <- as.data.frame(dengue_yearly_model$coeftable)
 df <- df[1:22,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
@@ -386,9 +374,8 @@ df$lower <- df$estimate-1.96*df$std_error
 df$estimate <- exp(df$estimate)-1
 df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
-#exp(confint(dengue_yearly_model, se = "cluster"))
 
-dengue_yearly_did_popadj <- ggplot(df) +
+fig2a <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
@@ -396,7 +383,6 @@ dengue_yearly_did_popadj <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  #ylim(c(-1.5,3))+
   scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
@@ -411,7 +397,7 @@ dengue_yearly_did_popadj <- ggplot(df) +
         legend.title=element_text(size=12),
         legend.position = "right",
         strip.text.x = element_text(size = 12))
-dengue_yearly_did_popadj
+fig2a
 
 #####################
 ## Fig 2b
@@ -442,17 +428,14 @@ df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
 df$rainy <- c("Dry","Rainy")
 
-dengue_biannual_did_agg <- ggplot(df) +
+fig2b <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
-  #geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
-  #geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  #ylim(c(-1.5,3))+
   scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
@@ -467,13 +450,13 @@ dengue_biannual_did_agg <- ggplot(df) +
         legend.title=element_text(size=12),
         legend.position = "",
         strip.text.x = element_text(size = 12))
-dengue_biannual_did_agg
+fig2b
 
 #####################
 ## Fig 2all
 #####################
 
-fig2all <- grid.arrange(dengue_yearly_did_popadj, dengue_biannual_did_agg,                     
+fig2all <- grid.arrange(fig2a, fig2b,                     
                         ncol = 2, nrow = 1,
                         layout_matrix = rbind(c(1,1,1,1,1,2)))#,heights=c(7,1))
 
@@ -499,7 +482,7 @@ summary(dengue_yearly_agg_model)
 df <- as.data.frame(dengue_yearly_agg_model$coeftable)
 df <- df[5,]
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$estimate <- exp(df$estimate)-1
+df$estimate <- exp(df$estimate)
 df$upper <- df$estimate+1.96*df$std_error
 df$lower <- df$estimate-1.96*df$std_error
 
