@@ -10,7 +10,7 @@ output:
 
 ```{r setup, include=FALSE}
 # install packages, load libraries, set themes, knit formatting
-pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot, ggspatial)
+pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot)#ggspatial
 theme_set(theme_bw())
 knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=F,
                       fig.height=5, fig.width=10)
@@ -506,6 +506,17 @@ attr_prop
 attr_cases <- incidence_df$yearly_cases_1[2]*attr_prop
 attr_cases
 attr_cases/sum(incidence_df$yearly_cases_0[2]+incidence_df$yearly_cases_1[2])
+
+# percentage change
+df <- as.data.frame(dengue_yearly_agg_model$coeftable)
+df <- df[5,]
+colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
+df$upper <- df$estimate+1.96*df$std_error
+df$lower <- df$estimate-1.96*df$std_error
+df$estimate <- exp(df$estimate)-1
+df$upper <- exp(df$upper)-1
+df$lower <- exp(df$lower)-1
+df
 ```
 
 ```{r, Fig3}

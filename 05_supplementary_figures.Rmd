@@ -10,7 +10,7 @@ output:
 
 ```{r setup, include=FALSE}
 # install packages, load libraries, set themes, knit formatting
-pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot, ggspatial, directlabels, scales)
+pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot, ggspatial, directlabels, scales, ggrepel)
 theme_set(theme_bw())
 knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=F,
                       fig.height=5, fig.width=10)
