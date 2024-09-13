@@ -539,7 +539,7 @@ df$estimate <- exp(df$estimate)-1
 df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
 
-leish_yearly_did_popadj <- ggplot(df) +
+fig3a <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
@@ -562,7 +562,7 @@ leish_yearly_did_popadj <- ggplot(df) +
         legend.title=element_text(size=12),
         legend.position = "right",
         strip.text.x = element_text(size = 12))
-leish_yearly_did_popadj
+fig3a
 
 #####################
 ## Fig 3b
@@ -593,7 +593,7 @@ df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
 df$rainy <- c("Dry","Rainy")
 
-leish_biannual_did_agg <- ggplot(df) +
+fig3b <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   #geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
@@ -618,12 +618,12 @@ leish_biannual_did_agg <- ggplot(df) +
         legend.title=element_text(size=12),
         legend.position = "",
         strip.text.x = element_text(size = 12))
-leish_biannual_did_agg
+fig3b
 
 #####################
 ## Fig 3all
 #####################
-fig3all <- grid.arrange(leish_yearly_did_popadj, leish_biannual_did_agg,                     
+fig3all <- grid.arrange(fig3a, fig3b,                     
                         ncol = 2, nrow = 1,
                         layout_matrix = rbind(c(1,1,1,1,1,2)))#,heights=c(7,1))
 
@@ -744,7 +744,7 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
         axis.text = element_text(size=14),
         legend.text=element_text(size=12),
         legend.title=element_text(size=12),
-        legend.position = "",
+        legend.position = "none",
         strip.text.x = element_text(size = 12))
 fig4a
 

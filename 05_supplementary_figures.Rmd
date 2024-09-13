@@ -863,7 +863,7 @@ df$lower <- df$estimate-1.96*df$std_error
 df$estimate <- exp(df$estimate)-1
 df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
-dengue_biannual_did_popadj <- ggplot(df) +
+sfig6a <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
@@ -887,9 +887,9 @@ dengue_biannual_did_popadj <- ggplot(df) +
         legend.title=element_text(size=12),
         legend.position = "bottom",
         strip.text.x = element_text(size = 12))
-dengue_biannual_did_popadj
-sfig6_legend <- get_legend(dengue_biannual_did_popadj)
-dengue_biannual_did_popadj <- dengue_biannual_did_popadj + theme(legend.position = "none")
+sfig6a
+sfig6_legend <- get_legend(sfig6a)
+sfig6a <- sfig6a + theme(legend.position = "none")
 
 ### biannual model
 leish_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + biannual_date, vcov = "cluster", data = leish_df_biannual_buffered)
@@ -907,7 +907,7 @@ df$lower <- df$estimate-1.96*df$std_error
 df$estimate <- exp(df$estimate)-1
 df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
-leish_biannual_did_popadj <- ggplot(df) +
+sfig6b <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
@@ -931,13 +931,13 @@ leish_biannual_did_popadj <- ggplot(df) +
         legend.title=element_text(size=12),
         legend.position = "none",
         strip.text.x = element_text(size = 12))
-leish_biannual_did_popadj
+sfig6b
 
 #####################
 ## SFig 6all
 #####################
 
-sfig6all <- grid.arrange(dengue_biannual_did_popadj, leish_biannual_did_popadj, sfig6_legend,
+sfig6all <- grid.arrange(sfig6a, sfig6b, sfig6_legend,
                          ncol = 1, nrow = 3,
                          layout_matrix = rbind(c(1),c(2),c(3)), 
                          heights=c(3,3,1))
