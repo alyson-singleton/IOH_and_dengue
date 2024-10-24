@@ -35,7 +35,7 @@ vert_line_date <- as.Date('2008-01-01')
 ### dengue data ###
 ###################
 ### yearly data
-dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
+dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_original/dengue_yearly_full_dataset.csv")
 dengue_df_yearly$year <- as.factor(dengue_df_yearly$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -69,7 +69,7 @@ dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_
 ### leish data ####
 ###################
 ### yearly data
-leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_yearly_full_dataset.csv")
+leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_original/leish_yearly_full_dataset.csv")
 leish_df_yearly$year <- as.factor(leish_df_yearly$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -107,7 +107,7 @@ vert_line_date <- as.Date('2008-01-01')
 ### dengue data ###
 ###################
 ### biannual data
-dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
+dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_original/dengue_biannual_full_dataset.csv")
 dengue_df_biannual$biannual_date <- as.factor(dengue_df_biannual$biannual_date)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -141,7 +141,7 @@ dengue_df_biannual_buffered <- dengue_df_biannual[which(dengue_df_biannual$all_c
 ###################
 
 ### biannaul data
-leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_biannual_full_dataset.csv")
+leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_original/leish_biannual_full_dataset.csv")
 leish_df_biannual$biannual_date <- as.factor(leish_df_biannual$biannual_date)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -361,7 +361,7 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 #####################
 ## Fig 2a
 #####################
-
+dengue_df_yearly_buffered <- dengue_df_yearly_buffered[-which(dengue_df_yearly_buffered$cluster %in% clusters_wo_case_either_pre_or_post_treatment),]
 ### yearly model
 dengue_yearly_model <- feglm(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, family = "poisson", vcov = "cluster", data = dengue_df_yearly_buffered)
 df <- as.data.frame(dengue_yearly_model$coeftable)
@@ -383,7 +383,7 @@ fig2a <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,22)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -523,6 +523,7 @@ df
 #####################
 ## Fig 3a
 #####################
+leish_df_yearly_buffered <- leish_df_yearly_buffered[-which(leish_df_yearly_buffered$cluster %in% clusters_wo_case_either_pre_or_post_treatment),]
 
 ### yearly leish model
 leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + year, vcov = "cluster", data = leish_df_yearly_buffered)
@@ -567,7 +568,7 @@ fig3a
 #####################
 ## Fig 3b
 #####################
-
+print(1)
 ### aggregated data (treatment)
 leish_df_agg_biannual <- leish_df_biannual_buffered
 leish_df_agg_biannual <- leish_df_agg_biannual[which(as.Date(leish_df_biannual_buffered$biannual_date) > '2006-10-01'),]
@@ -723,7 +724,7 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
   geom_errorbar(aes(x=Cutoff, ymax=upper, ymin=lower, color=Cutoff), width=0, linewidth=0.7) +
   geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3, shape=21) +
   scale_color_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
-                                                   ' 15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
+                                                   '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
                      #labels=list("1km"="<5km, >5km", "5km"="<5km, >10km", 
                     #             "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
   scale_fill_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
@@ -753,7 +754,7 @@ fig4a
 #####################
 
 boundary_dummy_vars <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars/boundary_dummy_vars.csv")
-cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/cluster_centroids_70.csv")
+cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/cluster_cenetroids_5000.csv")
 colnames(cluster_ids)[1] <- "cluster"
 center_lat_long <- left_join(cluster_ids, boundary_dummy_vars, by='cluster')
 

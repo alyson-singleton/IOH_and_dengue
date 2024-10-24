@@ -11,13 +11,14 @@ font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
 
 ## load raw mdd case data (all diseases)
-case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_case_data.csv")
+#case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_case_data.csv")
+case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/Datos vigilancia MDD 2000-2022_SubsetStanford.csv")
 head(case_data)
 
 #################################
 ### preprocess dengue data
 #################################
-
+#dengue_data <- case_data
 ## keep dengue data only (in this case do not include A97.1--alarm--or A97.2--severe)
 dengue_data <- case_data[which(case_data$DIAGNOSTIC=="A97.0"),]
 table(dengue_data$TIPO_DX)
@@ -30,30 +31,54 @@ mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
 dengue_data <- dengue_data[which(dengue_data$UBIGEO %in% mdd_districts),]
 
 ## group into months
-# dengue_data$FECHA_INI <- as.Date(dengue_data$FECHA_INI)
-# dengue_data <- dengue_data %>%
-#   mutate(month = lubridate::floor_date(FECHA_INI, 'month'), e_salud = E_SALUD)%>%
-#   summarize(monthly_cases = n())
-
 dengue_data$SEMANA <- ifelse(dengue_data$SEMANA==53,52,dengue_data$SEMANA)
 dengue_data <- dengue_data %>%
   mutate(month = lubridate::month(as.Date(paste0(ANO, "-", SEMANA, "-", 1), format = "%Y-%U-%u")))
 dengue_data$month_date <- as.Date(paste0(dengue_data$ANO, "-", dengue_data$month, "-", 01), format = "%Y-%m-%d")
+
 monthly_dengue_data <- dengue_data %>%
   group_by(month = month_date, e_salud = E_SALUD) %>%
   summarize(monthly_cases = n())
 
 ## merge e_salud codes and cluster ids
-e_salud_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_ESalud_Coordinates_Key.csv")
-id_cluster_key_7500 <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/building_spatial_units/idClusterKey7500.csv")
-linked_ids_codes <- left_join(e_salud_codes, id_cluster_key_7500, by = 'key')
+#e_salud_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_ESalud_Coordinates_Key.csv")
+e_salud_codes <- read.csv("~/Desktop/DIRESA_E_Salud_Coordinates_Key - best_choice.csv")
+id_cluster_key <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/idClusterKey7500.csv")
+linked_ids_codes <- left_join(e_salud_codes, id_cluster_key, by = 'key')
+
+## decide whether or not to include PM codes pre treatment
+linked_ids_codes <- linked_ids_codes[-c(104,105),]
 #write.csv(linked_ids_codes,"~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
 
 ## link to cluster ids and group into healthcare center clusters
-dengue_data_linked <- left_join(linked_ids_codes, monthly_dengue_data, by = 'e_salud')
+dengue_data_linked <- full_join(linked_ids_codes, monthly_dengue_data, by = 'e_salud')
 dengue_data_linked <- dengue_data_linked %>%
   group_by(cluster = clust, month = month) %>%
   summarize(monthly_cases = sum(monthly_cases))
+
+## remove healthcare facilities that do not report at least one case (of any disease) pre and post treatment
+mdd_districts <- unique(case_data$UBIGEO)[1:11]
+case_data <- case_data[which(case_data$UBIGEO %in% mdd_districts),]
+case_data$SEMANA <- ifelse(case_data$SEMANA==53,52,case_data$SEMANA)
+case_data <- case_data %>%
+  mutate(month = lubridate::month(as.Date(paste0(ANO, "-", SEMANA, "-", 1), format = "%Y-%U-%u")))
+case_data$month_date <- as.Date(paste0(case_data$ANO, "-", case_data$month, "-", 01), format = "%Y-%m-%d")
+monthly_case_data <- case_data %>%
+  group_by(month = month_date, e_salud = E_SALUD) %>%
+  summarize(monthly_cases = n())
+case_data_linked <- full_join(linked_ids_codes, monthly_case_data, by = 'e_salud')
+case_data_linked <- case_data_linked %>%
+  group_by(cluster = clust, month = month) %>%
+  summarize(monthly_cases = sum(monthly_cases))
+
+case_data_linked_time <- case_data_linked %>%
+  group_by(cluster) %>%
+  summarize(min_time = min(month, na.rm=T),
+            max_time = max(month, na.rm=T))
+clusters_wo_case_pre_treatment <- case_data_linked_time$cluster[which(case_data_linked_time$min_time>"2008-01-01")]
+clusters_wo_case_post_treatment <- case_data_linked_time$cluster[which(case_data_linked_time$max_time<"2009-01-01")]
+clusters_wo_case_either_pre_or_post_treatment <- unique(c(clusters_wo_case_pre_treatment,clusters_wo_case_post_treatment))
+dengue_data_linked <- dengue_data_linked[-which(dengue_data_linked$cluster %in% clusters_wo_case_either_pre_or_post_treatment),]
 
 ## add zeroes to cluster-months with no recorded cases
 full_months <- data.frame(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -69,7 +94,7 @@ dengue_data_complete_time_steps <- dengue_data_linked %>%
 #################################
 
 boundary_files <- list.files(path="~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars", pattern="csv", all.files=FALSE, full.names=TRUE,recursive=TRUE)
-boundary_dummy_vars <- as.data.frame(c(1:70)); colnames(boundary_dummy_vars) = c('cluster')
+boundary_dummy_vars <- as.data.frame(c(1:84)); colnames(boundary_dummy_vars) = c('cluster')
 for (i in 2:length(boundary_files)){
   boundary_csv <- read.csv(boundary_files[i])
   boundary_csv <- boundary_csv[,c(2,4)]
@@ -137,7 +162,7 @@ dengue_data_w_pop <- full_join(dengue_data_w_buffers, adjusted_diresa_pop, by=c(
 #################################
 
 ### precip data
-precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_precipitation_monthly_mean.csv")
+precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_precipitation_monthly_sum.csv")
 precip_monthly <- precip_monthly[,c(2:278)]
 precip_monthly <- precip_monthly[,c(277,1:276)]
 colnames(precip_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -152,7 +177,7 @@ precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, fo
 precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 precip_monthly_all <- precip_monthly_mdd_long %>%
   group_by(month, year) %>%
-  summarize(mean_precip = mean(mean_precip)) 
+  summarize(mean_precip = sum(mean_precip)) 
 precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
 ggplot(precip_monthly_all) +
   geom_line(aes(x=month_wo_year,y=mean_precip,group=year)) +

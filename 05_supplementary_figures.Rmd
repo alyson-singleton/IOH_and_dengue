@@ -955,7 +955,7 @@ ggsave("SFig6.pdf", plot=sfig6all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 ## SFig 7a
 #####################
 #map of all 100 healthcare centers
-center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_name_latlong.csv")
+center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
 center_lat_long <- data.frame(center_lat_long)
 center_lat_long <- center_lat_long %>%
   mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
@@ -1049,7 +1049,7 @@ sfig7all <- as_ggplot(sfig7all) +
   draw_plot_label(label = c("A", "B"), size = 17,
                   x = c(0.01, 0.5), y = c(0.99, 0.99)) 
 
-sfig2all
+sfig7all
 
 
 ggsave("SFig7.pdf", plot=sfig7all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 5, units = c("in"), device="pdf")
