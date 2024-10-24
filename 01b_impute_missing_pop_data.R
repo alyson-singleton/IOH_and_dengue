@@ -36,7 +36,15 @@ cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(2:19)]
 colnames(cleaned_diresa_pop)[c(6:14)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
 colnames(cleaned_diresa_pop)[c(15:18)] <- c(as.character(seq(as.Date("2020-01-01"), as.Date("2023-01-01"), by="years")))
-linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
+
+#################################### 
+### link to clusters
+# (need to use clusters to have shapefiles w which to download world pop data, can change these to be whatever groupings you'd prefer)
+#################################### 
+
+e_salud_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_E_Salud_Coordinates_Key - best_choice.csv")
+id_cluster_key <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/idClusterKey_7.5km.csv")
+linked_ids_codes <- left_join(e_salud_codes, id_cluster_key, by = 'key')
 cleaned_diresa_pop <- left_join(cleaned_diresa_pop, linked_ids_codes[,c(2,7)], by = 'key')
 colnames(cleaned_diresa_pop)[c(19)] <- "cluster"
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(1:5,19,6:18)]
@@ -48,7 +56,6 @@ cleaned_diresa_pop <- cleaned_diresa_pop[,c(1:5,19,6:18)]
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(6:19)]
 
 # change into long format and group into clusters 
-# (need to use clusters to have shapefiles w which to download world pop data, can change these to be whatever groupings you'd prefer)
 cleaned_diresa_pop <- cleaned_diresa_pop %>%
   pivot_longer(cols = c(2:14), 
                names_to = "year", 
