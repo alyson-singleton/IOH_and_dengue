@@ -15,7 +15,7 @@ showtext_auto()
 ### load worldpop data (downloaded from google earth engine)
 #################################### 
 
-population_mdd <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data/mdd_population_yearly.csv")
+population_mdd <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_7.5km/mdd_population_yearly.csv")
 population_mdd$cluster <- population_mdd$layer
 population_mdd <- population_mdd[,c(2:22,25)]
 colnames(population_mdd) <- c(as.character(seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by="years")), 'cluster')
@@ -36,7 +36,7 @@ cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(2:19)]
 colnames(cleaned_diresa_pop)[c(6:14)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
 colnames(cleaned_diresa_pop)[c(15:18)] <- c(as.character(seq(as.Date("2020-01-01"), as.Date("2023-01-01"), by="years")))
-linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
+linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
 cleaned_diresa_pop <- left_join(cleaned_diresa_pop, linked_ids_codes[,c(2,7)], by = 'key')
 colnames(cleaned_diresa_pop)[c(19)] <- "cluster"
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(1:5,19,6:18)]
@@ -80,19 +80,28 @@ all_pop$adjusted_pop[which(is.na(all_pop$adjusted_pop))] <- all_pop$worldpop_adj
 ## fix edge cases
 #################################### 
 
-#cluster 66 just use worldpop
-all_pop$adjusted_pop[which(all_pop$cluster==52)] <- all_pop$worldpop[which(all_pop$cluster==52)]
+#clusters that dont have any worldpop/diresa overlap just use worldpop
+all_pop_clusters_wo_diresapop_2000_2020 <- all_pop[which(all_pop$year %in% c(seq(as.Date("2000-01-01"), as.Date("2020-12-01"), by="years"))),] %>%
+  group_by(cluster) %>%
+  summarize(diresapop_sum = sum(diresapop, na.rm=T))
+clusters_wo_diresa_2000_2020 <- all_pop_clusters_wo_diresapop_2000_2020$cluster[which(all_pop_clusters_wo_diresapop_2000_2020$diresapop_sum==0)]
+all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2000_2020)] <- all_pop$worldpop[which(all_pop$cluster %in% clusters_wo_diresa_2000_2020)]
 
 #cluster that dont have diresa (or worldpop) data for 2020-2022, linearly interpolate
-all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2021-01-01"))] <- 
-  (all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2020-01-01"))] / 
-  all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2019-01-01"))]) * 
-  all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2020-01-01"))]
+all_pop_clusters_wo_diresapop_2021_2022 <- all_pop[which(all_pop$year %in% c(seq(as.Date("2021-01-01"), as.Date("2022-12-01"), by="years"))),] %>%
+  group_by(cluster) %>%
+  summarize(diresapop_sum = sum(diresapop, na.rm=T))
+clusters_wo_diresa_2021_2022 <- all_pop_clusters_wo_diresapop_2021_2022$cluster[which(all_pop_clusters_wo_diresapop_2021_2022$diresapop_sum==0)]
 
-all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2022-01-01"))] <- 
-  (all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2021-01-01"))] / 
-     all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2020-01-01"))]) * 
-  all_pop$adjusted_pop[which(all_pop$cluster %in% c(35:38,52,76,84) & all_pop$year==as.Date("2021-01-01"))]
+all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2021-01-01"))] <- 
+  (all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2020-01-01"))] / 
+  all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2019-01-01"))]) * 
+  all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2020-01-01"))]
+
+all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2022-01-01"))] <- 
+  (all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2021-01-01"))] / 
+     all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2020-01-01"))]) * 
+  all_pop$adjusted_pop[which(all_pop$cluster %in% clusters_wo_diresa_2021_2022 & all_pop$year==as.Date("2021-01-01"))]
 
 #reduce to final columns
 adjusted_diresa_pop <- all_pop[,c(1,2,8)]
@@ -102,7 +111,7 @@ colnames(adjusted_diresa_pop) <- c('cluster', 'year', 'population')
 adjusted_diresa_pop <- adjusted_diresa_pop[-which(adjusted_diresa_pop$year=="2023-01-01"),]
 
 #export imputed population data
-write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final.csv")
+write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final_7.5km.csv")
 
 #################################### 
 ## SCRATCH
