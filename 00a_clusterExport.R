@@ -14,9 +14,6 @@ library(rgeos)
 
 tmap_mode("view")
 
-# dir.create("Data/3_clusterExport")
-# dir.create("Data/3_clusterExport/clusterSHP")
-
 # Cluster All IDs ---------------------------------------------------------
 allID <- read_csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_E_Salud_Coordinates_Key - best_choice.csv")
 allIDSpatialPoints <- SpatialPointsDataFrame(allID[,c("longitude", "latitude")], allID[,1])
