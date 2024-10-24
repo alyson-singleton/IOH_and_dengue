@@ -1,4 +1,4 @@
 # Interoceanic Highway and Dengue
-Code written by Aly Singleton and TJ Sipin.
+General code written by Aly Singleton. Clustering code written by TJ Sipin.
 
 Preprint to be posted Fall 2024.
