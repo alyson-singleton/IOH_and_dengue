@@ -1156,7 +1156,7 @@ dengue_df_yearly_5km_buffered <- dengue_df_yearly_5km[which(dengue_df_yearly_5km
 dengue_df_yearly_5km_buffered_no_pm <- dengue_df_yearly_5km_buffered[!(dengue_df_yearly_5km_buffered$cluster %in% 1),]
 
 #####################
-## SFig ??a
+## SFig 8a
 #####################
 
 ## main specification
@@ -1330,13 +1330,13 @@ sfig8all <- grid.arrange(sfig8b, sfig8c, sfig8d, sfig8a,
                          layout_matrix = rbind(c(1,2,3),c(1,2,3),c(1,2,3),c(1,2,3),c(5,5,5),c(5,5,5),c(5,5,5),c(5,5,5),c(5,5,5)))
 
 sfig8all <- as_ggplot(sfig8all) +                                
-  draw_plot_label(label = c("A", "B", "C"), size = 17,
-                  x = c(0.01, 0.33,0.66), y = c(0.95, 0.95, 0.95)) 
+  draw_plot_label(label = c("A", "B", "C", "D"), size = 17,
+                  x = c(0.01, 0.33, 0.66, 0.01), y = c(0.95, 0.95, 0.95, 0.57)) 
 
 sfig8all
 
 ggsave("SFig8.pdf", plot=sfig8all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 8, units = c("in"), device="pdf")
- ```
+```
 
 ```{r, SFig S9}
 #####################
