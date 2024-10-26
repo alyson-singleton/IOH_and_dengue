@@ -35,7 +35,7 @@ vert_line_date <- as.Date('2008-01-01')
 ### dengue data ###
 ###################
 ### yearly data
-dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
+dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset.csv")
 dengue_df_yearly$year <- as.factor(dengue_df_yearly$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -69,7 +69,7 @@ dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_
 ### leish data ####
 ###################
 ### yearly data
-leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_yearly_full_dataset.csv")
+leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_yearly_full_dataset.csv")
 
 leish_df_yearly$year <- as.factor(leish_df_yearly$year)
 
@@ -104,7 +104,7 @@ leish_df_yearly_buffered_no_pm <- leish_df_yearly_buffered[!(leish_df_yearly_buf
 ### dengue data CONFIRMED ###
 #############################
 ### yearly data
-dengue_df_yearly_confirmed <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_original/dengue_yearly_full_dataset_confirmed.csv")
+dengue_df_yearly_confirmed <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset_confirmed.csv")
 dengue_df_yearly_confirmed$year <- as.factor(dengue_df_yearly_confirmed$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -142,7 +142,7 @@ vert_line_date <- as.Date('2008-01-01')
 ### dengue data ###
 ###################
 ### biannual data
-dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_biannual_full_dataset.csv")
+dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_biannual_full_dataset.csv")
 dengue_df_biannual$biannual_date <- as.factor(dengue_df_biannual$biannual_date)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -176,7 +176,7 @@ dengue_df_biannual_buffered <- dengue_df_biannual[which(dengue_df_biannual$all_c
 ###################
 
 ### biannaul data
-leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/leish_biannual_full_dataset.csv")
+leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_biannual_full_dataset.csv")
 leish_df_biannual$biannual_date <- as.factor(leish_df_biannual$biannual_date)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -207,8 +207,8 @@ leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cuto
 ```
 
 ```{r, STable1}
-dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
-leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + year, vcov = "cluster", data = leish_df_yearly_buffered)
+dengue_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + sum_precip + mean_temp + log(urban) + log(ag) | cluster + year, vcov = "cluster", data = leish_df_yearly_buffered)
 
 #####################
 ## STable 1
@@ -218,7 +218,7 @@ stable1 <- stable1[c(3:10,37,11:31,35,34,36),2:3]
 stable1[33,] <- c(rep(65,2))
 stable1[9,] <- c("----","----")
 colnames(stable1) <- c('Dengue Yearly', 'Leish Yearly')
-rownames(stable1) <- c("5km x 2000", "5km x 2001", "5km x 2002", "5km x 2003", "5km x 2004", "5km x 2005", "5km x 2006", "5km x 2007", "5km x 2008", "5km x 2009", "5km x 2010", "5km x 2011", "5km x 2012", "5km x 2013", "5km x 2014", "5km x 2015", "5km x 2016", "5km x 2017", "5km x 2018", "5km x 2019", "5km x 2020", "5km x 2021", "5km x 2022", "log(Urban)", "log(Ag)", "Mean Precip", "Mean Temp", "FEs", "Cluster", "Year", "Cor^2", "N", "Clusters")
+rownames(stable1) <- c("5km x 2000", "5km x 2001", "5km x 2002", "5km x 2003", "5km x 2004", "5km x 2005", "5km x 2006", "5km x 2007", "5km x 2008", "5km x 2009", "5km x 2010", "5km x 2011", "5km x 2012", "5km x 2013", "5km x 2014", "5km x 2015", "5km x 2016", "5km x 2017", "5km x 2018", "5km x 2019", "5km x 2020", "5km x 2021", "5km x 2022", "log(Urban)", "log(Ag)", "Sum Precip", "Mean Temp", "FEs", "Cluster", "Year", "Cor^2", "N", "Clusters")
 stable1
 write.csv(stable1, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable1.csv")
 ```
@@ -240,26 +240,26 @@ dengue_df_agg_buffered_confirmed <- dengue_df_agg_buffered_confirmed[which(as.Da
 dengue_df_agg_buffered_confirmed$year_binary <- ifelse(as.Date(dengue_df_agg_buffered_confirmed$year) > '2008-01-01',1,0)
 
 ## main specification
-dengue_yearly_model_main_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered)
+dengue_yearly_model_main_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered)
 
 ## population weighting
 dengue_df_agg_buffered_no_pm <- dengue_df_agg_buffered[!(dengue_df_agg_buffered$cluster %in% 1),]
-dengue_yearly_model_pop_weight_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_no_pm, weights=~population)
+dengue_yearly_model_pop_weight_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_no_pm, weights=~population)
 
 ## no Puerto Maldonado
-dengue_yearly_model_no_PM_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_no_pm)
+dengue_yearly_model_no_PM_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_no_pm)
 
 ## changing the spatial boundary delineating treatment and control groups
-dengue_yearly_model_onekm_agg <- fepois(incidence ~ year_binary*onekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
-dengue_yearly_model_tenkm_agg <- fepois(incidence ~ year_binary*tenkm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
+dengue_yearly_model_onekm_agg <- fepois(incidence ~ year_binary*onekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
+dengue_yearly_model_tenkm_agg <- fepois(incidence ~ year_binary*tenkm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
 
 ## changing the buffer zone size between treatment and control groups
-dengue_yearly_model_no_buffer_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
+dengue_yearly_model_no_buffer_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
 dengue_df_yearly_buffer_bigger_agg <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(1,2,5,6,7,0)),]
-dengue_yearly_model_buffer_bigger_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffer_bigger_agg)
+dengue_yearly_model_buffer_bigger_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffer_bigger_agg)
 
 ## confirmed cases only v confirmed and probable cases
-dengue_yearly_model_confirmed_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_confirmed)
+dengue_yearly_model_confirmed_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_confirmed)
 
 #####################
 ## STable S2
@@ -269,7 +269,7 @@ stable2 <- etable(dengue_yearly_model_main_agg,dengue_yearly_model_no_PM_agg,den
 stable2 <- stable2[c(3:9,16,15,14),2:9]
 stable2[10,] <- (as.numeric(gsub(",","",stable2[9,]))+1)/15
 colnames(stable2) <- c('Main model', 'No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Confirmed cases')
-rownames(stable2) <- c("log(Urban)", "log(Ag)", "Mean Precip", "Mean Temp", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "Cor^2", "N", "Clusters")
+rownames(stable2) <- c("log(Urban)", "log(Ag)", "Sum Precip", "Mean Temp", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "Cor^2", "N", "Clusters")
 stable2 <- stable2[c(5:7,1:4, 8:10),]
 stable2
 write.csv(stable2, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable2.csv")
@@ -302,18 +302,18 @@ leish_df_agg_biannual_rainy <- leish_df_agg_biannual[which(leish_df_agg_biannual
 #####################
 ## Build aggregated models
 #####################
-dengue_yearly_model_agg_quad <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + year, 
+dengue_yearly_model_agg_quad <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip^2 + mean_temp^2 | cluster + year, 
                                   vcov = "cluster", 
                                   data = dengue_df_agg)
-dengue_biannual_agg_model_dry_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_dry)
-dengue_biannual_agg_model_rainy_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_rainy)
+dengue_biannual_agg_model_dry_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_dry)
+dengue_biannual_agg_model_rainy_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_rainy)
 
-leish_yearly_model_agg_quad <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + year, 
+leish_yearly_model_agg_quad <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip^2 + mean_temp^2 | cluster + year, 
                                   vcov = "cluster", 
                                   data = leish_df_agg)
 
-leish_biannual_agg_model_dry_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_dry)
-leish_biannual_agg_model_rainy_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + mean_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_rainy)
+leish_biannual_agg_model_dry_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_dry)
+leish_biannual_agg_model_rainy_quad <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip^2 + mean_temp^2 | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_rainy)
 
 #####################
 ## STable 3
@@ -323,7 +323,7 @@ stable3 <- etable(dengue_yearly_model_agg_quad,dengue_biannual_agg_model_dry_qua
 stable3 <- stable3[c(3:8,9:12,16,15,14),2:7]
 stable3[13,] <- c(rep(65,6))
 colnames(stable3) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
-rownames(stable3) <- c("log(Urban)", "log(Ag)", "Mean Precip^2", "Mean Temp^2", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "Cor^2", "N", "Clusters")
+rownames(stable3) <- c("log(Urban)", "log(Ag)", "Sum Precip^2", "Mean Temp^2", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "Cor^2", "N", "Clusters")
 stable3 <- stable3[c(5:6,1:4,7:13),]
 stable3
 write.csv(stable3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable3.csv")
@@ -338,7 +338,7 @@ dengue_coverage_yearly <- dengue_df_yearly %>%
   group_by(year, fivekm) %>%
   summarize(coverage = sum(case_yn))
 
-## to determine dengue districution before paving
+## to determine dengue distribution before paving
 # dengue_coverage_yearly <- dengue_df_yearly %>%
 #   group_by(year, cluster) %>%
 #   summarize(coverage = sum(case_yn),
@@ -419,7 +419,7 @@ ggsave("SFig1.pdf", plot=sfig1all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 ```
 
 ```{r, SFig S2}
-## SFig S2 in 06_comparing_regions.R file
+## SFig S2 in 06_sfig_s2.R file
 ```
 
 ```{r, SFig S3}
@@ -428,26 +428,26 @@ ggsave("SFig1.pdf", plot=sfig1all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 #####################
 
 ## main specification
-dengue_yearly_model_main <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
+dengue_yearly_model_main <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
 
 ## population weighting
-dengue_yearly_model_pop_weight <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm, weights=~population)
+dengue_yearly_model_pop_weight <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm, weights=~population)
 
 ## no Puerto Maldonado
-dengue_yearly_model_no_PM <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm)
+dengue_yearly_model_no_PM <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm)
 
 ## changing the spatial boundary delineating treatment and control groups
-dengue_yearly_model_onekm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly)
-dengue_yearly_model_tenkm <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly)
+dengue_yearly_model_onekm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly)
+dengue_yearly_model_tenkm <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly)
 
 ## changing the buffer zone size between treatment and control groups
 dengue_df_yearly_no_buffer <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,7,0)),]
-dengue_yearly_model_no_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_no_buffer)
+dengue_yearly_model_no_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_no_buffer)
 dengue_df_yearly_buffer_bigger <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,5,6,7,0)),]
-dengue_yearly_model_buffer_bigger <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffer_bigger)
+dengue_yearly_model_buffer_bigger <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffer_bigger)
 
 ## confirmed cases only v confirmed and probable cases
-dengue_yearly_model_confirmed <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_confirmed_buffered)
+dengue_yearly_model_confirmed <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_confirmed_buffered)
 
 df <- rbind(
   as.data.frame(cbind(dengue_yearly_model_no_PM$coeftable[1:22,],c(rep("No PM",22)))),
@@ -567,7 +567,7 @@ dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01')
 dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
 
 # main specification aggregated effect estimate (for comparison)
-dengue_yearly_model_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+dengue_yearly_model_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, 
                                   vcov = "cluster", 
                                   data = dengue_df_agg)
 dengue_yearly_model_agg_effect_est <- coeftable(dengue_yearly_model_agg)[5,1]
@@ -582,7 +582,7 @@ permuted_effects_stor_full <- c()
 for(i in 1:1000){
   set.seed(i*10)
   dengue_df_yearly_permuted_full  <- transform(dengue_df_agg, fivekm = sample(fivekm))
-  dengue_yearly_model_permuted_full <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+  dengue_yearly_model_permuted_full <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, 
                                               vcov = "cluster", 
                                               data = dengue_df_yearly_permuted_full)
   permuted_effect_est_full <- coeftable(dengue_yearly_model_permuted_full)[6,1]
@@ -624,7 +624,7 @@ for(i in 1:1000){
     random_treatment <- rbinom(1, 1, prob_1)
     dengue_df_yearly_permuted_block$fivekm[which(dengue_df_yearly_permuted_block$cluster==k)] <- if (random_treatment==1) {rep(1,15)} else {rep(0,15)}
   }
-  dengue_yearly_model_permuted_block <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+  dengue_yearly_model_permuted_block <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, 
                                                vcov = "cluster", 
                                                data = dengue_df_yearly_permuted_block)
   permuted_effect_est_block <- coeftable(dengue_yearly_model_permuted_block)[5,1]
@@ -664,7 +664,7 @@ for(i in 1:1000){
     #random_treatment <- rbinom(1, 1, prob_1)
     dengue_df_yearly_permuted_within$year_binary[which(dengue_df_yearly_permuted_within$cluster==k)] <- sample(c(0,rep(1,14)))
   }
-  dengue_yearly_model_permuted_within <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + mean_precip + mean_temp | cluster + year, 
+  dengue_yearly_model_permuted_within <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, 
                                                vcov = "cluster", 
                                                data = dengue_df_yearly_permuted_within)
   permuted_effect_est_within <- coeftable(dengue_yearly_model_permuted_within)[5,1]
@@ -848,7 +848,7 @@ ggsave("SFig5.pdf", plot=sfig5all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 
 ```{r, SFig S6}
 ### biannual model
-dengue_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + biannual_date , vcov = "cluster", data = dengue_df_biannual_buffered)
+dengue_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + sum_precip + mean_temp + log(urban) + log(ag) | cluster + biannual_date , vcov = "cluster", data = dengue_df_biannual_buffered)
 #summary(dengue_biannual_model)
 
 df <- as.data.frame(dengue_biannual_model$coeftable)
@@ -892,7 +892,7 @@ sfig6_legend <- get_legend(sfig6a)
 sfig6a <- sfig6a + theme(legend.position = "none")
 
 ### biannual model
-leish_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + mean_precip + mean_temp + log(urban) + log(ag) | cluster + biannual_date, vcov = "cluster", data = leish_df_biannual_buffered)
+leish_biannual_model <- fepois(incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + sum_precip + mean_temp + log(urban) + log(ag) | cluster + biannual_date, vcov = "cluster", data = leish_df_biannual_buffered)
 #summary(leish_biannual_model)
 
 df <- as.data.frame(leish_biannual_model$coeftable)
@@ -1068,18 +1068,18 @@ colnames(precip_monthly)[1] <- "cluster"
 precip_monthly_mdd_long <- precip_monthly %>%
   pivot_longer(cols = c(2:277), 
                names_to = "month", 
-               values_to = "mean_precip")
+               values_to = "sum_precip")
 precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 
 #look at precip to inform rainy season/biannual split
 precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 precip_monthly_all <- precip_monthly_mdd_long %>%
   group_by(month, year) %>%
-  summarize(mean_precip = mean(mean_precip)) 
+  summarize(sum_precip = mean(sum_precip)) 
 precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
 sfig8a <- ggplot(precip_monthly_all) +
-  geom_line(aes(x=month_wo_year,y=mean_precip,group=year), color="black", alpha=0.7) +
-  geom_hline(yintercept=mean(precip_monthly_all$mean_precip), color='red', linetype="dashed") +
+  geom_line(aes(x=month_wo_year,y=sum_precip,group=year), color="black", alpha=0.7) +
+  geom_hline(yintercept=mean(precip_monthly_all$sum_precip), color='red', linetype="dashed") +
   geom_vline(xintercept=04, color='red', linetype="dashed") +
   geom_vline(xintercept=10, color='red', linetype="dashed") +
   xlab("Month") + ylab("Mean\nmonthly\nprecip") + 
@@ -1100,7 +1100,7 @@ sfig8a
 #####################
 ## SFig 8b
 #####################
-dengue_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_monthly_full_dataset.csv")
+dengue_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_monthly_full_dataset.csv")
 dengue_monthly <- dengue_monthly %>%
   group_by(month, year) %>%
   summarize(mean_cases = mean(monthly_cases))
