@@ -44,7 +44,7 @@ monthly_dengue_data <- dengue_data %>%
   summarize(monthly_cases = n())
 
 ## load linked e_salud codes and cluster ids
-linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_6km.csv")
+linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
 
 ## decide whether or not to include PM codes pre treatment
 #linked_ids_codes <- linked_ids_codes[-c(104,105),]
@@ -77,7 +77,7 @@ case_data_linked_time <- case_data_linked %>%
 clusters_wo_case_pre_treatment <- case_data_linked_time$cluster[which(case_data_linked_time$min_time>"2008-01-01")]
 clusters_wo_case_post_treatment <- case_data_linked_time$cluster[which(case_data_linked_time$max_time<"2009-01-01")]
 clusters_wo_case_either_pre_or_post_treatment <- unique(c(clusters_wo_case_pre_treatment,clusters_wo_case_post_treatment))
-dengue_data_linked <- dengue_data_linked[-which(dengue_data_linked$cluster %in% clusters_wo_case_either_pre_or_post_treatment),]
+#dengue_data_linked <- dengue_data_linked[-which(dengue_data_linked$cluster %in% clusters_wo_case_either_pre_or_post_treatment),]
 
 ## add zeroes to cluster-months with no recorded cases
 full_months <- data.frame(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -92,8 +92,8 @@ dengue_data_complete_time_steps <- dengue_data_linked %>%
 ### create dataframe of road buffers
 #################################
 
-boundary_files <- list.files(path="~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_6km", pattern="csv", all.files=FALSE, full.names=TRUE,recursive=TRUE)
-boundary_dummy_vars <- as.data.frame(c(1:84)); colnames(boundary_dummy_vars) = c('cluster')
+boundary_files <- list.files(path="~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_7.5km", pattern="csv", all.files=FALSE, full.names=TRUE,recursive=TRUE)
+boundary_dummy_vars <- as.data.frame(c(1:length(unique(dengue_data_linked$cluster)))); colnames(boundary_dummy_vars) = c('cluster')
 for (i in 2:length(boundary_files)){
   boundary_csv <- read.csv(boundary_files[i])
   boundary_csv <- boundary_csv[,c(2,4)]
@@ -127,11 +127,11 @@ for(i in 1:dim(boundary_dummy_vars)[1]){
                                                boundary_dummy_vars$all_cutoffs[i])
 }
 
-write.csv(boundary_dummy_vars,  "~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_6km/boundary_dummy_vars_6km.csv")
+write.csv(boundary_dummy_vars,  "~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_7.5km/boundary_dummy_vars_7.5km.csv")
 
 #link buffer data to case data
 dengue_data_complete_time_steps$cluster <- as.numeric(dengue_data_complete_time_steps$cluster)
-dengue_data_w_buffers <- full_join(dengue_data_complete_time_steps, boundary_dummy_vars, by='cluster')
+dengue_data_w_buffers <- left_join(dengue_data_complete_time_steps, boundary_dummy_vars, by='cluster')
 
 #################################
 ### add population data
@@ -143,7 +143,7 @@ dengue_data_w_buffers$year <- format(as.Date(dengue_data_w_buffers$year, format=
 dengue_data_w_buffers$year <- as.Date(dengue_data_w_buffers$year)
 
 #link population data
-adjusted_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final_6km.csv")
+adjusted_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final_7.5km.csv")
 adjusted_diresa_pop$year <- as.Date(adjusted_diresa_pop$year)
 adjusted_diresa_pop <- adjusted_diresa_pop[which(adjusted_diresa_pop$year!=as.Date("2023-01-01")),]#remove 2023 because no case data
 adjusted_diresa_pop <- adjusted_diresa_pop[,c(2:4)]
@@ -154,7 +154,7 @@ dengue_data_w_pop <- full_join(dengue_data_w_buffers, adjusted_diresa_pop, by=c(
 #################################
 
 ### precip data
-precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_6km/mdd_precipitation_monthly_sum.csv")
+precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_7.5km/mdd_precipitation_monthly_sum.csv")
 precip_monthly <- precip_monthly[,c(2:278)]
 precip_monthly <- precip_monthly[,c(277,1:276)]
 colnames(precip_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -178,7 +178,7 @@ ggplot(precip_monthly_all) +
   geom_vline(xintercept=10, color='red', linetype="dashed")
 
 ### temp data
-temp_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_6km/mdd_temperature_monthly_mean.csv")
+temp_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_7.5km/mdd_temperature_monthly_mean.csv")
 temp_monthly <- temp_monthly[,c(2:278)]
 temp_monthly <- temp_monthly[,c(277,1:276)]
 colnames(temp_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -190,7 +190,7 @@ temp_monthly_mdd_long <- temp_monthly %>%
 temp_monthly_mdd_long$year <- format(as.Date(temp_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 
 ### urban area data
-mapbiomas_areas <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_6km/mdd_mapbiomas.csv")
+mapbiomas_areas <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_7.5km/mdd_mapbiomas.csv")
 mapbiomas_areas <- mapbiomas_areas[,c(2:5)]
 mapbiomas_areas <- mapbiomas_areas[which(mapbiomas_areas$class %in% c(15,18,21,24)),]
 mapbiomas_areas$class <- ifelse(mapbiomas_areas$class %in% c(15,18,21),"ag","urban")
@@ -206,14 +206,14 @@ covariates <- left_join(precip_monthly_mdd_long,temp_monthly_mdd_long, by=c("clu
 mapbiomas_areas$year <- as.character(mapbiomas_areas$year)
 covariates <- full_join(covariates,mapbiomas_areas, by=c("cluster"="cluster", "year" = "year"))
 covariates$month <- as.Date(covariates$month)
-write.csv(covariates, "~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_6km/mdd_monthly_covariates.csv")
+write.csv(covariates, "~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_7.5km/mdd_monthly_covariates.csv")
 
 #link to monthly case data
 covariates$month <- as.Date(covariates$month)
 covariates <- covariates[,c(1:3,5:7)] #drop extra year column
 dengue_data_w_covariates_monthly <- full_join(dengue_data_w_pop, covariates, by=c("cluster"="cluster", "month" = "month"))
 dengue_data_w_covariates_monthly <- dengue_data_w_covariates_monthly[complete.cases(dengue_data_w_covariates_monthly),]
-write.csv(dengue_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_6km/dengue_monthly_full_dataset.csv")
+write.csv(dengue_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_monthly_full_dataset.csv")
 
 ################################
 ### group yearly and biannually
@@ -239,7 +239,7 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_6km/dengue_yearly_full_dataset.csv")
+write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset.csv")
 
 ## group biannually
 dengue_data_w_covariates_biannual <- dengue_data_w_covariates_monthly 
@@ -268,12 +268,13 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_6km/dengue_biannual_full_dataset.csv")
+write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_biannual_full_dataset.csv")
 
 ################################
 ### preprocess leish data 
 ### (abbreviated from above, need to run lines above for this to work)
 ################################
+case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/Datos vigilancia MDD 2000-2022_SubsetStanford.csv")
 
 ## keep leish data only (in this case include both B55.1--CL--and--B55.2--ML)
 leish_data <- case_data[which(case_data$DIAGNOSTIC=="B55.1" | case_data$DIAGNOSTIC=="B55.2"),]
@@ -305,7 +306,7 @@ leish_data_linked <- left_join(linked_ids_codes, monthly_leish_data, by = 'e_sal
 leish_data_linked <- leish_data_linked %>%
   group_by(cluster = clust, month = month) %>%
   summarize(monthly_cases = sum(monthly_cases))
-leish_data_linked <- leish_data_linked[-which(leish_data_linked$cluster %in% clusters_wo_case_either_pre_or_post_treatment),]
+#leish_data_linked <- leish_data_linked[-which(leish_data_linked$cluster %in% clusters_wo_case_either_pre_or_post_treatment),]
 
 ## add zeroes to cluster-months with no recorded cases
 full_months <- data.frame(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -331,7 +332,7 @@ leish_data_w_pop <- full_join(leish_data_w_buffers, adjusted_diresa_pop, by=c('c
 #link to covariate data (loaded from above)
 leish_data_w_covariates_monthly <- full_join(leish_data_w_pop, covariates, by=c("cluster"="cluster", "month" = "month"))
 leish_data_w_covariates_monthly <- leish_data_w_covariates_monthly[complete.cases(leish_data_w_covariates_monthly),]
-write.csv(leish_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_6km/leish_monthly_full_dataset.csv")
+write.csv(leish_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_monthly_full_dataset.csv")
 
 ## group yearly
 leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
@@ -353,7 +354,7 @@ leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(leish_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_6km/leish_yearly_full_dataset.csv")
+write.csv(leish_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_yearly_full_dataset.csv")
 
 ## group biannually
 leish_data_w_covariates_biannual <- leish_data_w_covariates_monthly 
@@ -382,7 +383,7 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_6km/leish_biannual_full_dataset.csv")
+write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_biannual_full_dataset.csv")
 
 ################################
 ### preprocess malaria data 

@@ -19,6 +19,7 @@ tb_eess_mdd <- sf::st_as_sf(
 )
 
 center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
+center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
 center_lat_long <- data.frame(center_lat_long)
 center_lat_long <- center_lat_long %>%
   mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%

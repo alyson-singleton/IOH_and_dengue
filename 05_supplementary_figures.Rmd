@@ -104,7 +104,7 @@ leish_df_yearly_buffered_no_pm <- leish_df_yearly_buffered[!(leish_df_yearly_buf
 ### dengue data CONFIRMED ###
 #############################
 ### yearly data
-dengue_df_yearly_confirmed <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset_confirmed.csv")
+dengue_df_yearly_confirmed <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_original/dengue_yearly_full_dataset_confirmed.csv")
 dengue_df_yearly_confirmed$year <- as.factor(dengue_df_yearly_confirmed$year)
 
 # cases + 1 so 0's dont go to infinity when logged
