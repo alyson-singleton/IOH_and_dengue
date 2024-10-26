@@ -1105,115 +1105,6 @@ ggsave("SFig7.pdf", plot=sfig7all, "~/Desktop/doctorate/ch2 mdd highway/suppleme
 
 ```{r, SFig S8}
 #####################
-## SFig 8a
-#####################
-### precip data
-precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_7.5km/mdd_precipitation_monthly_sum.csv")
-precip_monthly <- precip_monthly[,c(2:278)]
-precip_monthly <- precip_monthly[,c(277,1:276)]
-colnames(precip_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
-colnames(precip_monthly)[1] <- "cluster"
-precip_monthly_mdd_long <- precip_monthly %>%
-  pivot_longer(cols = c(2:277), 
-               names_to = "month", 
-               values_to = "sum_precip")
-precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
-
-#look at precip to inform rainy season/biannual split
-precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
-precip_monthly_all <- precip_monthly_mdd_long %>%
-  group_by(month, year) %>%
-  summarize(sum_precip = sum(sum_precip)) 
-precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
-sfig8a <- ggplot(precip_monthly_all) +
-  geom_line(aes(x=month_wo_year,y=sum_precip,group=year), color="black", alpha=0.7) +
-  geom_hline(yintercept=mean(precip_monthly_all$sum_precip), color='red', linetype="dashed") +
-  geom_vline(xintercept=04, color='red', linetype="dashed") +
-  geom_vline(xintercept=10, color='red', linetype="dashed") +
-  xlab("Month") + ylab("Acc.\nmonthly\nprecip") + 
-  theme_bw()+
-  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
-        axis.title.x=element_text(size=10),
-        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
-        axis.text = element_text(size=16),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "none",
-        strip.text.x = element_text(size = 14))
-sfig8a
-
-#####################
-## SFig 8b
-#####################
-dengue_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_monthly_full_dataset.csv")
-dengue_monthly <- dengue_monthly %>%
-  group_by(month, year) %>%
-  summarize(mean_cases = mean(monthly_cases))
-dengue_monthly$month_wo_year <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%m")
-dengue_monthly$year_wo_month <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%Y")
-
-sfig8b <- ggplot(dengue_monthly) +
-  geom_line(aes(x=month_wo_year,y=mean_cases,group=year), color='black', alpha=0.7) +
-  #geom_hline(yintercept=mean(dengue_monthly$mean_cases), color='red', linetype="dashed") +
-  geom_vline(xintercept=04, color='red', linetype="dashed") +
-  geom_vline(xintercept=10, color='red', linetype="dashed") +
-  xlab("Month") + ylab("Mean\nmonthly\ndengue\ncases") + 
-  theme_bw()+
-  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
-        axis.title.x=element_text(size=10),
-        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
-        axis.text = element_text(size=16),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "none",
-        strip.text.x = element_text(size = 14)) +
-  geom_text_repel(
-    data = subset(dengue_monthly, (month_wo_year == 12 & year_wo_month %in% c('2019','2022','2010','2020','2012','2009','2013','2015'))),
-    aes(x = month_wo_year, y = mean_cases, label = year_wo_month), 
-    color='slategrey',
-    point.size = NA,
-    min.segment.length = 0,
-    size = 2.5,
-    hjust = 'right',
-    direction = "y",
-    nudge_x = 0.8,
-    segment.color = 'slategrey',
-    segment.alpha = 0.7,
-    #segment.curvature = -0.1,
-    #segment.ncp = 3,
-    #segment.angle = 20,
-    point.padding = 0.1,
-    show.legend = FALSE,
-    angle = 0,
-    arrow = arrow(length = unit(0.01, "npc")),
-    expand = expansion(mult = 0.4)
-  )
-sfig8b
-
-#####################
-## SFig 8all
-#####################
-sfig8all <- grid.arrange(sfig8a, sfig8b,
-                         ncol = 1, nrow = 2,
-                         layout_matrix = rbind(c(1),c(2)), 
-                         heights=c(1,1))
-
-sfig8all <- as_ggplot(sfig8all) +                                
-  draw_plot_label(label = c("A", "B"), size = 14,
-                  x = c(0.04, 0.04), y = c(1, 0.50)) 
-sfig8all
-
-ggsave("SFig8.pdf", plot=sfig8all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 8, units="in", device = "pdf")
-```
-
-```{r, clustering sup figure}
-#####################
 ## Load alternate clustering data and process
 #####################
 ### 6km // 78 units
@@ -1292,7 +1183,7 @@ df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
 df$Model <- factor(as.character(df$Model), levels=c('7.5km clustering', '6km clustering','5km clustering'))
 
-sfig10a <- ggplot(df, aes(group=Model)) +
+sfig8a <- ggplot(df, aes(group=Model)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Model), width=0.1, linewidth=0.5, alpha=0.8) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
@@ -1318,12 +1209,10 @@ sfig10a <- ggplot(df, aes(group=Model)) +
         legend.title=element_text(size=10),
         legend.position = "right",
         strip.text.x = element_text(size = 12))
-sfig10a
-#sfig3_legend <- get_legend(sfig3a)
-#sfig3a <- sfig3a + theme(legend.position = "none")
+sfig8a
 
 #####################
-## SFig ??b
+## SFig 8b
 #####################
 cluster_lat_long_7.5km <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
 cluster_lat_long_7.5km <- data.frame(cluster_lat_long_7.5km)
@@ -1359,7 +1248,7 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
 
-sfig10b <- ggplot() +
+sfig8b <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
@@ -1373,14 +1262,14 @@ sfig10b <- ggplot() +
         legend.title=element_text(size=14),
         legend.position='none') +
   guides(fill=guide_legend(override.aes=list(shape=21))) +
-  annotation_scale(location = "bl",height = unit(0.1, "cm"))
+  annotation_scale(location = "bl",height = unit(0.08, "cm"))
 
-sfig10b
-sfig10_legend <- get_legend(sfig10b)
-sfig10b <- sfig10b + theme(legend.position = "none")
+sfig8b
+#sfig8_legend <- get_legend(sfig8b)
+#sfig8b <- sfig8b + theme(legend.position = "none")
 
 #####################
-## SFig ??c
+## SFig 8c
 #####################
 cluster_lat_long_6km <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_6km/cluster_centroids_6km.csv")
 cluster_lat_long_6km <- data.frame(cluster_lat_long_6km)
@@ -1388,7 +1277,7 @@ cluster_lat_long_6km <- cluster_lat_long_6km %>%
   mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
-sfig10c <- ggplot() +
+sfig8c <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
@@ -1403,10 +1292,10 @@ sfig10c <- ggplot() +
         legend.position='none') +
   guides(fill=guide_legend(override.aes=list(shape=21)))
 
-sfig10c
+sfig8c
 
 #####################
-## SFig ??d
+## SFig 8d
 #####################
 cluster_lat_long_5km <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_5km/cluster_centroids_5km.csv")
 cluster_lat_long_5km <- data.frame(cluster_lat_long_5km)
@@ -1414,7 +1303,7 @@ cluster_lat_long_5km <- cluster_lat_long_5km %>%
   mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
-sfig10d <- ggplot() +
+sfig8d <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
@@ -1429,25 +1318,135 @@ sfig10d <- ggplot() +
         legend.position='none') +
   guides(fill=guide_legend(override.aes=list(shape=21))) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
-                         height = unit(0.7, "cm"), width = unit(0.7, "cm"))
+                         height = unit(0.5, "cm"), width = unit(0.5, "cm"))
 
-sfig10d
+sfig8d
 
 #####################
-## SFig 10all
+## SFig 8all
 #####################
-sfig10all <- grid.arrange(sfig10b, sfig10c, sfig10d, sfig10a,                     
+sfig8all <- grid.arrange(sfig8b, sfig8c, sfig8d, sfig8a,                     
                          ncol = 4, nrow = 2,
-                         layout_matrix = rbind(c(1,2,3),c(1,2,3),c(5,5,5),c(5,5,5)))
+                         layout_matrix = rbind(c(1,2,3),c(1,2,3),c(1,2,3),c(1,2,3),c(5,5,5),c(5,5,5),c(5,5,5),c(5,5,5),c(5,5,5)))
 
-sfig10all <- as_ggplot(sfig10all) +                                
+sfig8all <- as_ggplot(sfig8all) +                                
   draw_plot_label(label = c("A", "B", "C"), size = 17,
                   x = c(0.01, 0.33,0.66), y = c(0.95, 0.95, 0.95)) 
 
-sfig10all
+sfig8all
 
-ggsave("SFig10.pdf", plot=sfig10all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 5, units = c("in"), device="pdf")
+ggsave("SFig8.pdf", plot=sfig8all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 8, units = c("in"), device="pdf")
+ ```
+
+```{r, SFig S9}
+#####################
+## SFig 9a
+#####################
+### precip data
+precip_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/covariates_data_7.5km/mdd_precipitation_monthly_sum.csv")
+precip_monthly <- precip_monthly[,c(2:278)]
+precip_monthly <- precip_monthly[,c(277,1:276)]
+colnames(precip_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
+colnames(precip_monthly)[1] <- "cluster"
+precip_monthly_mdd_long <- precip_monthly %>%
+  pivot_longer(cols = c(2:277), 
+               names_to = "month", 
+               values_to = "sum_precip")
+precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
+
+#look at precip to inform rainy season/biannual split
+precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
+precip_monthly_all <- precip_monthly_mdd_long %>%
+  group_by(month, year) %>%
+  summarize(sum_precip = sum(sum_precip)) 
+precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
+sfig9a <- ggplot(precip_monthly_all) +
+  geom_line(aes(x=month_wo_year,y=sum_precip,group=year), color="black", alpha=0.7) +
+  geom_hline(yintercept=mean(precip_monthly_all$sum_precip), color='red', linetype="dashed") +
+  geom_vline(xintercept=04, color='red', linetype="dashed") +
+  geom_vline(xintercept=10, color='red', linetype="dashed") +
+  xlab("Month") + ylab("Acc.\nmonthly\nprecip") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14))
+sfig9a
+
+#####################
+## SFig 9b
+#####################
+dengue_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_monthly_full_dataset.csv")
+dengue_monthly <- dengue_monthly %>%
+  group_by(month, year) %>%
+  summarize(mean_cases = mean(monthly_cases))
+dengue_monthly$month_wo_year <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%m")
+dengue_monthly$year_wo_month <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%Y")
+
+sfig9b <- ggplot(dengue_monthly) +
+  geom_line(aes(x=month_wo_year,y=mean_cases,group=year), color='black', alpha=0.7) +
+  #geom_hline(yintercept=mean(dengue_monthly$mean_cases), color='red', linetype="dashed") +
+  geom_vline(xintercept=04, color='red', linetype="dashed") +
+  geom_vline(xintercept=10, color='red', linetype="dashed") +
+  xlab("Month") + ylab("Mean\nmonthly\ndengue\ncases") + 
+  theme_bw()+
+  theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title.y=element_text(size=10,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text = element_text(size=16),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "none",
+        strip.text.x = element_text(size = 14)) +
+  geom_text_repel(
+    data = subset(dengue_monthly, (month_wo_year == 12 & year_wo_month %in% c('2019','2022','2010','2020','2012','2009','2013','2015'))),
+    aes(x = month_wo_year, y = mean_cases, label = year_wo_month), 
+    color='slategrey',
+    point.size = NA,
+    min.segment.length = 0,
+    size = 2.5,
+    hjust = 'right',
+    direction = "y",
+    nudge_x = 0.8,
+    segment.color = 'slategrey',
+    segment.alpha = 0.7,
+    #segment.curvature = -0.1,
+    #segment.ncp = 3,
+    #segment.angle = 20,
+    point.padding = 0.1,
+    show.legend = FALSE,
+    angle = 0,
+    arrow = arrow(length = unit(0.01, "npc")),
+    expand = expansion(mult = 0.4)
+  )
+sfig9b
+
+#####################
+## SFig 9all
+#####################
+sfig9all <- grid.arrange(sfig9a, sfig9b,
+                         ncol = 1, nrow = 2,
+                         layout_matrix = rbind(c(1),c(2)), 
+                         heights=c(1,1))
+
+sfig9all <- as_ggplot(sfig9all) +                                
+  draw_plot_label(label = c("A", "B"), size = 14,
+                  x = c(0.04, 0.04), y = c(1, 0.50)) 
+sfig9all
+
+ggsave("SFig9.pdf", plot=sfig9all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 8, units="in", device = "pdf")
 ```
+
 
 
 
