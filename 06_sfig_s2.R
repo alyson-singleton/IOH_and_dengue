@@ -124,7 +124,7 @@ loreto_peru_case_data_summary <- left_join(loreto_peru_case_data_summary, peru_p
 loreto_peru_case_data_summary$incidence <- (loreto_peru_case_data_summary$dengue_cases+1)/loreto_peru_case_data_summary$population
 loreto_peru_case_data_summary$region <- 'H. Loreto, Peru'
 
-## brazil national (change to global dataset?)
+## brazil national
 brazil_case_data <- read.csv("~/Desktop/doctorate/hfi_threshold/annual_dengue_case_inci.csv")
 brazil_case_data_summary <- brazil_case_data %>%
   group_by(year) %>%
@@ -136,7 +136,6 @@ brazil_case_data_summary$region <- 'E. Brazil (national)'
 ## acre brazil
 brazil_case_data$state <- substr(brazil_case_data$CD_MUN, 1, 2)
 acre_brazil_case_data <- brazil_case_data[which(brazil_case_data$state == 12),]
-
 acre_brazil_case_data_summary <- acre_brazil_case_data %>%
   group_by(year) %>%
   summarize(dengue_cases = sum(dengue_cases),
@@ -160,8 +159,7 @@ bol_case_data <- dengue_global_dataset[which(dengue_global_dataset$country=="BOL
 bol_case_data$dengue_cases <- ifelse(is.na(bol_case_data$dengue_cases), 0, bol_case_data$dengue_cases)
 bol_case_data_summary <- bol_case_data %>%
   group_by(year) %>%
-  summarize(dengue_cases = sum(dengue_cases))#,
-            #incidence = mean(incidence)) 
+  summarize(dengue_cases = sum(dengue_cases))
 to_link <- data.frame(c(2005:2014),
                       c(4443, 2555, 7332, 7807, 84047, 6620, 44804, 26587, 18206, 22846))
 to_link2 <- data.frame(c(2015:2023),
@@ -201,7 +199,6 @@ regional_groupings_case_data <- rbind(peru_case_data_summary, dengue_df_yearly_s
 ## comparing region plot #######
 ################################
 
-## comparing region plot
 region_comp_fig <- ggplot(regional_groupings_case_data) +
   geom_line(aes(x=year, y=incidence)) +
   facet_wrap(~region, scales = "free_y") +
@@ -262,7 +259,6 @@ peru_extra_depts <- peru[which(peru$ADM1_ES %in% c("Loreto", "Cusco")),]
 peru_extra_depts <- peru_extra_depts[,c(3,14)]
 mdd_peru <- peru[which(peru$ADM1_ES %in% c("Madre de Dios")),]
 peru_outline <- st_union(peru$geometry)
-#peru_outline$geometry <- st_transform(peru_outline$geometry, 4326)
 
 # bolivia pando shapefile
 bolivia <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bol_adm_gb2014_shp/bol_admbnda_adm1_gov_2020514.shp")
@@ -272,7 +268,6 @@ bolivia_pando <- bolivia[which(bolivia$ADM1_ES %in% c("Pando")),]
 bolivia_pando <- bolivia_pando[,c(1,11)]
 
 # brazil acre shapefile
-#brazil <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/BR_Municipios_2021.shp")
 brazil <- st_read("~/Desktop/doctorate/hfi_threshold/brazil_municipality_yearly_hfi_max.csv", geometry_column = ".geo")
 brazil_acre <- brazil[brazil$SIGLA_UF=="AC",]
 brazil_acre <- st_as_sf(data.frame(brazil_acre, geometry=geojson_sf(brazil_acre$.geo)))
@@ -292,12 +287,7 @@ sfig2 <- ggdraw() +
               geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
               geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
               geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
-              #geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#648FFF', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
-              #scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
-              #                   labels=c('Unpaved Roads','Highway','Rivers')) +
               theme_minimal() +
-              #annotate("text", x = 8, y=5, label= "boat") + 
-              #annotate("text", x = 4, y=5, label = "ship") +
               no_axis +
               theme(legend.text=element_text(size=12),
                     legend.title=element_text(size=14),
