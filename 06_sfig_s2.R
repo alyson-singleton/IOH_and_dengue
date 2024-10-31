@@ -10,6 +10,7 @@ library(fixest)
 library(cowplot)
 library(geojsonsf)
 library(cowplot)
+library(sf)
 
 #add back in arial font
 library(showtext)
@@ -221,31 +222,6 @@ region_comp_fig <- ggplot(regional_groupings_case_data) +
 region_comp_fig
 
 ###################################
-#### load road shapefiles #########
-###################################
-
-# peru road shapefile
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
-highway <- highway[which(highway$ref %in% c("PE-30C","PE-30A")),] #"PE-3S"
-#highway2 <- highway[which(highway$name %in% c("Carretera Longitudinal de la Sierra Sur")),]
-#highway <- rbind(highway1,highway2)
-highway <- st_as_sf(highway) 
-highway$geometry <- st_transform(highway$geometry, 4326)
-highway_mdd_cusco <- st_covers(peru_three_dept,highway$geometry, sparse = FALSE)
-highway_mdd_cusco <- highway[highway_mdd_cusco[1,],]
-
-# brazil roads
-peru_roads <- st_covers(peru,americas_roads$geometry, sparse = FALSE)
-brazil_norte_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/norte-latest-free.shp/gis_osm_roads_free_1.shp")
-brazil_norte_roads_primary <- brazil_norte_roads[which(brazil_norte_roads$fclass == 'primary'),]
-brazil_norte_roads_primary_estrada <- brazil_norte_roads[which(brazil_norte_roads$name == 'Estrada do Pacífico'),]
-brazil_norte_roads_primary_bool <- st_covers(brazil_acre,brazil_norte_roads_primary_estrada$geometry, sparse = FALSE)
-brazil_norte_roads_primary_estrada <- brazil_norte_roads_primary_estrada[brazil_norte_roads_primary_bool[1,],]
-
-# bolivia roads
-bolivia_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bolivia-latest-free.shp/gis_osm_roads_free_1.shp")
-
-###################################
 #### load region shapefiles #######
 ###################################
 
@@ -273,6 +249,31 @@ brazil_acre <- brazil[brazil$SIGLA_UF=="AC",]
 brazil_acre <- st_as_sf(data.frame(brazil_acre, geometry=geojson_sf(brazil_acre$.geo)))
 brazil_acre$geometry <- st_transform(brazil_acre$geometry, 4326)
 brazil_acre <- st_union(brazil_acre$geometry)
+
+###################################
+#### load road shapefiles #########
+###################################
+
+# peru road shapefile
+highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
+highway <- highway[which(highway$ref %in% c("PE-30C","PE-30A")),] #"PE-3S"
+#highway2 <- highway[which(highway$name %in% c("Carretera Longitudinal de la Sierra Sur")),]
+#highway <- rbind(highway1,highway2)
+highway <- st_as_sf(highway) 
+highway$geometry <- st_transform(highway$geometry, 4326)
+highway_mdd_cusco <- st_covers(peru_three_dept,highway$geometry, sparse = FALSE)
+highway_mdd_cusco <- highway[highway_mdd_cusco[1,],]
+
+# brazil roads
+#peru_roads <- st_covers(peru,americas_roads$geometry, sparse = FALSE)
+brazil_norte_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/norte-latest-free.shp/gis_osm_roads_free_1.shp")
+brazil_norte_roads_primary <- brazil_norte_roads[which(brazil_norte_roads$fclass == 'primary'),]
+brazil_norte_roads_primary_estrada <- brazil_norte_roads[which(brazil_norte_roads$name == 'Estrada do Pacífico'),]
+brazil_norte_roads_primary_bool <- st_covers(brazil_acre,brazil_norte_roads_primary_estrada$geometry, sparse = FALSE)
+brazil_norte_roads_primary_estrada <- brazil_norte_roads_primary_estrada[brazil_norte_roads_primary_bool[1,],]
+
+# bolivia roads
+bolivia_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bolivia-latest-free.shp/gis_osm_roads_free_1.shp")
 
 ###################################
 #### plot full map w insets #######
@@ -407,3 +408,37 @@ sfig2 <- sfig2 +
 sfig2
 
 ggsave("SFig2.pdf", plot=sfig2, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 11.29, height = 7.29, units="in", device = "pdf")
+
+
+#######################
+### simple pres plot ##
+#######################
+no_axis <- theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank(),
+                 panel.grid.major = element_blank())
+
+sfig2a <- ggdraw() + 
+  draw_plot(ggplot() +
+              #geom_sf(data = peru_extra_depts, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = bolivia_pando, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = brazil_acre, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = mdd_peru, fill='#EEEEEE', color='#a6a6a6', size=.5, show.legend = FALSE) +
+              geom_sf(data = peru_outline, fill='white', color='black', size=.3, show.legend = FALSE) +
+              geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+              theme_minimal() +
+              no_axis +
+              theme(legend.text=element_text(size=12),
+                    legend.title=element_text(size=14),
+                    legend.position='none'),
+            0, 0, 1, 1)
+
+sfig2a <- sfig2a +                                
+  draw_plot_label(label = c("Peru", "Brazil", "Bolivia"), size = 14, color = "darkred",
+                  x = c(0.33, 0.56, 0.74), y = c(0.6, 0.62, 0.32)) +                                
+  draw_plot_label(label = c("Interoceanic\nHighway"), size = 8, color = "red",
+                  x = c(0.63), y = c(0.49)) 
+sfig2a
+
+ggsave("SFig2a.pdf", plot=sfig2a, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9.25, height = 8.53, units="in", device = "pdf")
