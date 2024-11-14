@@ -35,7 +35,7 @@ vert_line_date <- as.Date('2008-01-01')
 ### dengue data ###
 ###################
 ### yearly data
-dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset.csv")
+dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset_c.csv")
 dengue_df_yearly$year <- as.factor(dengue_df_yearly$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -69,7 +69,7 @@ dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_
 ### leish data ####
 ###################
 ### yearly data
-leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_yearly_full_dataset.csv")
+leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_yearly_full_dataset_c.csv")
 leish_df_yearly$year <- as.factor(leish_df_yearly$year)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -107,7 +107,7 @@ vert_line_date <- as.Date('2008-01-01')
 ### dengue data ###
 ###################
 ### biannual data
-dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_biannual_full_dataset.csv")
+dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_biannual_full_dataset_c.csv")
 dengue_df_biannual$biannual_date <- as.factor(dengue_df_biannual$biannual_date)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -141,7 +141,7 @@ dengue_df_biannual_buffered <- dengue_df_biannual[which(dengue_df_biannual$all_c
 ###################
 
 ### biannaul data
-leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_biannual_full_dataset.csv")
+leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_biannual_full_dataset_c.csv")
 leish_df_biannual$biannual_date <- as.factor(leish_df_biannual$biannual_date)
 
 # cases + 1 so 0's dont go to infinity when logged
@@ -373,7 +373,7 @@ fig2a <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,17)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -426,7 +426,7 @@ fig2b <- ggplot(df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,17)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -537,7 +537,7 @@ fig3a <- ggplot(df) +
   xlab("Year") + ylab("Percent\nchange\nleish\nincidence") + 
   theme_bw()+
   #ylim(c(-1.2,15))+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,17)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -593,7 +593,7 @@ fig3b <- ggplot(df) +
   xlab("Season") + ylab("") + 
   theme_bw()+
   #ylim(c(-1.2,15))+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,17)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -721,7 +721,7 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
                       #           "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
   xlab("") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1,19)) +
+  scale_y_continuous(labels = scales::percent, limits=c(-1,18)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),

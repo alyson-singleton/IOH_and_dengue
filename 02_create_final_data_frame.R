@@ -27,7 +27,8 @@ dengue_data <- case_data[which(case_data$DIAGNOSTIC=="A97.0"),]
 table(dengue_data$TIPO_DX)
 
 ## remove "descartado" cases (options are D/C/P)
-dengue_data <- dengue_data[which(dengue_data$TIPO_DX=="C" | dengue_data$TIPO_DX=="P"),]
+#dengue_data <- dengue_data[which(dengue_data$TIPO_DX=="C" | dengue_data$TIPO_DX=="P"),]
+dengue_data <- dengue_data[which(dengue_data$TIPO_DX=="C"),]
 
 ## remove cases listed as being from outside madre de dios
 mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
@@ -213,7 +214,7 @@ covariates$month <- as.Date(covariates$month)
 covariates <- covariates[,c(1:3,5:7)] #drop extra year column
 dengue_data_w_covariates_monthly <- full_join(dengue_data_w_pop, covariates, by=c("cluster"="cluster", "month" = "month"))
 dengue_data_w_covariates_monthly <- dengue_data_w_covariates_monthly[complete.cases(dengue_data_w_covariates_monthly),]
-write.csv(dengue_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_monthly_full_dataset.csv")
+write.csv(dengue_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_monthly_full_dataset_c.csv")
 
 ################################
 ### group yearly and biannually
@@ -239,7 +240,7 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset.csv")
+write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset_c.csv")
 
 ## group biannually
 dengue_data_w_covariates_biannual <- dengue_data_w_covariates_monthly 
@@ -268,7 +269,7 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_biannual_full_dataset.csv")
+write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_biannual_full_dataset_c.csv")
 
 ################################
 ### preprocess leish data 
@@ -281,7 +282,8 @@ leish_data <- case_data[which(case_data$DIAGNOSTIC=="B55.1" | case_data$DIAGNOST
 table(leish_data$TIPO_DX)
 
 ## remove "descartado" cases (options are D/C/P)
-leish_data <- leish_data[which(leish_data$TIPO_DX=="C" | leish_data$TIPO_DX=="P"),]
+#leish_data <- leish_data[which(leish_data$TIPO_DX=="C" | leish_data$TIPO_DX=="P"),]
+leish_data <- leish_data[which(leish_data$TIPO_DX=="C"),]
 
 ## remove cases listed as being from outside madre de dios
 mdd_districts <- unique(leish_data$UBIGEO)[1:11]
@@ -332,7 +334,7 @@ leish_data_w_pop <- full_join(leish_data_w_buffers, adjusted_diresa_pop, by=c('c
 #link to covariate data (loaded from above)
 leish_data_w_covariates_monthly <- full_join(leish_data_w_pop, covariates, by=c("cluster"="cluster", "month" = "month"))
 leish_data_w_covariates_monthly <- leish_data_w_covariates_monthly[complete.cases(leish_data_w_covariates_monthly),]
-write.csv(leish_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_monthly_full_dataset.csv")
+write.csv(leish_data_w_covariates_monthly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_monthly_full_dataset_c.csv")
 
 ## group yearly
 leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
@@ -354,7 +356,7 @@ leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(leish_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_yearly_full_dataset.csv")
+write.csv(leish_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_yearly_full_dataset_c.csv")
 
 ## group biannually
 leish_data_w_covariates_biannual <- leish_data_w_covariates_monthly 
@@ -383,7 +385,7 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
             urban = max(urban),
             ag = max(ag),
             all_cutoffs = max(all_cutoffs))
-write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_biannual_full_dataset.csv")
+write.csv(leish_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_biannual_full_dataset_c.csv")
 
 ################################
 ### preprocess malaria data 
