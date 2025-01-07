@@ -6,6 +6,8 @@ output:
   html_document: default
   word_document: default
   pdf_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -517,6 +519,7 @@ df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
 df$Model <- factor(as.character(df$Model), levels=c('No PM', 'Pop weight no PM','1km','10km','No buffer', 'Big buffer', 'Confirmed cases', "Pre post", 'Main'))
 
+#consider updating this so the main model is just bold black ouline with no fill in the point estimate
 sfig3a <- ggplot(df, aes(group=Model)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Model), width=0.1, linewidth=0.5, alpha=0.8) +
@@ -525,7 +528,7 @@ sfig3a <- ggplot(df, aes(group=Model)) +
   geom_point(aes(year, estimate, fill=Model), color='black', size=3, shape=21, alpha=0.6) +
   scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Confirmed cases'="#648FFF", 'Pre post'="#785EF0", 'Main' = "#2b175e"),
                      labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units reporting pre & post', 'Main model'))+
-  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Confirmed cases'="#648FFF", 'Pre post'="#785EF0", 'Main' = "#2b175e"),
+  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Confirmed cases'="#648FFF", 'Pre post'="#785EF0", 'Main' = NA),
                     labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units reporting pre & post', 'Main model'))+
   xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
   theme_bw()+
