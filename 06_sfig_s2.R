@@ -21,8 +21,8 @@ showtext_auto()
 ## load pop and dengue case data ########
 #########################################
 
-## load raw mdd case data (all diseases)
-dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data/dengue_yearly_full_dataset.csv")
+## load mdd case data
+dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset_cp.csv")
 head(dengue_df_yearly)
 
 dengue_df_yearly_summary <- dengue_df_yearly %>%
@@ -35,10 +35,10 @@ dengue_df_yearly_summary$year <- format(as.Date(dengue_df_yearly_summary$year, f
 dengue_df_yearly_summary$year <- as.numeric(dengue_df_yearly_summary$year)
   
 ## load global dataset
-dengue_global_dataset <- read_rds("~/Desktop/dengue_temp_full.rds")
+dengue_global_dataset <- read_rds("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/dengue_temp_full.rds")
 
 ## peru population data (worldpop)
-peru_population <- read.csv("~/Downloads/peru_population_yearly.csv")
+peru_population <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/peru_population_yearly.csv")
 peru_population <- peru_population[,c(37:59)]
 colnames(peru_population) <- c("department", "id", 2000:2020)
 peru_population <- peru_population %>%
@@ -256,13 +256,45 @@ brazil_acre <- st_union(brazil_acre$geometry)
 
 # peru road shapefile
 highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
-highway <- highway[which(highway$ref %in% c("PE-30C","PE-30A")),] #"PE-3S"
-#highway2 <- highway[which(highway$name %in% c("Carretera Longitudinal de la Sierra Sur")),]
-#highway <- rbind(highway1,highway2)
-highway <- st_as_sf(highway) 
-highway$geometry <- st_transform(highway$geometry, 4326)
-highway_mdd_cusco <- st_covers(peru_three_dept,highway$geometry, sparse = FALSE)
-highway_mdd_cusco <- highway[highway_mdd_cusco[1,],]
+mapview(highway)
+highway1 <- highway[which(highway$ref %in% c("PE-30C","PE-30A","PE-30","PE-34B","PE-34A","PE-36B")),] #
+highway2 <- highway[which(highway$osm_id %in% c(29102555,604763302,1049793277,
+                                                1049793211,604763304,399003045)),] #PE-1S
+highway3 <- highway[which(highway$osm_id %in% c(186707203,205371265,225770349,453990517,225770354,586138716,
+                                                586138717,586138795,778806921,778791891,586138794,435395271,
+                                                435395270,435395269,435395268,435395050,446383361,379231958,
+                                                1029446417,198924459,86493671,465684096,462675294,188513541,
+                                                8153377,316216142,82315367,446383347,446383345,86462741,
+                                                890800597,890800598,520851257,311201234,698761268,698761269,
+                                                586121507,435385594,586121509,586121510,40853459,46157510,
+                                                787969069,40853464,610030580,610030579,40853462,610030578,
+                                                40853467,40853470,40853476,462685333,462685332,462685329,
+                                                80886877,40853472,40853479,80886879,328357042,559578215,
+                                                80886878,40847782,610030573,80887116,80887120,221658347,
+                                                256635558,304374768,186768667,462329344,186768679,186768637,
+                                                29094033,186768631,186768650,186768629,186768652,186768685,
+                                                29094029,186768691,186768632,186768693,186768628,1035240297,
+                                                29094028,186768672,271201675,271201678,438353973,186768643,
+                                                509105200,221656756,
+                                                233687098,1011499450,1042410885,
+                                                666016966,666016965,1084728138,
+                                                374385515,1042410884,1042410883,
+                                                892651044,890822752,892094307,
+                                                256314666,606503179,770065001,
+                                                770064999,890852296,23604416,
+                                                770065007,407627084,1042480554,
+                                                272198167,130682641,590329499,
+                                                590329492,590329493,236839140)),] #PE-3S
+highway4 <- highway[which(highway$osm_id %in% c(610023802,1005111393,
+                                                32784764,1005109113,171592037,
+                                                685010870,171592041,299663644,
+                                                172478085,299663645,226540660,
+                                                226540659,337421844,171125424,
+                                                666016965,679342797,374385517)),] #PE-36A
+highway_final <- rbind(highway1,highway2,highway3,highway4)
+mapview(highway_final)
+highway_final <- st_as_sf(highway_final) 
+highway_final$geometry <- st_transform(highway_final$geometry, 4326)
 
 # brazil roads
 #peru_roads <- st_covers(peru,americas_roads$geometry, sparse = FALSE)
@@ -286,7 +318,7 @@ sfig2 <- ggdraw() +
               geom_sf(data = brazil_acre, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = mdd_peru, fill='#EEEEEE', color='#a6a6a6', size=.5, show.legend = FALSE) +
               geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
-              geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+              geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
               geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
               theme_minimal() +
               no_axis +
@@ -410,9 +442,9 @@ sfig2
 ggsave("SFig2.pdf", plot=sfig2, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 11.29, height = 7.29, units="in", device = "pdf")
 
 
-#######################
-### simple pres plot ##
-#######################
+############################
+### simple plot wo insets ##
+############################
 no_axis <- theme(axis.title=element_blank(),
                  axis.text=element_blank(),
                  axis.ticks=element_blank(),
@@ -442,3 +474,58 @@ sfig2a <- sfig2a +
 sfig2a
 
 ggsave("SFig2a.pdf", plot=sfig2a, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9.25, height = 8.53, units="in", device = "pdf")
+
+############################
+### 3MT version ############
+############################
+no_axis <- theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank(),
+                 panel.grid.major = element_blank())
+
+sfig_3mt <- ggdraw() + 
+  draw_plot(ggplot() +
+              #geom_sf(data = peru_extra_depts, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = bolivia_pando, fill=NA, color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = brazil_acre, fill=NA, color='#a6a6a6', size=.15, show.legend = FALSE) +
+              geom_sf(data = mdd_peru, fill='#DDDDDD', color='#a6a6a6', size=.5, show.legend = FALSE) +
+              geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
+              geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+              theme_minimal() +
+              no_axis +
+              theme(legend.text=element_text(size=12),
+                    legend.title=element_text(size=14),
+                    legend.position='none'),
+            0, 0, 1, 1) +
+  draw_plot(ggplot(dengue_df_yearly_summary) +
+              geom_line(aes(x=year, y=incidence)) +
+              geom_vline(xintercept=2008,linetype='dashed', color="red") +
+              #ggtitle("Madre de Dios, Peru") +
+              xlab("Year") + ylab("Dengue\nincidence") + 
+              theme_classic()+
+              xlim(2000,2022)+
+              theme(plot.title = element_text(size=12, face="bold"),
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=14),
+                    axis.title.y=element_text(size=10, angle=0, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=8),
+                    axis.title.x=element_text(size=10),
+                    axis.text.x=element_text(size=8),
+                    axis.text = element_text(size=10),
+                    legend.text=element_text(size=10),
+                    legend.title=element_text(size=10),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 10)),
+            0.1, 0.07, 0.22, 0.22)
+
+sfig_3mt <- sfig_3mt +                                
+  draw_plot_label(label = c("Peru", "Brazil", "Bolivia"), size = 14, color = "darkred",
+                  x = c(0.33, 0.56, 0.74), y = c(0.6, 0.62, 0.32)) +                                
+  draw_plot_label(label = c("Interoceanic\nHighway"), size = 8, color = "red",
+                  x = c(0.36), y = c(0.37)) 
+sfig_3mt
+
+ggsave("SFig2a.pdf", plot=sfig_3mt, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9.25, height = 8.53, units="in", device = "pdf")
+
+
