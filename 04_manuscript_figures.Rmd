@@ -462,7 +462,7 @@ ggsave("Fig2.pdf", plot=fig2all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 ```{r, attributable cases}
 ### aggregated data (treatment)
 dengue_df_agg <- dengue_df_yearly_buffered
-#dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),] ##NOTE change this!**
+dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),] ##NOTE change this!**
 dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
 
 ### aggregated model

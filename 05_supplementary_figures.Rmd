@@ -33,6 +33,17 @@ showtext_auto()
 ```{r, load yearly case data}
 vert_line_date <- as.Date('2008-01-01')
 
+#for harper
+# dengue_df_monthly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_monthly_full_dataset_c.csv")
+# 
+# dengue_df_monthly <- dengue_df_monthly %>%
+#   group_by(tenkm,month) %>%
+#   summarise(monthly_cases = sum(monthly_cases),
+#             population = sum(population)) %>%
+#   rename(group = tenkm)
+# 
+# write.csv(dengue_df_monthly,"~/Desktop/doctorate/ch2 mdd highway/data/harper_case_counts.csv")
+
 ###################
 ### dengue data ###
 ###################
