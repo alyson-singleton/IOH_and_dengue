@@ -12,6 +12,7 @@ library(geojsonsf)
 library(cowplot)
 library(sf)
 library(geobr)
+library(mapview)
 
 #add back in arial font
 library(showtext)
@@ -460,21 +461,23 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
 
-sfig2a <- ggdraw() + 
-  draw_plot(ggplot() +
-              #geom_sf(data = peru_extra_depts, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
-              geom_sf(data = bolivia_pando, fill=NA, color='#a6a6a6', size=.15, show.legend = FALSE) +
-              geom_sf(data = brazil_acre, fill=NA, color='#a6a6a6', size=.15, show.legend = FALSE) +
-              geom_sf(data = mdd_peru, fill='#DDDDDD', color='#a6a6a6', size=.5, show.legend = FALSE) +
-              geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
-              geom_sf(data = highway_mdd_cusco, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
-              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
-              theme_minimal() +
-              no_axis +
-              theme(legend.text=element_text(size=12),
-                    legend.title=element_text(size=14),
-                    legend.position='none'),
-            0, 0, 1, 1)
+sfig2a <- ggplot() +
+  #geom_sf(data = peru_extra_depts, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
+  geom_sf(data = bolivia_pando, fill=NA, color='#a6a6a6', size=.15, show.legend = FALSE) +
+  geom_sf(data = brazil_acre, fill=NA, color='#a6a6a6', size=.15, show.legend = FALSE) +
+  geom_sf(data = mdd_peru, fill='#DDDDDD', color='#a6a6a6', size=.5, show.legend = FALSE) +
+  geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
+  geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+  geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+  theme_minimal() +
+  no_axis +
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=14),
+        legend.position='none') +
+  coord_sf(ylim = c(-19, 0),
+           xlim = c(-83,-65),
+           clip = "on",
+           expand = F)
 
 sfig2a <- sfig2a +                                
   draw_plot_label(label = c("Peru", "Brazil", "Bolivia"), size = 14, color = "darkred",
@@ -484,6 +487,7 @@ sfig2a <- sfig2a +
 sfig2a
 
 ggsave("SFig2a.pdf", plot=sfig2a, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9.25, height = 8.53, units="in", device = "pdf")
+ggsave("SFig2a.png", plot=sfig2a, path="~/Desktop/", width = 9.25, height = 8.53, units="in", device = "png")
 
 ############################
 ### 3MT version ############
@@ -495,7 +499,7 @@ no_axis <- theme(axis.title=element_blank(),
                  panel.grid.major = element_blank())
 
 sfig_3mt_small_map <- ggplot() +
-  geom_sf(data = bolivia, fill=NA, color='black', size=.15, show.legend = FALSE) +
+  geom_sf(data = bolivia_union, fill=NA, color='black', size=.15, show.legend = FALSE) +
   geom_sf(data = mdd_peru, fill='#EEEEEE', color='slategrey', size=.5, show.legend = FALSE) +
   geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
   geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.5, show.legend = "line") +
@@ -512,6 +516,7 @@ sfig_3mt_small_map <- ggplot() +
 
 sfig_3mt_small_map
 ggsave("sfig_3mt_small_map.pdf", plot=sfig_3mt_small_map, path="~/Desktop/", width = 5, height = 5, units="in", device = "pdf")
+ggsave("sfig_3mt_small_map.png", plot=sfig_3mt_small_map, path="~/Desktop/", width = 5, height = 5, units="in", device = "png")
 
 library(rnaturalearth)
 library(rnaturalearthdata)
