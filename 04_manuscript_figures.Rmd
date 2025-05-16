@@ -10,7 +10,7 @@ output:
 
 ```{r setup, include=FALSE}
 # install packages, load libraries, set themes, knit formatting
-pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot, ggspatial)
+pacman::p_load(tidyverse, dplyr, kableExtra, knitr, sf, raster, terra, spData, tmap, leaflet, ggplot2, spThin, mapdata, rnaturalearth, rnaturalearthdata, brazilmaps, devtools, brazilmaps, mapview, grid, gridExtra, RColorBrewer, raster, plm, fixest, cobalt, broom, ggpubr, gridExtra, cowplot, ggspatial, scales)
 theme_set(theme_bw())
 knitr::opts_chunk$set(echo = F, results='asis', warning=F, message=F, cache=F,
                       fig.height=5, fig.width=10)
@@ -176,14 +176,11 @@ leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cuto
 ## Fig 1a
 #####################
 
-# center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mapping_cutoffs.csv")
-# cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
-
 cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
 colnames(cluster_ids)[1] <- "cluster"
-center_lat_long_fig1 <- left_join(dengue_df_yearly[,c(3,20)], cluster_ids, by='cluster')
+center_lat_long <- left_join(dengue_df_yearly[,c(3,20)], cluster_ids, by='cluster')
 
-center_lat_long_fig1 <- center_lat_long_fig1 %>%
+center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
 peru_depts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/per_admbnda_adm1_ign_20200714.shp")
@@ -219,8 +216,8 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
 
-# Plot MdD
-center_lat_long_fig1 <- center_lat_long_fig1 %>%
+# Build columns for plotting
+center_lat_long_fig1 <- center_lat_long_fig %>%
   mutate(all_cutoffs = case_when(
     all_cutoffs %in% c('0', '4', '5', '6', '7') ~ '0',
     all_cutoffs %in% c('1', '2') ~ '1',
@@ -232,13 +229,12 @@ center_lat_long_fig1 <- center_lat_long_fig1 %>%
 
 # Coordinates for labeling
 cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(cluster == 1))
-
 arrow_x <- cluster1_coords[1, "X"] + 0.08
 arrow_y <- cluster1_coords[1, "Y"]
 label_x <- arrow_x + 0.14
 label_y <- arrow_y - 0.07
 
-
+# Plot MdD
 mdd_map <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#3b3b3b', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='Rivers'), linewidth=0.2, show.legend = "line") +
@@ -252,15 +248,8 @@ mdd_map <- ggplot() +
           alpha=1) +
   scale_fill_manual(name= "", values=c("1" = "#E04490", "0" = "#648FFF", "3" = "#ffffff"),
                     labels=c("Exposed (<5km)", "Unexposed (>10km)", "Buffer (removed)")) +
-  scale_color_manual(
-    name = "", 
-    values = c(
-      "Unpaved Roads" = '#a6a6a6',
-      "Highway" = 'black',
-      "Rivers" = 'lightblue')) +
-  scale_shape_manual(
-    values = c(`21` = 21, `24` = 24), 
-    guide = "none") +
+  scale_color_manual(name = "", values = c("Unpaved Roads" = '#a6a6a6', "Highway" = 'black',"Rivers" = 'lightblue')) +
+  scale_shape_manual(values = c(`21` = 21, `24` = 24), guide = "none") +
   theme_minimal() +
   no_axis +
   guides(fill=guide_legend(override.aes=list(shape=21, color = "black", linetype = 0, size=2.5))) +
@@ -281,7 +270,7 @@ mdd_map <- ggplot() +
   annotate("text", 
            x = label_x, y = label_y, 
            label = "PM", 
-           size = 3.4, fontface = "bold", hjust = 0, color = "#E04490")
+           size = 3.4, fontface = "bold", hjust = 0, color = "black")
 mdd_map
 fig1_legend <- get_legend(mdd_map)
 mdd_map <- mdd_map + theme(legend.position = "none")
@@ -406,9 +395,16 @@ fig2a <- ggplot(df) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("% change\ndengue\nincidence\ncompared\nto 2008") + 
-  theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  xlab("Year") + ylab("% change\ndengue\nincidence\nby year\nrelative\nto 2008") + 
+  theme_bw() +
+  scale_y_continuous(
+    trans = scales::trans_new(
+      name = "arcsinh",
+      transform = function(x) asinh(x),
+      inverse = function(x) sinh(x)),
+    labels = scales::percent_format(accuracy = 1),
+    limits=c(-1.2,15)) +
+  #scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -460,8 +456,15 @@ fig2b <- ggplot(df) +
   scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
-  theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  theme_bw() +
+  scale_y_continuous(
+    trans = scales::trans_new(
+      name = "arcsinh",
+      transform = function(x) asinh(x),
+      inverse = function(x) sinh(x)),
+    labels = scales::percent_format(accuracy = 1),
+    limits=c(-1.2,15)) +
+  #scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -487,7 +490,7 @@ fig2all <- grid.arrange(fig2a, fig2b,
 
 fig2all <- as_ggplot(fig2all) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.133, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.138, 0.846), y = c(0.99, 0.99)) 
 
 fig2all
 
@@ -569,10 +572,16 @@ fig3a <- ggplot(df) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("% change\nleish\nincidence\ncompared\nto 2008") + 
+  xlab("Year") + ylab("% change\nleish\nincidence\nby year\nrelative\nto 2008") + 
   theme_bw()+
-  #ylim(c(-1.2,15))+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  scale_y_continuous(
+    trans = scales::trans_new(
+      name = "arcsinh",
+      transform = function(x) asinh(x),
+      inverse = function(x) sinh(x)),
+    labels = scales::percent_format(accuracy = 1),
+    limits=c(-1.2,15)) +
+  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -620,15 +629,19 @@ df$rainy <- c("Dry","Rainy")
 fig3b <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
-  #geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
-  #geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
   theme_bw()+
-  #ylim(c(-1.2,15))+
-  scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  scale_y_continuous(
+    trans = scales::trans_new(
+      name = "arcsinh",
+      transform = function(x) asinh(x),
+      inverse = function(x) sinh(x)),
+    labels = scales::percent_format(accuracy = 1),
+    limits=c(-1.2,15)) +
+  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -653,7 +666,7 @@ fig3all <- grid.arrange(fig3a, fig3b,
 
 fig3all <- as_ggplot(fig3all) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.133, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.138, 0.846), y = c(0.99, 0.99)) 
 
 fig3all
 
@@ -748,15 +761,17 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
   geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3, shape=21) +
   scale_color_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
                                                    '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
-                     #labels=list("1km"="<5km, >5km", "5km"="<5km, >10km", 
-                    #             "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
   scale_fill_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
-                                                   '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
-                     #labels=list("1km"="<5km, >5km", "5km"="<5km, >10km", 
-                      #           "10km"="<5km, >20km", "20km"="<5km, >30km", "30km"="<5km, >40km", "40km" = "40km"))+
-  xlab("") + ylab("Percent\nchange\ndengue\nincidence") + 
+                                                  '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
+  xlab("") + ylab("% change\ndengue\nincidence\nrelative\nto 2008") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1,18)) +
+  scale_y_continuous(
+    trans = scales::trans_new(
+      name = "arcsinh",
+      transform = function(x) asinh(x),
+      inverse = function(x) sinh(x)),
+    labels = scales::percent_format(accuracy = 1)) +
+  #scale_y_continuous(labels = scales::percent, limits=c(-1,18)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -770,6 +785,7 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
         legend.title=element_text(size=12),
         legend.position = "none",
         strip.text.x = element_text(size = 12))
+
 fig4a
 
 #####################
@@ -812,30 +828,63 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
 
+# Build columns for plotting
+center_lat_long_fig4 <- center_lat_long %>%
+  mutate(all_cutoffs = case_when(
+    all_cutoffs %in% c('0', '6', '7') ~ '0',
+    TRUE ~ as.character(all_cutoffs)),
+    all_cutoffs = factor(all_cutoffs, levels = c('1','2','3','4','5','0')),
+    pm_indicator = if_else(cluster == 1, 24, 21),
+    pm_indicator2 = if_else(cluster == 1, 3.2, 2.5)) %>%
+  arrange(if_else(cluster == 1, 1, 0))
+
+# Coordinates for labeling
+cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(cluster == 1))
+arrow_x <- cluster1_coords[1, "X"] + 0.08
+arrow_y <- cluster1_coords[1, "Y"]
+label_x <- arrow_x + 0.14
+label_y <- arrow_y - 0.07
+
 # Plot MdD
-center_lat_long$all_cutoffs <- as.character(center_lat_long$all_cutoffs)
-center_lat_long$all_cutoffs <- ifelse(center_lat_long$all_cutoffs %in% c('0','6','7'),'0',center_lat_long$all_cutoffs)
-center_lat_long$all_cutoffs <- factor(center_lat_long$all_cutoffs, levels=c('1','2','3','4','5','0'))
 fig4b <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = FALSE) +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = FALSE) +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = FALSE) +
-  geom_sf(data = center_lat_long, aes(geometry = geometry, fill=all_cutoffs), pch=21, size = 3, stroke=0.5) + #colour='#25CED1',
-  scale_fill_manual(name= "Legend", values=list('1'="#DC267F",'2'='#FF7900','3'='#FFB000',
-                                                '4'='#648FFF','5'='#785EF0','0'='lightgrey'), 
+  geom_sf(data = center_lat_long_fig4, 
+          aes(geometry = geometry, 
+              fill=all_cutoffs, 
+              shape=factor(pm_indicator)), 
+          size=center_lat_long_fig1$pm_indicator2, 
+          stroke=0.5,
+          alpha = 1) +
+  scale_fill_manual(name= "", values=list('1'="#DC267F",'2'='#FF7900','3'='#FFB000',
+                                          '4'='#648FFF','5'='#785EF0','0'='lightgrey'), 
                     labels=c("1km", "5km", "10km", "15km", "20km", "Control")) +
   scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
-                     labels=c('Dirt Roads','Highway','Rivers')) +
+                     labels=c('Unpaved Roads','Highway','Rivers')) +
+  scale_shape_manual(values = c(`21` = 21, `24` = 24), guide = "none") +
   theme_minimal() +
   no_axis +
-  theme(legend.text=element_text(size=10),
-        legend.title=element_text(size=10),
-        legend.position='bottom') +
-  #guides(fill=guide_legend(override.aes=list(shape=21)))+
+  guides(fill=guide_legend(override.aes=list(shape=21, color = "black", linetype = 0, size=2.5))) +
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=14),
+        legend.position='bottom',
+        legend.spacing.x = unit(0.05, 'cm'),
+        legend.box.spacing = unit(0.05, 'cm'),
+        legend.key.width = unit(0.4, "cm")) +
   annotation_scale(location = "bl",height = unit(0.1, "cm")) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
-                         height = unit(0.7, "cm"), width = unit(0.7, "cm"))
+                         height = unit(0.7, "cm"), width = unit(0.7, "cm")) +
+  annotate("segment", 
+           x = label_x-0.02, y = label_y, 
+           xend = arrow_x, yend = arrow_y,
+           arrow = arrow(length = unit(0.17, "cm")), 
+           color = "black") +
+  annotate("text", 
+           x = label_x, y = label_y, 
+           label = "PM", 
+           size = 3.4, fontface = "bold", hjust = 0, color = "black")
 fig4b
 
 #####################
@@ -844,7 +893,7 @@ fig4b
 
 fig4all <- grid.arrange(fig4a, fig4b,                     
                         ncol = 2, nrow = 1,
-                        layout_matrix = rbind(c(1,1,1,2,2,2,2)))#,heights=c(7,1))
+                        layout_matrix = rbind(c(1,1,1,2,2,2,2)))
 
 fig4all <- as_ggplot(fig4all) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
