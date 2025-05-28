@@ -665,12 +665,25 @@ fig3all <- grid.arrange(fig3a, fig3b,
                         layout_matrix = rbind(c(1,1,1,1,1,2)))#,heights=c(7,1))
 
 fig3all <- as_ggplot(fig3all) +                                
-  draw_plot_label(label = c("A", "B"), size = 17,
+  draw_plot_label(label = c("C", "D"), size = 17,
                   x = c(0.138, 0.846), y = c(0.99, 0.99)) 
 
 fig3all
 
 ggsave("Fig3.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
+```
+
+```{r, Fig2 combined}
+#####################
+## Fig 2combined
+#####################
+fig2combined <- grid.arrange(fig2all, fig3all,                     
+                        ncol = 1, nrow = 2,
+                        layout_matrix = rbind(c(1),c(2)), heights=c(1,1))#,heights=c(7,1))
+
+fig2combined
+
+ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 8, units="in", device = "pdf")
 ```
 
 ```{r, Fig4}
