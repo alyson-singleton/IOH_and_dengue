@@ -28,149 +28,6 @@ showtext_auto()
 
 ```
 
-```{r, load yearly case data}
-vert_line_date <- as.Date('2008-01-01')
-
-###################
-### dengue data ###
-###################
-### yearly data
-dengue_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_yearly_full_dataset_c.csv")
-dengue_df_yearly$year <- as.factor(dengue_df_yearly$year)
-
-# cases + 1 so 0's dont go to infinity when logged
-dengue_df_yearly$incidence <- (dengue_df_yearly$yearly_cases+1)/dengue_df_yearly$population 
-
-# land use vars + 0.001 so 0's dont go to infinity when logged
-dengue_df_yearly$urban <- dengue_df_yearly$urban + 0.001
-dengue_df_yearly$ag <- dengue_df_yearly$ag + 0.001
-
-# double check complete cases
-dengue_df_yearly <- dengue_df_yearly[complete.cases(dengue_df_yearly),]
-
-# remove extreme outliers (all most likely due to inaccurate pop data)
-dengue_df_yearly <- dengue_df_yearly[which(dengue_df_yearly$incidence < 0.5),]
-
-# check how many are always zero
-dengue_df_yearly_zeroes <- dengue_df_yearly %>% 
-  group_by(cluster) %>% 
-  summarize(total_cases = sum(yearly_cases))
-clusters_w_at_least_one_case <- dengue_df_yearly$cluster[which(dengue_df_yearly_zeroes$total_cases>0)]
-dengue_df_yearly_at_least_one_case <- dengue_df_yearly[which(dengue_df_yearly$cluster %in% clusters_w_at_least_one_case),]
-
-# remove PM
-dengue_df_yearly_no_pm <- dengue_df_yearly[!(dengue_df_yearly$cluster %in% 1),]
-
-# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-dengue_df_yearly_buffered <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
-dengue_df_yearly_buffered_no_pm <- dengue_df_yearly_buffered[!(dengue_df_yearly_buffered$cluster %in% 1),]
-
-###################
-### leish data ####
-###################
-### yearly data
-leish_df_yearly <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_yearly_full_dataset_c.csv")
-leish_df_yearly$year <- as.factor(leish_df_yearly$year)
-
-# cases + 1 so 0's dont go to infinity when logged
-leish_df_yearly$incidence <- (leish_df_yearly$yearly_cases+1)/leish_df_yearly$population
-
-# land use vars + 0.001 so 0's dont go to infinity when logged
-leish_df_yearly$urban <- leish_df_yearly$urban + 0.001
-leish_df_yearly$ag <- leish_df_yearly$ag + 0.001
-
-# double check complete cases
-leish_df_yearly <- leish_df_yearly[complete.cases(leish_df_yearly),]
-
-# remove extreme outliers
-leish_df_yearly <- leish_df_yearly[which(leish_df_yearly$incidence < 0.5),]
-
-# check how many are always zero
-leish_df_yearly_zeroes <- leish_df_yearly  %>% 
-  group_by(cluster) %>% 
-  summarize(total_cases = sum(yearly_cases))
-leish_clusters_w_at_least_one_case <- leish_df_yearly$cluster[which(leish_df_yearly_zeroes$total_cases>0)]
-leish_df_yearly_at_least_one_case <- leish_df_yearly[which(leish_df_yearly$cluster %in% leish_clusters_w_at_least_one_case),]
-
-# remove PM
-leish_df_yearly_no_pm <- leish_df_yearly[!(leish_df_yearly$cluster %in% 1),]
-
-# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-leish_df_yearly_buffered <- leish_df_yearly[which(leish_df_yearly$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
-leish_df_yearly_buffered_no_pm <- leish_df_yearly_buffered[!(leish_df_yearly_buffered$cluster %in% 1),]
-```
-
-```{r, load biannual case data}
-vert_line_date <- as.Date('2008-01-01')
-
-###################
-### dengue data ###
-###################
-### biannual data
-dengue_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/dengue_biannual_full_dataset_c.csv")
-dengue_df_biannual$biannual_date <- as.factor(dengue_df_biannual$biannual_date)
-
-# cases + 1 so 0's dont go to infinity when logged
-dengue_df_biannual$incidence <- (dengue_df_biannual$biannual_cases+1)/dengue_df_biannual$population 
-
-# land use vars + 0.001 so 0's dont go to infinity when logged
-dengue_df_biannual$urban <- dengue_df_biannual$urban + 0.001
-dengue_df_biannual$ag <- dengue_df_biannual$ag + 0.001
-
-# double check complete cases
-dengue_df_biannual <- dengue_df_biannual[complete.cases(dengue_df_biannual),]
-
-# remove extreme outliers
-dengue_df_biannual <- dengue_df_biannual[which(dengue_df_biannual$incidence < 0.5),]
-
-#check how many are always zero
-dengue_df_biannual_zeroes <- dengue_df_biannual %>% 
-  group_by(cluster) %>% 
-  summarize(total_cases = sum(biannual_cases))
-clusters_w_at_least_one_case_biannual <- dengue_df_biannual$cluster[which(dengue_df_biannual_zeroes$total_cases>0)]
-dengue_df_biannaul_at_least_one_case <- dengue_df_biannual[which(dengue_df_biannual$cluster %in% clusters_w_at_least_one_case_biannual),]
-
-#remove PM
-dengue_df_biannual_no_pm <- dengue_df_biannual[!(dengue_df_biannual$cluster %in% 1),]
-
-# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-dengue_df_biannual_buffered <- dengue_df_biannual[which(dengue_df_biannual$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
-
-###################
-### leish data ####
-###################
-
-### biannaul data
-leish_df_biannual <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_7.5km/leish_biannual_full_dataset_c.csv")
-leish_df_biannual$biannual_date <- as.factor(leish_df_biannual$biannual_date)
-
-# cases + 1 so 0's dont go to infinity when logged
-leish_df_biannual$incidence <- (leish_df_biannual$biannual_cases+1)/leish_df_biannual$population
-
-# land use vars + 0.001 so 0's dont go to infinity when logged
-leish_df_biannual$urban <- leish_df_biannual$urban + 0.001
-leish_df_biannual$ag <- leish_df_biannual$ag + 0.001
-
-# double check complete cases
-leish_df_biannual <- leish_df_biannual[complete.cases(leish_df_biannual),]
-
-# remove extreme outliers
-leish_df_biannual <- leish_df_biannual[which(leish_df_biannual$incidence < 0.5),]
-
-# check how many are always zero
-leish_df_biannual_zeroes <- leish_df_biannual  %>% 
-  group_by(cluster) %>% 
-  summarize(total_cases = sum(biannual_cases))
-leish_clusters_w_at_least_one_case_biannual <- leish_df_biannual$cluster[which(leish_df_biannual_zeroes$total_cases>0)]
-leish_df_biannual_at_least_one_case <- leish_df_biannual[which(leish_df_biannual$cluster %in% leish_clusters_w_at_least_one_case_biannual),]
-
-# remove PM
-leish_df_biannual_no_pm <- leish_df_biannual[!(leish_df_biannual$cluster %in% 1),]
-
-# build final, buffered dataset where below 5km is 1, between 5km and 10km are thrown out (buffer zone), and above 10km is 0
-leish_df_biannual_buffered <- leish_df_biannual[which(leish_df_biannual$all_cutoffs %in% c(1,2,4,5,6,7,0)),]
-```
-
 ```{r, Fig1}
 #####################
 ## Fig 1a
@@ -294,7 +151,7 @@ fig1a
 ## Fig 1b
 #####################
 
-dengue_raw_plotting <- dengue_df_yearly_buffered %>%
+dengue_raw_plotting <- dengue_yearly$buffered %>%
   group_by(fivekm, year) %>%
   summarize(new_incidence = sum(yearly_cases)/sum(population))
 
@@ -326,7 +183,7 @@ fig1b
 ## Fig 1c
 #####################
 
-leish_raw_plotting <- leish_df_yearly_buffered %>%
+leish_raw_plotting <- leish_yearly$buffered %>%
   group_by(fivekm, year) %>%
   summarize(new_incidence = sum(yearly_cases)/sum(population))
 
