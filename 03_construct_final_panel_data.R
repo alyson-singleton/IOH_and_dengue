@@ -11,7 +11,9 @@ process_case_data <- function(df, case_col, date_col, drop_pm = TRUE) {
   df %>%
     mutate(
       {{ date_col }} := as.factor({{ date_col }}),
-      incidence = (!!sym(case_col) + 1) / population, # cases + 1 so 0's dont go to infinity when logged
+      incidence = (!!sym(case_col)) / population, # cases + 1 so 0's dont go to infinity when logged
+      incidence_plus_1 = (!!sym(case_col)+1) / population, # cases + 1 so 0's dont go to infinity when logged
+      cases_plus_1 = (!!sym(case_col)+1), # cases + 1 so 0's dont go to infinity when logged
       urban = urban + 0.001, # land use vars + 0.001 so 0's dont go to infinity when logged
       ag = ag + 0.001
     ) %>%

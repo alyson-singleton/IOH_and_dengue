@@ -6,6 +6,8 @@ output:
   html_document: default
   word_document: default
   pdf_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -234,19 +236,10 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 ## Fig 2a
 #####################
 ### yearly model
-dengue_yearly_model <- fenegbin(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
-df <- as.data.frame(dengue_yearly_model$coeftable)
-df <- df[1:22,]
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$estimate <- exp(df$estimate)-1
-df$upper <- exp(df$upper)-1
-df$lower <- exp(df$lower)-1
+max <- max(dengue_yearly_df$estimate[which(dengue_yearly_df$year > "2009-01-01")])
+min <- min(dengue_yearly_df$estimate[which(dengue_yearly_df$year > "2009-01-01")])
 
-fig2a <- ggplot(df) +
+fig2a <- ggplot(dengue_yearly_df) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
@@ -254,14 +247,15 @@ fig2a <- ggplot(df) +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
   xlab("Year") + ylab("% change\ndengue\nincidence\nby year\nrelative\nto 2008") + 
   theme_bw() +
-  scale_y_continuous(
-    trans = scales::trans_new(
-      name = "arcsinh",
-      transform = function(x) asinh(x),
-      inverse = function(x) sinh(x)),
-    labels = scales::percent_format(accuracy = 1),
-    limits=c(-1.2,15)) +
+  # scale_y_continuous(
+  #   trans = scales::trans_new(
+  #     name = "arcsinh",
+  #     transform = function(x) asinh(x),
+  #     inverse = function(x) sinh(x)))+
+    #labels = scales::percent_format(accuracy = 1))+
+    #limits=c(-1.2,15)) +
   #scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  #ylim(c(min,max)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -280,31 +274,6 @@ fig2a
 #####################
 ## Fig 2b
 #####################
-
-### aggregated data (treatment)
-dengue_df_agg_biannual <- dengue_df_biannual_buffered
-dengue_df_agg_biannual <- dengue_df_agg_biannual[which(as.Date(dengue_df_biannual_buffered$biannual_date) > '2006-10-01'),]
-dengue_df_agg_biannual$biannual_binary <- ifelse(as.Date(dengue_df_agg_biannual$biannual_date) > '2008-04-01',1, 0)
-dengue_df_agg_biannual$month <- format(as.Date(dengue_df_agg_biannual$biannual_date), "%m")
-dengue_df_agg_biannual_dry <- dengue_df_agg_biannual[which(dengue_df_agg_biannual$month == "04"),]
-dengue_df_agg_biannual_rainy <- dengue_df_agg_biannual[which(dengue_df_agg_biannual$month == "10"),]
-
-### aggregated models
-dengue_biannual_agg_model_dry <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_dry)
-summary(dengue_biannual_agg_model_dry)
-
-dengue_biannual_agg_model_rainy <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = dengue_df_agg_biannual_rainy)
-summary(dengue_biannual_agg_model_rainy)
-
-df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable[5,],
-                          dengue_biannual_agg_model_rainy$coeftable[5,]))
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$estimate <- exp(df$estimate)-1
-df$upper <- exp(df$upper)-1
-df$lower <- exp(df$lower)-1
-df$rainy <- c("Dry","Rainy")
 
 fig2b <- ggplot(df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
@@ -338,39 +307,116 @@ fig2b <- ggplot(df) +
 fig2b
 
 #####################
-## Fig 2all
+## Fig 2ab
 #####################
 
-fig2all <- grid.arrange(fig2a, fig2b,                     
+fig2ab <- grid.arrange(fig2a, fig2b,                     
                         ncol = 2, nrow = 1,
                         layout_matrix = rbind(c(1,1,1,1,1,2)))#,heights=c(7,1))
 
-fig2all <- as_ggplot(fig2all) +                                
+fig2ab <- as_ggplot(fig2ab) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
                   x = c(0.138, 0.846), y = c(0.99, 0.99)) 
 
-fig2all
+fig2ab
 
-ggsave("Fig2.pdf", plot=fig2all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
+#####################
+## Fig 2c
+#####################
+
+fig2c <- ggplot(leish_yearly_df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
+  xlab("Year") + ylab("% change\nleish\nincidence\nby year\nrelative\nto 2008") + 
+  theme_bw()+
+  scale_y_continuous(
+    trans = scales::trans_new(
+      name = "arcsinh",
+      transform = function(x) asinh(x),
+      inverse = function(x) sinh(x)),
+    labels = scales::percent_format(accuracy = 1),
+    limits=c(-1.2,15)) +
+  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=10),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "right",
+        strip.text.x = element_text(size = 12))
+fig2c
+
+#####################
+## Fig 2d
+#####################
+
+fig2d <- ggplot(df) +
+  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
+  geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
+  scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  xlab("Season") + ylab("") + 
+  theme_bw()+
+  scale_y_continuous(
+    trans = scales::trans_new(
+      name = "arcsinh",
+      transform = function(x) asinh(x),
+      inverse = function(x) sinh(x)),
+    labels = scales::percent_format(accuracy = 1),
+    limits=c(-1.2,15)) +
+  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
+  theme(plot.title = element_text(size=20),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(hjust=0.5, size=22),
+        axis.title=element_text(size=12),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_blank(),
+        axis.title.x=element_text(size=14),
+        axis.text.x=element_text(size=12),
+        axis.text = element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        legend.position = "",
+        strip.text.x = element_text(size = 12))
+fig2d
+
+#####################
+## Fig 3all
+#####################
+fig2cd <- grid.arrange(fig2c, fig2d,                     
+                        ncol = 2, nrow = 1,
+                        layout_matrix = rbind(c(1,1,1,1,1,2)))#,heights=c(7,1))
+
+fig2cd <- as_ggplot(fig2cd) +                                
+  draw_plot_label(label = c("C", "D"), size = 17,
+                  x = c(0.138, 0.846), y = c(0.99, 0.99)) 
+
+fig2cd
+
+#####################
+## Fig 2combined
+#####################
+fig2combined <- grid.arrange(fig2ab, fig2cd,                     
+                        ncol = 1, nrow = 2,
+                        layout_matrix = rbind(c(1),c(2)), heights=c(1,1))#,heights=c(7,1))
+
+fig2combined
+
+ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 8, units="in", device = "pdf")
+
 ```
 
 ```{r, attributable cases}
-### aggregated data (treatment)
-dengue_df_agg <- dengue_df_yearly_buffered
-dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),] ##NOTE change this!**
-dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
-
-### aggregated model
-dengue_yearly_agg_model <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
-summary(dengue_yearly_agg_model)
-
-df <- as.data.frame(dengue_yearly_agg_model$coeftable)
-df <- df[5,]
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$estimate <- exp(df$estimate)
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-
 ## build df w information needed for IRR/attributable cases calculations
 incidence_df <- dengue_df_agg %>%
   group_by(year_binary,fivekm) %>%
@@ -402,145 +448,6 @@ df$estimate <- exp(df$estimate)-1
 df$upper <- exp(df$upper)-1
 df$lower <- exp(df$lower)-1
 df
-```
-
-```{r, Fig3}
-#####################
-## Fig 3a
-#####################
-### yearly leish model
-leish_yearly_model <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + sum_precip + mean_temp + log(urban) + log(ag) | cluster + year, vcov = "cluster", data = leish_df_yearly_buffered)
-#summary(leish_yearly_model)
-
-df <- as.data.frame(leish_yearly_model$coeftable)
-df <- df[1:22,]
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
-             seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$estimate <- exp(df$estimate)-1
-df$upper <- exp(df$upper)-1
-df$lower <- exp(df$lower)-1
-
-fig3a <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
-  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
-  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("% change\nleish\nincidence\nby year\nrelative\nto 2008") + 
-  theme_bw()+
-  scale_y_continuous(
-    trans = scales::trans_new(
-      name = "arcsinh",
-      transform = function(x) asinh(x),
-      inverse = function(x) sinh(x)),
-    labels = scales::percent_format(accuracy = 1),
-    limits=c(-1.2,15)) +
-  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=18),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "right",
-        strip.text.x = element_text(size = 12))
-fig3a
-
-#####################
-## Fig 3b
-#####################
-
-### aggregated data (treatment)
-leish_df_agg_biannual <- leish_df_biannual_buffered
-leish_df_agg_biannual <- leish_df_agg_biannual[which(as.Date(leish_df_biannual_buffered$biannual_date) > '2006-10-01'),]
-leish_df_agg_biannual$biannual_binary <- ifelse(as.Date(leish_df_agg_biannual$biannual_date) > '2008-04-01',1, 0)
-leish_df_agg_biannual$month <- format(as.Date(leish_df_agg_biannual$biannual_date), "%m")
-leish_df_agg_biannual_dry <- leish_df_agg_biannual[which(leish_df_agg_biannual$month == "04"),]
-leish_df_agg_biannual_rainy <- leish_df_agg_biannual[which(leish_df_agg_biannual$month == "10"),]
-
-### aggregated models
-leish_biannual_agg_model_dry <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_dry)
-summary(leish_biannual_agg_model_dry)
-
-leish_biannual_agg_model_rainy <- fepois(incidence ~ biannual_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + biannual_date, vcov = "cluster", data = leish_df_agg_biannual_rainy)
-summary(leish_biannual_agg_model_rainy)
-
-df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable[5,],
-                          leish_biannual_agg_model_rainy$coeftable[5,]))
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$estimate <- exp(df$estimate)-1
-df$upper <- exp(df$upper)-1
-df$lower <- exp(df$lower)-1
-df$rainy <- c("Dry","Rainy")
-
-fig3b <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
-  geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
-  geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
-  scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
-  scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
-  xlab("Season") + ylab("") + 
-  theme_bw()+
-  scale_y_continuous(
-    trans = scales::trans_new(
-      name = "arcsinh",
-      transform = function(x) asinh(x),
-      inverse = function(x) sinh(x)),
-    labels = scales::percent_format(accuracy = 1),
-    limits=c(-1.2,15)) +
-  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=12),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_blank(),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "",
-        strip.text.x = element_text(size = 12))
-fig3b
-
-#####################
-## Fig 3all
-#####################
-fig3all <- grid.arrange(fig3a, fig3b,                     
-                        ncol = 2, nrow = 1,
-                        layout_matrix = rbind(c(1,1,1,1,1,2)))#,heights=c(7,1))
-
-fig3all <- as_ggplot(fig3all) +                                
-  draw_plot_label(label = c("C", "D"), size = 17,
-                  x = c(0.138, 0.846), y = c(0.99, 0.99)) 
-
-fig3all
-
-ggsave("Fig3.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
-```
-
-```{r, Fig2 combined}
-#####################
-## Fig 2combined
-#####################
-fig2combined <- grid.arrange(fig2all, fig3all,                     
-                        ncol = 1, nrow = 2,
-                        layout_matrix = rbind(c(1),c(2)), heights=c(1,1))#,heights=c(7,1))
-
-fig2combined
-
-ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 8, units="in", device = "pdf")
 ```
 
 ```{r, Fig4}
