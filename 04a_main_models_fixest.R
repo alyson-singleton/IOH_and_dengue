@@ -59,7 +59,7 @@ dengue_yearly_model <- feols(
   log(incidence_plus_1) ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year,
   vcov = "cluster",
   #fixef.rm = "none",
-  data = dengue_yearly$buffered)
+  data = leish_yearly$buffered)
 
 dengue_yearly_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
 colnames(dengue_yearly_df) <- c('estimate', 'std_error', 't_value', 'p_value')
