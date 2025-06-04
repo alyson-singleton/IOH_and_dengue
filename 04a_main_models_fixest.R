@@ -59,7 +59,36 @@ dengue_yearly_model <- feols(
   log(incidence_plus_1) ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year,
   vcov = "cluster",
   #fixef.rm = "none",
-  data = leish_yearly$buffered)
+  data = dengue_yearly$buffered)
+
+dengue_yearly_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
+colnames(dengue_yearly_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
+                           seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by = "year"))
+dengue_yearly_df <- dengue_yearly_df %>%
+  mutate(upper_log = estimate + 1.96 * std_error,
+         lower_log = estimate - 1.96 * std_error,
+         estimate = (exp(estimate)-1),
+         upper = (exp(upper_log)-1),
+         lower = (exp(lower_log)-1))
+
+ggplot(dengue_yearly_df) +
+  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
+  geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
+  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
+  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
+  geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
+  xlab("Year") + ylab("% change\ndengue\nincidence\nby year\nrelative\nto 2008") + 
+  theme_bw() +
+  theme_stor +
+  scale_y_continuous(labels = scales::percent)
+
+##option 1a: feols, log(normal) with incidence+1 but no all the time zeroes
+dengue_yearly_model <- feols(
+  log(incidence_plus_1) ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year,
+  vcov = "cluster",
+  #fixef.rm = "none",
+  data = dengue_yearly_buffered_wo_zeroes)
 
 dengue_yearly_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
 colnames(dengue_yearly_df) <- c('estimate', 'std_error', 't_value', 'p_value')
@@ -85,10 +114,11 @@ ggplot(dengue_yearly_df) +
 
 ## option 2: fepois w yearly cases
 dengue_yearly_model <- fepois(
-  yearly_cases ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp + offset(log(population)) | cluster,
+  yearly_cases ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster,
   vcov = "cluster",
-  #fixef.rm = "none", #this doesnt seem to make a difference
-  data = dengue_yearly$buffered)
+  offset = ~log(population),
+  #fixef.rm = "none",
+  data = dengue_yearly_buffered_wo_zero_years)
 
 dengue_yearly_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
 colnames(dengue_yearly_df) <- c('estimate', 'std_error', 't_value', 'p_value')
