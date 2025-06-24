@@ -13,10 +13,10 @@ process_case_data <- function(df, case_col, date_col) {
   df %>%
     mutate(
       !!date_col := as.factor(!!date_col),
-      incidence = (!!sym(case_col)) / population
+      incidence = (!!sym(case_col)) / population * 1000
     ) %>%
     filter(complete.cases(.), 
-           incidence < 0.5, # remove extreme outliers (n=1, most likely due to inaccurate pop data)
+           incidence < 500, # remove extreme outliers (n=1, most likely due to inaccurate pop data)
            !key %in% c(101, 105, 106)) %>% # remove facilities without population data & that only existed pre tx
     {
       df_clean <- .

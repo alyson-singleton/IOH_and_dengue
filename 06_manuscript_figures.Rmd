@@ -438,14 +438,14 @@ regional_incidence_all <- dengue_yearly$connected_buffered %>%
   summarise(
     yearly_cases_all = sum(yearly_cases),
     pop_sum_all = sum(population),
-    incidence_all = yearly_cases_all / pop_sum_all)
+    incidence_all = yearly_cases_all / pop_sum_all * 1000)
 
 regional_incidence_yearly <- dengue_yearly$connected_buffered %>%
   group_by(year, fivekm) %>%
   summarise(
     yearly_cases = sum(yearly_cases),
     pop_sum = sum(population),
-    incidence_avg = yearly_cases / pop_sum,
+    incidence_avg = yearly_cases / pop_sum * 1000,
     .groups = "drop") %>%
   left_join(regional_incidence_all, by = "year")
 
@@ -479,7 +479,7 @@ treated_post <- dengue_yearly$connected_buffered %>%
 
 # Step 1c: Expected cases in tx group = pre-treatment incidence x post-treatment population
 treated_post <- treated_post %>%
-  mutate(expected_cases = treated_pre_avg_incidence * population)
+  mutate(expected_cases = treated_pre_avg_incidence/1000 * population)
 
 # Step 1d: Total expected cases in treated group post-treatment
 total_expected_cases <- sum(treated_post$expected_cases, na.rm = TRUE)
@@ -576,7 +576,7 @@ df <- as.data.frame(rbind(dengue_yearly_model_1km$coeftable[5,],
 df$Cutoff <- c('1km','5km','10km', '15km','20km')
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
 df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','5km','10km', '15km','20km'))
-df$estimate <- as.numeric(df$estimate)*1000
+df$estimate <- as.numeric(df$estimate)
 
 # replace analytic standard errors w bootstrapped estimates
 df$std_error_boot <- c(mean(std_error_stor[1:1000]),
@@ -585,8 +585,8 @@ df$std_error_boot <- c(mean(std_error_stor[1:1000]),
                        mean(std_error_stor[3001:4000]),
                        mean(std_error_stor[4001:5000]))
 
-df$upper <- df$estimate+1.96*df$std_error_boot*1000
-df$lower <- df$estimate-1.96*df$std_error_boot*1000
+df$upper <- df$estimate+1.96*df$std_error_boot
+df$lower <- df$estimate-1.96*df$std_error_boot
 
 fig3a <- ggplot(df, aes(group=Cutoff)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
@@ -750,35 +750,24 @@ ggsave("Fig3.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 
 ```{r, Table1}
 #####################
-## Build aggregated model
-#####################
-dengue_df_agg <- dengue_df_yearly_buffered
-dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
-dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
-
-leish_df_agg <- leish_df_yearly_buffered
-leish_df_agg <- leish_df_agg[which(as.Date(leish_df_agg$year) > '2007-01-01'),]
-leish_df_agg$year_binary <- ifelse(as.Date(leish_df_agg$year) > '2008-01-01',1,0)
-
-# main specification aggregated effect estimate (for comparison)
-dengue_yearly_model_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, 
-                                  vcov = "cluster", 
-                                  data = dengue_df_agg)
-
-leish_yearly_model_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, 
-                                  vcov = "cluster", 
-                                  data = leish_df_agg)
-
-#####################
 ## Table 1
 #####################
-table1 <- etable(dengue_yearly_model_agg,dengue_biannual_agg_model_dry,dengue_biannual_agg_model_rainy, 
-                 leish_yearly_model_agg,leish_biannual_agg_model_dry,leish_biannual_agg_model_rainy, digits = 2)
+table1 <- fixest::etable(dengue_yearly_agg_model,
+                         dengue_biannual_agg_model_dry,
+                         dengue_biannual_agg_model_rainy,
+                         leish_yearly_agg_model,
+                         leish_biannual_agg_model_dry,
+                         leish_biannual_agg_model_rainy, 
+                         digits = 3,
+                         signif.code = c("*" = 0.05))
 table1 <- table1[c(3:8,9:12,16,15,14),2:7]
-table1[13,] <- c(rep(65,6))
+table1[13,] <- c(rep(65,6))#need to update this
 colnames(table1) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
-rownames(table1) <- c("log(Urban)", "log(Ag)", "Sum Precip", "Mean Temp", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "Cor^2", "N", "Clusters")
+rownames(table1) <- c("Urban", "Ag", "Sum Precip", "Mean Temp", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Cluster", "Year", "Biannual", "R^2", "N", "Clusters")
 table1 <- table1[c(5:6,1:4,7:13),]
+table1[] <- lapply(table1, function(col) {
+  ifelse(col == "Yes", "X", ifelse(col == "No", "", col))
+})
 table1
 write.csv(table1, "~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/table1.csv")
 ```
