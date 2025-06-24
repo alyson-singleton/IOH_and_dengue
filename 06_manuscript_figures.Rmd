@@ -34,10 +34,9 @@ showtext_auto()
 #####################
 ## Fig 1a
 #####################
+linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
 
-cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
-colnames(cluster_ids)[1] <- "cluster"
-center_lat_long <- left_join(dengue_df_yearly[,c(3,20)], cluster_ids, by='cluster')
+center_lat_long <- left_join(dengue_yearly$full[,c(3,20,21,23)], linked_ids_codes, by='key')
 
 center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
@@ -76,12 +75,15 @@ no_axis <- theme(axis.title=element_blank(),
                  panel.grid.major = element_blank())
 
 # Build columns for plotting
-center_lat_long_fig1 <- center_lat_long_fig %>%
-  mutate(all_cutoffs = case_when(
-    all_cutoffs %in% c('0', '4', '5', '6', '7') ~ '0',
-    all_cutoffs %in% c('1', '2') ~ '1',
-    TRUE ~ as.character(all_cutoffs)),
-    all_cutoffs = factor(all_cutoffs, levels = c('1', '0', '3')),
+center_lat_long_fig1 <- center_lat_long %>%
+  mutate(
+    all_cutoffs = case_when(
+      all_cutoffs %in% c('0', '4', '5', '6', '7') ~ '0',
+      all_cutoffs %in% c('1', '2') ~ '1',
+      TRUE ~ as.character(all_cutoffs))) %>%
+  mutate(
+    all_cutoffs = if_else(!key_connected, '2', all_cutoffs),
+    all_cutoffs = factor(all_cutoffs, levels = c('1', '0', '3', '2')),
     pm_indicator = if_else(cluster == 1, 24, 21),
     pm_indicator2 = if_else(cluster == 1, 3.2, 2.5)) %>%
   arrange(if_else(cluster == 1, 1, 0))
@@ -90,7 +92,7 @@ center_lat_long_fig1 <- center_lat_long_fig %>%
 cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(cluster == 1))
 arrow_x <- cluster1_coords[1, "X"] + 0.08
 arrow_y <- cluster1_coords[1, "Y"]
-label_x <- arrow_x + 0.14
+label_x <- arrow_x + 0.12
 label_y <- arrow_y - 0.07
 
 # Plot MdD
@@ -105,19 +107,23 @@ mdd_map <- ggplot() +
               shape=factor(pm_indicator)), 
           size=center_lat_long_fig1$pm_indicator2, 
           alpha=1) +
-  scale_fill_manual(name= "", values=c("1" = "#E04490", "0" = "#648FFF", "3" = "#ffffff"),
-                    labels=c("Exposed (<5km)", "Unexposed (>10km)", "Buffer (removed)")) +
+  scale_fill_manual(name= "", values=c("1" = "#E04490", "0" = "#648FFF", "3" = "grey80", "2" = "#ffffff"),
+                    labels=c("Exposed (<5km)", "Unexposed (>10km)", "Buffer (removed)", "Disconnected (removed)")) +
   scale_color_manual(name = "", values = c("Unpaved Roads" = '#a6a6a6', "Highway" = 'black',"Rivers" = 'lightblue')) +
   scale_shape_manual(values = c(`21` = 21, `24` = 24), guide = "none") +
   theme_minimal() +
   no_axis +
-  guides(fill=guide_legend(override.aes=list(shape=21, color = "black", linetype = 0, size=2.5))) +
-  theme(legend.text=element_text(size=12),
-        legend.title=element_text(size=14),
-        legend.position='bottom',
-        legend.spacing.x = unit(0.05, 'cm'),
-        legend.box.spacing = unit(0.05, 'cm'),
-        legend.key.width = unit(0.4, "cm")) +
+  guides(color = guide_legend(nrow = 2), 
+         fill=guide_legend(override.aes=list(shape=21, color = "black", 
+                                             linetype = 0, size=2.2), nrow = 2)) +
+  theme(legend.position = "bottom",
+        legend.key.width = unit(0.3, "cm"),
+        legend.key.height = unit(0.3, "cm"),
+        legend.spacing.x = unit(0.02, "cm"),
+        legend.box.spacing = unit(0.01, "cm"),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 10),
+        legend.direction = "horizontal") +
   annotation_scale(location = "bl",height = unit(0.1, "cm")) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
                          height = unit(0.7, "cm"), width = unit(0.7, "cm")) +
@@ -136,9 +142,12 @@ mdd_map <- mdd_map + theme(legend.position = "none")
 
 fig1a <- ggdraw() + 
     draw_plot(ggplot() +
-              geom_sf(data = peru_outline, fill=NA, color='#3b3b3b', size=.001, show.legend = FALSE) +
-              geom_sf(data = peru_depts, fill=NA, color='#3b3b3b', size=.001, show.legend = FALSE) +
-              geom_sf(data = mdd_region, fill='#cfcfcf', color='#3b3b3b', size=.001, show.legend = FALSE) +
+              geom_sf(data = peru_outline, fill=NA, color='#3b3b3b', 
+                      size=.001, show.legend = FALSE) +
+              geom_sf(data = peru_depts, fill=NA, color='#3b3b3b', 
+                      size=.001, show.legend = FALSE) +
+              geom_sf(data = mdd_region, fill='#cfcfcf', color='#3b3b3b', 
+                      size=.001, show.legend = FALSE) +
               theme_minimal() +
               no_axis +
               theme(legend.text=element_text(size=12),
@@ -153,9 +162,9 @@ fig1a
 ## Fig 1b
 #####################
 
-dengue_raw_plotting <- dengue_yearly$buffered %>%
+dengue_raw_plotting <- dengue_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases)/sum(population))
+  summarize(new_incidence = sum(yearly_cases)/sum(population)*1000)
 
 dengue_raw_plotting$year <- as.Date(dengue_raw_plotting$year)
 dengue_raw_plotting$fivekm <- as.character(dengue_raw_plotting$fivekm)
@@ -163,7 +172,7 @@ dengue_raw_plotting$fivekm <- as.character(dengue_raw_plotting$fivekm)
 fig1b <- ggplot(dengue_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
-  ggtitle("Dengue incidence") +
+  ggtitle("Dengue incidence per 1,000") +
   xlab("Year") + ylab("") + 
   scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
   theme_bw()+
@@ -185,9 +194,9 @@ fig1b
 ## Fig 1c
 #####################
 
-leish_raw_plotting <- leish_yearly$buffered %>%
+leish_raw_plotting <- leish_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases)/sum(population))
+  summarize(new_incidence = sum(yearly_cases)/sum(population)*1000)
 
 leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
 leish_raw_plotting$fivekm <- as.character(leish_raw_plotting$fivekm)
@@ -195,7 +204,7 @@ fig1c <- ggplot(leish_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
-  ggtitle("Leish incidence") +
+  ggtitle("Leishmaniasis incidence per 1,000") +
   xlab("Year") + ylab("") + 
   scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
   theme_bw()+
@@ -219,13 +228,13 @@ fig1c
 
 fig1all <- grid.arrange(fig1a, fig1b, fig1c, fig1_legend,
                         ncol = 4, nrow = 3,
-                        layout_matrix = rbind(c(1,1,2,2),c(1,1,3,3),c(NA,4,4,NA)), 
+                        layout_matrix = rbind(c(1,1,1,2,2,2),c(1,1,1,3,3,3),c(NA,4,4,4,4,NA)), 
                         heights=c(3,3,1))
 
 fig1all <- as_ggplot(fig1all) +                                
   draw_plot_label(label = c("A", "B", "C"), size = 14,
                   x = c(0.01, 0.48, 0.48), y = c(1, 1, 0.57)) 
-fig1all
+#fig1all
 
 ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
 
@@ -236,74 +245,67 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 ## Fig 2a
 #####################
 ### yearly model
-max <- max(dengue_yearly_df$estimate[which(dengue_yearly_df$year > "2009-01-01")])
-min <- min(dengue_yearly_df$estimate[which(dengue_yearly_df$year > "2009-01-01")])
+y_lims <- c(-10,39)
+
+theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+                    panel.grid.major.x = element_line(linewidth = 0.3),
+                    panel.grid.major.y = element_line(linewidth = 0.3),
+                    axis.line.x = element_line(color = "black", linewidth = 0.3),
+                    axis.line.y = element_line(color = "black", linewidth = 0.3),
+                    plot.title = element_text(size=20, hjust=0.1),
+                    plot.title.position = "plot",
+                    plot.subtitle = element_text(hjust=0.5, size=22),
+                    axis.title=element_text(size=12),
+                    axis.title.y=element_text(size=11,angle=0, vjust=.5, hjust=0.5),
+                    axis.text.y=element_text(size=12),
+                    axis.title.x=element_text(size=12),
+                    axis.text.x=element_text(size=12),
+                    #axis.text = element_text(size=14),
+                    legend.text=element_text(size=12),
+                    legend.title=element_text(size=12),
+                    legend.position = "none",
+                    strip.text.x = element_text(size = 12))
 
 fig2a <- ggplot(dengue_yearly_df) +
-  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
+  geom_hline(aes(yintercept=0), colour='grey30', linewidth=.4) +
+  geom_rect(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2022-06-01"),
+                ymin = dengue_yearly_agg_df$upper,
+                ymax = dengue_yearly_agg_df$lower),
+            fill = "gray60", alpha = 0.01, inherit.aes = FALSE) +
+  geom_segment(aes(x = as.Date("2008-01-01"), xend = as.Date("2022-06-01"), 
+                   y = dengue_yearly_agg_df$estimate, yend = dengue_yearly_agg_df$estimate),
+               color = "red", linewidth = 0.4, inherit.aes = FALSE) +
+  # annotate("text", x = as.Date("2009-01-01"), y = dengue_yearly_agg_df$estimate+0.005,
+  #          label = "ATT", size = 4, color="red") +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, linewidth=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("% change\ndengue\nincidence\nby year\nrelative\nto 2008") + 
-  theme_bw() +
-  # scale_y_continuous(
-  #   trans = scales::trans_new(
-  #     name = "arcsinh",
-  #     transform = function(x) asinh(x),
-  #     inverse = function(x) sinh(x)))+
-    #labels = scales::percent_format(accuracy = 1))+
-    #limits=c(-1.2,15)) +
-  #scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
-  #ylim(c(min,max)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=12),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "right",
-        strip.text.x = element_text(size = 12))
+  xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
+  theme_minimal() +
+  scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
+                     limits = y_lims) +
+  theme_stor
+
 fig2a
 
 #####################
 ## Fig 2b
 #####################
 
-fig2b <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+fig2b <- ggplot(dengue_biannual_df) +
+  geom_hline(aes(yintercept=0), colour='black', size=.4) +
   geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
-  theme_bw() +
-  scale_y_continuous(
-    trans = scales::trans_new(
-      name = "arcsinh",
-      transform = function(x) asinh(x),
-      inverse = function(x) sinh(x)),
-    labels = scales::percent_format(accuracy = 1),
-    limits=c(-1.2,15)) +
-  #scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=12),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_blank(),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "",
-        strip.text.x = element_text(size = 12))
+  theme_minimal() +
+  scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
+                     limits = y_lims) +
+  theme_stor +
+  theme(axis.text.y=element_blank())
+
 fig2b
 
 #####################
@@ -316,7 +318,7 @@ fig2ab <- grid.arrange(fig2a, fig2b,
 
 fig2ab <- as_ggplot(fig2ab) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.138, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.128, 0.846), y = c(0.99, 0.99)) 
 
 fig2ab
 
@@ -325,69 +327,43 @@ fig2ab
 #####################
 
 fig2c <- ggplot(leish_yearly_df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_hline(aes(yintercept=0), colour='grey30', size=.4) +
+  geom_rect(aes(xmin = as.Date("2008-01-01"), xmax = as.Date("2022-06-01"),
+                ymin = leish_yearly_agg_df$upper,
+                ymax = leish_yearly_agg_df$lower),
+            fill = "gray60", alpha = 0.01, inherit.aes = FALSE) +
+  geom_segment(aes(x = as.Date("2008-01-01"), xend = as.Date("2022-06-01"), 
+                   y = leish_yearly_agg_df$estimate, yend = leish_yearly_agg_df$estimate),
+               color = "red", linewidth = 0.4, inherit.aes = FALSE) +
+  # annotate("text", x = as.Date("2009-01-01"), y = leish_yearly_agg_df$estimate+0.005,
+  #          label = "ATT", size = 4, color="red") +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("% change\nleish\nincidence\nby year\nrelative\nto 2008") + 
-  theme_bw()+
-  scale_y_continuous(
-    trans = scales::trans_new(
-      name = "arcsinh",
-      transform = function(x) asinh(x),
-      inverse = function(x) sinh(x)),
-    labels = scales::percent_format(accuracy = 1),
-    limits=c(-1.2,15)) +
-  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=18),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "right",
-        strip.text.x = element_text(size = 12))
+  xlab("Year") + ylab("change in\nleish\nincidence\nper 1,000\nrelative\nto 2008") + 
+  theme_minimal() +
+  scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
+                     limits = y_lims) +
+  theme_stor
 fig2c
 
 #####################
 ## Fig 2d
 #####################
 
-fig2d <- ggplot(df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+fig2d <- ggplot(leish_biannual_df) +
+  geom_hline(aes(yintercept=0), colour='black', size=.4) +
   geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Season") + ylab("") + 
-  theme_bw()+
-  scale_y_continuous(
-    trans = scales::trans_new(
-      name = "arcsinh",
-      transform = function(x) asinh(x),
-      inverse = function(x) sinh(x)),
-    labels = scales::percent_format(accuracy = 1),
-    limits=c(-1.2,15)) +
-  # scale_y_continuous(labels = scales::percent, limits=c(-1.2,15)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=12),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_blank(),
-        axis.title.x=element_text(size=14),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=14),
-        legend.text=element_text(size=12),
-        legend.title=element_text(size=12),
-        legend.position = "",
-        strip.text.x = element_text(size = 12))
+  theme_minimal() +
+  scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
+                     limits = y_lims) +
+  theme_stor +
+  theme(axis.text.y=element_blank())
 fig2d
 
 #####################
@@ -399,7 +375,7 @@ fig2cd <- grid.arrange(fig2c, fig2d,
 
 fig2cd <- as_ggplot(fig2cd) +                                
   draw_plot_label(label = c("C", "D"), size = 17,
-                  x = c(0.138, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.128, 0.846), y = c(0.99, 0.99)) 
 
 fig2cd
 
@@ -408,15 +384,16 @@ fig2cd
 #####################
 fig2combined <- grid.arrange(fig2ab, fig2cd,                     
                         ncol = 1, nrow = 2,
-                        layout_matrix = rbind(c(1),c(2)), heights=c(1,1))#,heights=c(7,1))
+                        layout_matrix = rbind(c(1),c(2)), 
+                        heights=c(1,1))
 
 fig2combined
 
-ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 8, units="in", device = "pdf")
+ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 9, height = 8, units="in", device = "pdf")
 
 ```
 
-```{r, attributable cases}
+```{r, attributable cases old, eval=F}
 ## build df w information needed for IRR/attributable cases calculations
 incidence_df <- dengue_df_agg %>%
   group_by(year_binary,fivekm) %>%
@@ -450,15 +427,77 @@ df$lower <- exp(df$lower)-1
 df
 ```
 
-```{r, Fig4}
+```{r, percent change & attributable cases new}
+##"When reporting estimates in percentage terms, we use the nationally representative baseline mean of allcause death rates of 10.7 deaths per-1,000 people between 1988 to 1993, as reported by the United Nations Population Division." -SCKS
+
+## Baseline: Recent Regional Unadjusted Incidence (2007–2008 average)
+# Intuitive comparison to regional background levels.
+# Anchors the percent change in a broader, policy-relevant benchmark.
+regional_incidence_all <- dengue_yearly$connected_buffered %>%
+  group_by(year) %>%
+  summarise(
+    yearly_cases_all = sum(yearly_cases),
+    pop_sum_all = sum(population),
+    incidence_all = yearly_cases_all / pop_sum_all)
+
+regional_incidence_yearly <- dengue_yearly$connected_buffered %>%
+  group_by(year, fivekm) %>%
+  summarise(
+    yearly_cases = sum(yearly_cases),
+    pop_sum = sum(population),
+    incidence_avg = yearly_cases / pop_sum,
+    .groups = "drop") %>%
+  left_join(regional_incidence_all, by = "year")
+
+# Reduce to just 2007 and 2008 (most conservative)
+treated_pre_avg_incidence <- regional_incidence_yearly %>%
+  filter(fivekm == 1, year %in% as.Date(c("2007-01-01", "2008-01-01"))) %>%
+  summarise(mean_incidence_treated_pre = mean(incidence_avg)) %>%
+  pull(mean_incidence_treated_pre)
+
+# add percent changes to results dfs
+dengue_yearly_agg_df <- dengue_yearly_agg_df %>%
+  mutate(pct_change = (estimate / treated_pre_avg_incidence) * 100,
+         pct_change_upper = (upper / treated_pre_avg_incidence) * 100,
+         pct_change_lower = (lower / treated_pre_avg_incidence) * 100)
+
+dengue_yearly_df <- dengue_yearly_df %>%
+  mutate(pct_change = (estimate / treated_pre_avg_incidence) * 100,
+         pct_change_upper = (upper / treated_pre_avg_incidence) * 100,
+         pct_change_lower = (lower / treated_pre_avg_incidence) * 100)
+
+# Calculate attributable cases
+# Step 1a: Define post-treatment years
+post_years <- as.Date(c("2009-01-01", "2010-01-01", "2011-01-01", "2012-01-01",
+                        "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01",
+                        "2017-01-01", "2018-01-01", "2019-01-01", "2020-01-01",
+                        "2021-01-01", "2022-01-01"))
+
+# Step 1b: Subset to treated group post-treatment
+treated_post <- dengue_yearly$connected_buffered %>%
+  filter(fivekm == 1, year %in% post_years)
+
+# Step 1c: Expected cases in tx group = pre-treatment incidence x post-treatment population
+treated_post <- treated_post %>%
+  mutate(expected_cases = treated_pre_avg_incidence * population)
+
+# Step 1d: Total expected cases in treated group post-treatment
+total_expected_cases <- sum(treated_post$expected_cases, na.rm = TRUE)
+dengue_yearly_agg_df_test <- dengue_yearly_agg_df %>%
+  mutate(attributable_cases = (pct_change / 100) * total_expected_cases,
+         attributable_cases_upper = (pct_change_upper / 100) * total_expected_cases,
+         attributable_cases_lower = (pct_change_lower / 100) * total_expected_cases)
+```
+
+```{r, Fig3}
 #####################
-## Fig 4a
+## Fig 3a
 #####################
 
 ### aggregated data (treatment)
-dengue_df_agg <- dengue_df_yearly
+dengue_df_agg <- dengue_yearly$connected
 dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
-dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
+dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01', 1, 0)
 
 ## bootstrap to get more conservative standard errors
 treatment_col_names <- c('onekm','fivekm','tenkm','fifteenkm','twentykm','thirtykm')
@@ -469,23 +508,28 @@ for(j in 1:5){
   dengue_df_yearly_1s <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(j)),] #loop through each distance group
   
   for(k in 1:1000){
-    # sample cluster ids
+    # sample key ids
     set.seed(k)
-    dengue_df_yearly_sample0s <- sample(dengue_df_yearly_0s$cluster,length(unique(dengue_df_yearly_0s$cluster)),replace=T)
-    dengue_df_yearly_sample1s <- sample(dengue_df_yearly_1s$cluster,length(unique(dengue_df_yearly_1s$cluster)),replace=T)
+    dengue_df_yearly_sample0s <- sample(dengue_df_yearly_0s$key,
+                                        length(unique(dengue_df_yearly_0s$key)),replace=T)
+    dengue_df_yearly_sample1s <- sample(dengue_df_yearly_1s$key,
+                                        length(unique(dengue_df_yearly_1s$key)),replace=T)
     ids_to_pull <- c(dengue_df_yearly_sample0s,dengue_df_yearly_sample1s)
     
     # build new dataset
     dengue_df_yearly_boot <- c()
     for(i in ids_to_pull) {
-      og_rows_associated_w_id_i <- dengue_df_agg[which(dengue_df_agg$cluster == i),]
+      og_rows_associated_w_id_i <- dengue_df_agg[which(dengue_df_agg$key == i),]
       dengue_df_yearly_boot <- rbind(dengue_df_yearly_boot, og_rows_associated_w_id_i)
     }
     
     #run model
     col_name <- treatment_col_names[j]
-    dengue_yearly_model_boot <- fepois(as.formula(paste0("incidence ~ year_binary*", col_name, "+ log(urban) + log(ag) + sum_precip + mean_temp | cluster + year")), 
-                                           vcov = "cluster", 
+    dengue_yearly_model_boot <- feols(as.formula(paste0("incidence ~ year_binary*", 
+                                                        col_name, 
+                                                        "+ urban + ag + sum_precip + mean_temp | key + year")), 
+                                           vcov = ~cluster, 
+                                           #weights = ~population,
                                            data = dengue_df_yearly_boot)
     
     #store standard error
@@ -502,11 +546,26 @@ dengue_df_yearly_15km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(4,
 dengue_df_yearly_20km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(5,6,7,0)),]
 
 # run models
-dengue_yearly_model_1km <- fepois(incidence ~ year_binary*onekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_1km)
-dengue_yearly_model_5km <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_5km)
-dengue_yearly_model_10km <- fepois(incidence ~ year_binary*tenkm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_10km)
-dengue_yearly_model_15km <- fepois(incidence ~ year_binary*fifteenkm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_15km)
-dengue_yearly_model_20km <- fepois(incidence ~ year_binary*twentykm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_20km)
+dengue_yearly_model_1km <- feols(incidence ~ year_binary*onekm + urban + ag + sum_precip + mean_temp | key + year, 
+                                 vcov = ~cluster, 
+                                 #weights=~population, 
+                                 data = dengue_df_yearly_1km)
+dengue_yearly_model_5km <- feols(incidence ~ year_binary*fivekm + urban + ag + sum_precip + mean_temp | key + year, 
+                                 vcov = ~cluster, 
+                                 #weights=~population, 
+                                 data = dengue_df_yearly_5km)
+dengue_yearly_model_10km <- feols(incidence ~ year_binary*tenkm + urban + ag + sum_precip + mean_temp | key + year, 
+                                  vcov = ~cluster, 
+                                  #weights=~population, 
+                                  data = dengue_df_yearly_10km)
+dengue_yearly_model_15km <- feols(incidence ~ year_binary*fifteenkm + urban + ag + sum_precip + mean_temp | key + year, 
+                                  vcov = ~cluster, 
+                                  #weights=~population, 
+                                  data = dengue_df_yearly_15km)
+dengue_yearly_model_20km <- feols(incidence ~ year_binary*twentykm + urban + ag + sum_precip + mean_temp | key + year, 
+                                  vcov = ~cluster, 
+                                  #weights=~population,
+                                  data = dengue_df_yearly_20km)
 
 df <- as.data.frame(rbind(dengue_yearly_model_1km$coeftable[5,],
                           dengue_yearly_model_5km$coeftable[5,],
@@ -517,7 +576,7 @@ df <- as.data.frame(rbind(dengue_yearly_model_1km$coeftable[5,],
 df$Cutoff <- c('1km','5km','10km', '15km','20km')
 colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Cutoff')
 df$Cutoff <- factor(as.character(df$Cutoff), levels=c('1km','5km','10km', '15km','20km'))
-df$estimate <- as.numeric(df$estimate)
+df$estimate <- as.numeric(df$estimate)*1000
 
 # replace analytic standard errors w bootstrapped estimates
 df$std_error_boot <- c(mean(std_error_stor[1:1000]),
@@ -526,13 +585,10 @@ df$std_error_boot <- c(mean(std_error_stor[1:1000]),
                        mean(std_error_stor[3001:4000]),
                        mean(std_error_stor[4001:5000]))
 
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$estimate <- exp(df$estimate)-1
-df$upper <- exp(df$upper)-1
-df$lower <- exp(df$lower)-1
+df$upper <- df$estimate+1.96*df$std_error_boot*1000
+df$lower <- df$estimate-1.96*df$std_error_boot*1000
 
-fig4a <- ggplot(df, aes(group=Cutoff)) +
+fig3a <- ggplot(df, aes(group=Cutoff)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=Cutoff, ymax=upper, ymin=lower, color=Cutoff), width=0, linewidth=0.7) +
   geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3, shape=21) +
@@ -540,14 +596,14 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
                                                    '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
   scale_fill_manual(name="Treatment", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
                                                   '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
-  xlab("") + ylab("% change\ndengue\nincidence\nrelative\nto 2008") + 
+  xlab("") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_bw()+
-  scale_y_continuous(
-    trans = scales::trans_new(
-      name = "arcsinh",
-      transform = function(x) asinh(x),
-      inverse = function(x) sinh(x)),
-    labels = scales::percent_format(accuracy = 1)) +
+  # scale_y_continuous(
+  #   trans = scales::trans_new(
+  #     name = "arcsinh",
+  #     transform = function(x) asinh(x),
+  #     inverse = function(x) sinh(x)),
+  #   labels = scales::percent_format(accuracy = 1)) +
   #scale_y_continuous(labels = scales::percent, limits=c(-1,18)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
@@ -563,17 +619,14 @@ fig4a <- ggplot(df, aes(group=Cutoff)) +
         legend.position = "none",
         strip.text.x = element_text(size = 12))
 
-fig4a
+fig3a
 
 #####################
-## Fig 4b
+## Fig 3b
 #####################
 
-boundary_dummy_vars <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_7.5km/boundary_dummy_vars_7.5km.csv")
-cluster_ids <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
-colnames(cluster_ids)[1] <- "cluster"
-center_lat_long <- left_join(dengue_df_yearly, cluster_ids, by='cluster')
-
+linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
+center_lat_long <- left_join(dengue_yearly$full[,c(3,20,21,23)], linked_ids_codes, by='key')
 center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
@@ -606,11 +659,25 @@ no_axis <- theme(axis.title=element_blank(),
                  panel.grid.major = element_blank())
 
 # Build columns for plotting
+center_lat_long_fig1 <- center_lat_long %>%
+  mutate(
+    all_cutoffs = case_when(
+      all_cutoffs %in% c('0', '4', '5', '6', '7') ~ '0',
+      all_cutoffs %in% c('1', '2') ~ '1',
+      TRUE ~ as.character(all_cutoffs))) %>%
+  mutate(
+    all_cutoffs = if_else(!key_connected, '2', all_cutoffs),
+    all_cutoffs = factor(all_cutoffs, levels = c('1', '0', '3', '2')),
+    pm_indicator = if_else(cluster == 1, 24, 21),
+    pm_indicator2 = if_else(cluster == 1, 3.2, 2.5)) %>%
+  arrange(if_else(cluster == 1, 1, 0))
+
 center_lat_long_fig4 <- center_lat_long %>%
   mutate(all_cutoffs = case_when(
+    !key_connected ~ '-1',
     all_cutoffs %in% c('0', '6', '7') ~ '0',
     TRUE ~ as.character(all_cutoffs)),
-    all_cutoffs = factor(all_cutoffs, levels = c('1','2','3','4','5','0')),
+    all_cutoffs = factor(all_cutoffs, levels = c('1','2','3','4','5','0','-1')),
     pm_indicator = if_else(cluster == 1, 24, 21),
     pm_indicator2 = if_else(cluster == 1, 3.2, 2.5)) %>%
   arrange(if_else(cluster == 1, 1, 0))
@@ -623,7 +690,7 @@ label_x <- arrow_x + 0.14
 label_y <- arrow_y - 0.07
 
 # Plot MdD
-fig4b <- ggplot() +
+fig3b <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = FALSE) +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = FALSE) +
@@ -636,14 +703,14 @@ fig4b <- ggplot() +
           stroke=0.5,
           alpha = 1) +
   scale_fill_manual(name= "", values=list('1'="#DC267F",'2'='#FF7900','3'='#FFB000',
-                                          '4'='#648FFF','5'='#785EF0','0'='lightgrey'), 
-                    labels=c("1km", "5km", "10km", "15km", "20km", "Control")) +
+                                          '4'='#648FFF','5'='#785EF0','0'='lightgrey','-1'="#ffffff"), 
+                    labels=c("1km", "5km", "10km", "15km", "20km", "Control", "Removed")) +
   scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
                      labels=c('Unpaved Roads','Highway','Rivers')) +
   scale_shape_manual(values = c(`21` = 21, `24` = 24), guide = "none") +
   theme_minimal() +
   no_axis +
-  guides(fill=guide_legend(override.aes=list(shape=21, color = "black", linetype = 0, size=2.5))) +
+  guides(fill=guide_legend(override.aes=list(shape=21, color = "black", linetype = 0, size=2.5),nrow=2)) +
   theme(legend.text=element_text(size=12),
         legend.title=element_text(size=14),
         legend.position='bottom',
@@ -662,23 +729,23 @@ fig4b <- ggplot() +
            x = label_x, y = label_y, 
            label = "PM", 
            size = 3.4, fontface = "bold", hjust = 0, color = "black")
-fig4b
+fig3b
 
 #####################
-## Fig 4all
+## Fig 3all
 #####################
 
-fig4all <- grid.arrange(fig4a, fig4b,                     
+fig3all <- grid.arrange(fig3a, fig3b,                     
                         ncol = 2, nrow = 1,
                         layout_matrix = rbind(c(1,1,1,2,2,2,2)))
 
-fig4all <- as_ggplot(fig4all) +                                
+fig3all <- as_ggplot(fig3all) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
                   x = c(0.01, 0.44), y = c(0.99, 0.99)) 
 
-fig4all
+fig3all
 
-ggsave("Fig4.pdf", plot=fig4all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
+ggsave("Fig3.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
 ```
 
 ```{r, Table1}
