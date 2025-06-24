@@ -3,20 +3,6 @@ library(dplyr)
 library(readr)
 library(ggplot2)
 
-theme_stor <- theme(plot.title = element_text(size=20),
-                    plot.title.position = "plot",
-                    plot.subtitle = element_text(hjust=0.5, size=22),
-                    axis.title=element_text(size=12),
-                    axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-                    axis.text.y=element_text(size=10),
-                    axis.title.x=element_text(size=14),
-                    axis.text.x=element_text(size=12),
-                    axis.text = element_text(size=14),
-                    legend.text=element_text(size=12),
-                    legend.title=element_text(size=12),
-                    legend.position = "right",
-                    strip.text.x = element_text(size = 12))
-
 #########################
 ### dengue yearly 
 #########################
@@ -39,6 +25,7 @@ dengue_yearly_df <- dengue_yearly_df %>%
 ### dengue biannual 
 #########################
 
+# data set up
 dengue_df_agg_biannual <- dengue_biannual$connected_buffered %>%
   filter(as.Date(biannual_date) > as.Date("2007-10-01")) %>%
   mutate(biannual_binary = if_else(as.Date(biannual_date) > as.Date("2008-10-01"), 1, 0),
@@ -47,6 +34,7 @@ dengue_df_agg_biannual <- dengue_biannual$connected_buffered %>%
 dengue_df_dry <- filter(dengue_df_agg_biannual, month == "04")
 dengue_df_rainy <- filter(dengue_df_agg_biannual, month == "10")
 
+# run models
 dengue_biannual_agg_model_dry <- feols(
   incidence ~ biannual_binary * fivekm + urban + ag + sum_precip + mean_temp | key + biannual_date,
   vcov = ~cluster,
@@ -59,8 +47,9 @@ dengue_biannual_agg_model_rainy <- feols(
   data = dengue_df_rainy)
 dengue_biannual_agg_model_rainy
 
-dengue_biannual_df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable[5, ],
-                                          dengue_biannual_agg_model_rainy$coeftable[5, ]))
+# store main results
+dengue_biannual_df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable["biannual_binary:fivekm", ],
+                                          dengue_biannual_agg_model_rainy$coeftable["biannual_binary:fivekm", ]))
 colnames(dengue_biannual_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 dengue_biannual_df <- dengue_biannual_df %>%
   mutate(estimate = estimate,
@@ -83,7 +72,7 @@ dengue_yearly_agg_model <- feols(
   data = dengue_df_agg)
 
 dengue_yearly_agg_model
-dengue_yearly_agg_df <- as.data.frame(dengue_yearly_agg_model$coeftable)[5, ]
+dengue_yearly_agg_df <- as.data.frame(dengue_yearly_agg_model$coeftable)["year_binary:fivekm", ]
 colnames(dengue_yearly_agg_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 dengue_yearly_agg_df <- dengue_yearly_agg_df %>%
   mutate(estimate = estimate,
