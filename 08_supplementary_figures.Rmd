@@ -51,88 +51,26 @@ write.csv(stable1, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/st
 
 ```{r, STable2}
 #####################
-## Build aggregated models
-#####################
-dengue_df_agg <- dengue_df_yearly
-dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
-dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
-
-dengue_df_agg_buffered <- dengue_df_yearly_buffered
-dengue_df_agg_buffered <- dengue_df_agg_buffered[which(as.Date(dengue_df_agg_buffered$year) > '2007-01-01'),]
-dengue_df_agg_buffered$year_binary <- ifelse(as.Date(dengue_df_agg_buffered$year) > '2008-01-01',1,0)
-
-dengue_df_agg_buffered_cp <- dengue_df_yearly_cp_buffered
-dengue_df_agg_buffered_cp <- dengue_df_agg_buffered_cp[which(as.Date(dengue_df_agg_buffered_cp$year) > '2007-01-01'),]
-dengue_df_agg_buffered_cp$year_binary <- ifelse(as.Date(dengue_df_agg_buffered_cp$year) > '2008-01-01',1,0)
-
-dengue_df_agg_buffered_prepost <- dengue_df_yearly_prepost_buffered
-dengue_df_agg_buffered_prepost <- dengue_df_agg_buffered_prepost[which(as.Date(dengue_df_agg_buffered_prepost$year) > '2007-01-01'),]
-dengue_df_agg_buffered_prepost$year_binary <- ifelse(as.Date(dengue_df_agg_buffered_prepost$year) > '2008-01-01',1,0)
-
-## main specification
-dengue_yearly_model_main_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered)
-
-## population weighting
-dengue_df_agg_buffered_no_pm <- dengue_df_agg_buffered[!(dengue_df_agg_buffered$cluster %in% 1),]
-dengue_yearly_model_pop_weight_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_no_pm, weights=~population)
-
-## no Puerto Maldonado
-dengue_yearly_model_no_PM_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_no_pm)
-
-## changing the spatial boundary delineating treatment and control groups
-dengue_yearly_model_onekm_agg <- fepois(incidence ~ year_binary*onekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
-dengue_yearly_model_tenkm_agg <- fepois(incidence ~ year_binary*tenkm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
-
-## changing the buffer zone size between treatment and control groups
-dengue_yearly_model_no_buffer_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg)
-dengue_df_yearly_buffer_bigger_agg <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(1,2,5,6,7,0)),]
-dengue_yearly_model_buffer_bigger_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffer_bigger_agg)
-
-## confirmed cases only v confirmed and probable cases
-dengue_yearly_model_confirmed_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_cp)
-
-## only include clusters where at least one disease case reported both pre and post treatment
-dengue_yearly_model_prepost_agg <- fepois(incidence ~ year_binary*fivekm + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_agg_buffered_prepost)
-
-#####################
 ## STable S2
 #####################
-stable2 <- etable(dengue_yearly_model_main_agg,dengue_yearly_model_no_PM_agg,dengue_yearly_model_pop_weight_agg,dengue_yearly_model_onekm_agg,
-                  dengue_yearly_model_tenkm_agg,dengue_yearly_model_no_buffer_agg,dengue_yearly_model_buffer_bigger_agg,dengue_yearly_model_confirmed_agg, dengue_yearly_model_prepost_agg, digits = 2)
+stable2 <- etable(dengue_yearly_model_main_agg,dengue_yearly_model_no_PM_agg,
+                  dengue_yearly_model_pop_weight_agg,dengue_yearly_model_onekm_agg,
+                  dengue_yearly_model_tenkm_agg,dengue_yearly_model_no_buffer_agg,
+                  dengue_yearly_model_buffer_bigger_agg,dengue_yearly_model_confirmed_agg, 
+                  dengue_yearly_model_prepost_agg, 
+                  digits = 3,
+                  signif.code = c("*" = 0.05))
 stable2 <- stable2[c(3:9,16,15,14),2:10]
 stable2[10,] <- (as.numeric(gsub(",","",stable2[9,]))+1)/15
 stable2[10,9] <- 49
 colnames(stable2) <- c('Main model', 'No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units reporting pre & post')
-rownames(stable2) <- c("log(Urban)", "log(Ag)", "Sum Precip", "Mean Temp", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "Cor^2", "N", "Clusters")
+rownames(stable2) <- c("Urban", "Ag", "Sum Precip", "Mean Temp", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "R^2", "N", "Facilities")
 stable2 <- stable2[c(5:7,1:4, 8:10),]
 stable2
 write.csv(stable2, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable2.csv")
 ```
 
 ```{r, STable3}
-#####################
-## Build aggregated datasets
-#####################
-dengue_df_agg <- dengue_df_yearly_buffered
-dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01'),]
-dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01',1,0)
-dengue_df_agg_biannual <- dengue_df_biannual_buffered
-dengue_df_agg_biannual <- dengue_df_agg_biannual[which(as.Date(dengue_df_biannual_buffered$biannual_date) > '2006-10-01'),]
-dengue_df_agg_biannual$biannual_binary <- ifelse(as.Date(dengue_df_agg_biannual$biannual_date) > '2008-04-01',1, 0)
-dengue_df_agg_biannual$month <- format(as.Date(dengue_df_agg_biannual$biannual_date), "%m")
-dengue_df_agg_biannual_dry <- dengue_df_agg_biannual[which(dengue_df_agg_biannual$month == "04"),]
-dengue_df_agg_biannual_rainy <- dengue_df_agg_biannual[which(dengue_df_agg_biannual$month == "10"),]
-
-leish_df_agg <- leish_df_yearly_buffered
-leish_df_agg <- leish_df_agg[which(as.Date(leish_df_agg$year) > '2007-01-01'),]
-leish_df_agg$year_binary <- ifelse(as.Date(leish_df_agg$year) > '2008-01-01',1,0)
-leish_df_agg_biannual <- leish_df_biannual_buffered
-leish_df_agg_biannual <- leish_df_agg_biannual[which(as.Date(leish_df_biannual_buffered$biannual_date) > '2006-10-01'),]
-leish_df_agg_biannual$biannual_binary <- ifelse(as.Date(leish_df_agg_biannual$biannual_date) > '2008-04-01',1, 0)
-leish_df_agg_biannual$month <- format(as.Date(leish_df_agg_biannual$biannual_date), "%m")
-leish_df_agg_biannual_dry <- leish_df_agg_biannual[which(leish_df_agg_biannual$month == "04"),]
-leish_df_agg_biannual_rainy <- leish_df_agg_biannual[which(leish_df_agg_biannual$month == "10"),]
-
 #####################
 ## Build aggregated models
 #####################
@@ -254,69 +192,40 @@ ggsave("SFig1.pdf", plot=sfig1all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 #####################
 ## SFig 3
 #####################
-
-## main specification
-dengue_yearly_model_main <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered)
-
-## population weighting
-dengue_yearly_model_pop_weight <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm, weights=~population)
-
-## no Puerto Maldonado
-dengue_yearly_model_no_PM <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffered_no_pm)
-
-## changing the spatial boundary delineating treatment and control groups
-dengue_yearly_model_onekm <- fepois(incidence ~ i(year, onekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly)
-dengue_yearly_model_tenkm <- fepois(incidence ~ i(year, tenkm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly)
-
-## changing the buffer zone size between treatment and control groups
-dengue_df_yearly_no_buffer <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,3,4,5,6,7,0)),]
-dengue_yearly_model_no_buffer <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_no_buffer)
-dengue_df_yearly_buffer_bigger <- dengue_df_yearly[which(dengue_df_yearly$all_cutoffs %in% c(1,2,5,6,7,0)),]
-dengue_yearly_model_buffer_bigger <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_buffer_bigger)
-
-## confirmed cases only v confirmed and probable cases
-dengue_yearly_model_confirmed <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_cp_buffered)
-
-## only include clusters where at least one disease case reported both pre and post treatment
-dengue_yearly_model_prepost <- fepois(incidence ~ i(year, fivekm, ref = '2008-01-01') + log(urban) + log(ag) + sum_precip + mean_temp | cluster + year, vcov = "cluster", data = dengue_df_yearly_prepost_buffered)
-
-df <- rbind(
+#load supplementary model results
+sfig3_df <- rbind(
   as.data.frame(cbind(dengue_yearly_model_no_PM$coeftable[1:22,],c(rep("No PM",22)))),
-  as.data.frame(cbind(dengue_yearly_model_pop_weight$coeftable[1:22,],c(rep("Pop weight no PM",22)))),
+  as.data.frame(cbind(dengue_yearly_model_pop_weight$coeftable[1:22,],c(rep("Pop weight",22)))),
   as.data.frame(cbind(dengue_yearly_model_onekm$coeftable[1:22,],c(rep("1km",22)))),
   as.data.frame(cbind(dengue_yearly_model_tenkm$coeftable[1:22,],c(rep("10km",22)))),
   as.data.frame(cbind(dengue_yearly_model_no_buffer$coeftable[1:22,],c(rep("No buffer",22)))),
   as.data.frame(cbind(dengue_yearly_model_buffer_bigger$coeftable[1:22,],c(rep("Big buffer",22)))),
-  as.data.frame(cbind(dengue_yearly_model_confirmed$coeftable[1:22,],c(rep("Confirmed cases",22)))),
-  as.data.frame(cbind(dengue_yearly_model_prepost$coeftable[1:22,],c(rep("Pre post",22)))),
+  as.data.frame(cbind(dengue_yearly_model_cp$coeftable[1:22,],c(rep("Conf & prob cases",22)))),
   as.data.frame(cbind(dengue_yearly_model_main$coeftable[1:22,],c(rep("Main",22)))))
 
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Model')
-df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
+colnames(sfig3_df) <- c('estimate', 'std_error', 't_value', 'p_value', 'Model')
+sfig3_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by="year"),
              seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by="year"))
-df$estimate <- as.numeric(df$estimate)
-df$std_error <- as.numeric(df$std_error)
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$estimate <- exp(df$estimate)-1
-df$upper <- exp(df$upper)-1
-df$lower <- exp(df$lower)-1
-df$Model <- factor(as.character(df$Model), levels=c('No PM', 'Pop weight no PM','1km','10km','No buffer', 'Big buffer', 'Confirmed cases', "Pre post", 'Main'))
+sfig3_df$estimate <- as.numeric(df$estimate)
+sfig3_df$std_error <- as.numeric(sfig3_df$std_error)
+sfig3_df$upper <- sfig3_df$estimate+1.96*sfig3_df$std_error
+sfig3_df$lower <- sfig3_df$estimate-1.96*sfig3_df$std_error
+sfig3_df$Model <- factor(as.character(sfig3_df$Model), levels=c('No PM', 'Pop weight','1km','10km','No buffer', 'Big buffer', 'Conf & prob cases', "Pre post", 'Main'))
 
-#consider updating this so the main model is just bold black outline with no fill in the point estimate
-sfig3a <- ggplot(df, aes(group=Model)) +
+sfig3 <- ggplot(sfig3_df, aes(group=Model)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Model), width=0.1, linewidth=0.5, alpha=0.8) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate, fill=Model), color='black', size=3, shape=21, alpha=0.6) +
-  scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Confirmed cases'="#648FFF", 'Pre post'="#785EF0", 'Main' = "#2b175e"),
-                     labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units reporting pre & post', 'Main model'))+
-  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Confirmed cases'="#648FFF", 'Pre post'="#785EF0", 'Main' = NA),
-                    labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units reporting pre & post', 'Main model'))+
-  xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
+  scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Conf & prob cases'="#648FFF", 'Main' = "#2b175e"),
+                     labels=list('No PM', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Main model'))+
+  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Conf & prob cases'="#648FFF", 'Main' = '#2b175e'),
+                    labels=list('No PM', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Main model'))+
+  xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_bw()+
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
+                     limits = c(-13,50)) +
   theme(plot.title = element_text(size=20),
         plot.title.position = "plot",
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -330,61 +239,8 @@ sfig3a <- ggplot(df, aes(group=Model)) +
         legend.title=element_text(size=10),
         legend.position = "right",
         strip.text.x = element_text(size = 12))
-sfig3a
-sfig3_legend <- get_legend(sfig3a)
-sfig3a <- sfig3a + theme(legend.position = "none")
-
-df_limits <- df
-df_limits$upper <- ifelse(df$upper>8, 7.99, df$upper)
-
-# df_limits_test <- df_limits %>% 
-#   filter(Model %in% c('Main','10km', 'No buffer'))
-
-sfig3b <- ggplot(df_limits, aes(group=Model)) +
-  geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
-  geom_errorbar(aes(x=year, ymax=upper, ymin=lower, color=Model), width=0.1, linewidth=0.5, alpha=0.8) +
-  geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
-  geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
-  geom_point(aes(year, estimate, fill=Model), color='black', size=3, shape=21, alpha=0.6) +
-  scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Confirmed cases'="#648FFF", 'Pre post'="#785EF0", 'Main' = "#2b175e"),
-                     labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units reporting pre & post', 'Main model'))+
-  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight no PM'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Confirmed cases'="#648FFF", 'Pre post'="#785EF0", 'Main' = "#2b175e"),
-                    labels=list('No PM', 'Pop weight no PM','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units reporting pre & post', 'Main model'))+
-  xlab("Year") + ylab("Percent\nchange\ndengue\nincidence") + 
-  theme_bw()+
-  scale_y_continuous(labels = scales::percent, limits=c(-1,8)) +
-  theme(plot.title = element_text(size=20),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=18),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=12),
-        axis.title.x=element_text(size=12),
-        axis.text.x=element_text(size=12),
-        axis.text = element_text(size=12),
-        legend.text=element_text(size=10),
-        legend.title=element_text(size=10),
-        legend.position = "none",
-        strip.text.x = element_text(size = 12))
-sfig3b
-
-
-
-#####################
-## SFig 3all
-#####################
-
-sfig3all <- grid.arrange(sfig3a, sfig3b, sfig3_legend,
-                         ncol = 4, nrow = 2,
-                         layout_matrix = rbind(c(1,1,1,3),c(2,2,2,3)), 
-                         heights=c(1,1))
-
-sfig3all <- as_ggplot(sfig3all) +                                
-  draw_plot_label(label = c("A", "B"), size = 14,
-                  x = c(0.111, 0.111), y = c(0.99, 0.49)) 
-sfig3all
-
-ggsave("SFig3.pdf", plot=sfig3all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 10, units = c("in"), device="pdf")
+sfig3
+ggsave("SFig3.pdf", plot=sfig3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 10, units = c("in"), device="pdf")
 
 ```
 

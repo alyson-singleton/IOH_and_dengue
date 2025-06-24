@@ -56,7 +56,7 @@ dengue_data_linked <- full_join(linked_ids_codes, monthly_dengue_data, by = 'e_s
 
 boundary_files <- list.files(path="~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_0km", pattern="csv", all.files=FALSE, full.names=TRUE,recursive=TRUE)
 boundary_dummy_vars <- as.data.frame(c(1:length(unique(dengue_data_linked$key)))); colnames(boundary_dummy_vars) = c('key')
-for (i in 1:length(boundary_files)){
+for (i in 2:length(boundary_files)){
   boundary_csv <- read.csv(boundary_files[i])
   boundary_csv <- boundary_csv[,c(3,4)]
   boundary_csv$isInsideBuffer[boundary_csv$isInsideBuffer == 'true'] <- 1

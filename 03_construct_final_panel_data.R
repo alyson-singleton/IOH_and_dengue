@@ -1,5 +1,6 @@
 library(dplyr)
 library(readr)
+library(rlang)
 
 vert_line_date <- as.Date('2008-01-01')
 
@@ -57,6 +58,10 @@ process_case_data <- function(df, case_col, date_col) {
 # yearly
 dengue_df_yearly_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_c.csv")
 dengue_yearly <- process_case_data(dengue_df_yearly_raw, "yearly_cases", year)
+
+# yearly (conf & prob)
+dengue_df_yearly_raw_cp <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_cp.csv")
+dengue_yearly_cp <- process_case_data(dengue_df_yearly_raw, "yearly_cases", year)
 
 # biannual
 dengue_df_biannual_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_biannual_full_dataset_c.csv")
