@@ -22,7 +22,38 @@ dengue_yearly_df <- dengue_yearly_df %>%
          lower = estimate - 1.96 * std_error)
 
 #########################
-### dengue biannual 
+### dengue yearly long difference
+#########################
+
+dengue_df_agg <- dengue_yearly$connected_buffered %>%
+  filter(as.Date(year) > as.Date("2007-01-01")) %>%
+  mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
+
+dengue_yearly_agg_model <- feols(
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
+  vcov = ~cluster,
+  data = dengue_df_agg)
+
+dengue_yearly_agg_model
+dengue_yearly_agg_df <- as.data.frame(dengue_yearly_agg_model$coeftable)["year_binary:fivekm", ]
+colnames(dengue_yearly_agg_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_agg_df <- dengue_yearly_agg_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+dengue_yearly_agg_df
+
+#########################
+### dengue biannual
+#########################
+
+dengue_biannual_model <- feols(
+  incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + urban + ag + sum_precip + mean_temp | key + biannual_date,
+  vcov = ~cluster,
+  data = dengue_biannual$connected_buffered)
+
+#########################
+### dengue biannual long difference
 #########################
 
 # data set up
@@ -59,28 +90,6 @@ dengue_biannual_df <- dengue_biannual_df %>%
 dengue_biannual_df
 
 #########################
-### dengue long difference
-#########################
-
-dengue_df_agg <- dengue_yearly$connected_buffered %>%
-  filter(as.Date(year) > as.Date("2007-01-01")) %>%
-  mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
-
-dengue_yearly_agg_model <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
-  vcov = ~cluster,
-  data = dengue_df_agg)
-
-dengue_yearly_agg_model
-dengue_yearly_agg_df <- as.data.frame(dengue_yearly_agg_model$coeftable)["year_binary:fivekm", ]
-colnames(dengue_yearly_agg_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-dengue_yearly_agg_df <- dengue_yearly_agg_df %>%
-  mutate(estimate = estimate,
-         upper = estimate + 1.96 * std_error,
-         lower = estimate - 1.96 * std_error)
-dengue_yearly_agg_df
-
-#########################
 ### leish yearly model
 #########################
 
@@ -99,7 +108,38 @@ leish_yearly_df <- leish_yearly_df %>%
          lower = estimate - 1.96 * std_error)
 
 #########################
-### leish biannual model 
+### leish long difference
+#########################
+
+leish_df_agg <- leish_yearly$connected_buffered %>%
+  filter(as.Date(year) > as.Date("2007-01-01")) %>%
+  mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
+
+leish_yearly_agg_model <- feols(
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
+  vcov = ~cluster,
+  data = leish_df_agg)
+
+leish_yearly_agg_model
+leish_yearly_agg_df <- as.data.frame(leish_yearly_agg_model$coeftable)[5, ]
+colnames(leish_yearly_agg_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+leish_yearly_agg_df <- leish_yearly_agg_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+leish_yearly_agg_df
+
+#########################
+### leish biannual
+#########################
+
+leish_biannual_model <- feols(
+  incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + urban + ag + sum_precip + mean_temp | key + biannual_date,
+  vcov = ~cluster,
+  data = leish_biannual$connected_buffered)
+
+#########################
+### leish biannual long difference 
 #########################
 
 leish_df_agg_biannual <- leish_biannual$connected_buffered %>%
@@ -130,28 +170,6 @@ leish_biannual_df <- leish_biannual_df %>%
          lower = estimate - 1.96 * std_error,
          rainy = c("Dry", "Rainy"))
 leish_biannual_df
-
-#########################
-### leish long difference
-#########################
-
-leish_df_agg <- leish_yearly$connected_buffered %>%
-  filter(as.Date(year) > as.Date("2007-01-01")) %>%
-  mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
-
-leish_yearly_agg_model <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
-  vcov = ~cluster,
-  data = leish_df_agg)
-
-leish_yearly_agg_model
-leish_yearly_agg_df <- as.data.frame(leish_yearly_agg_model$coeftable)[5, ]
-colnames(leish_yearly_agg_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-leish_yearly_agg_df <- leish_yearly_agg_df %>%
-  mutate(estimate = estimate,
-         upper = estimate + 1.96 * std_error,
-         lower = estimate - 1.96 * std_error)
-leish_yearly_agg_df
 
 #########################
 ### save output

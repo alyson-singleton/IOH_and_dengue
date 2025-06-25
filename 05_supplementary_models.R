@@ -151,6 +151,12 @@ dengue_ld_model_w_dengue <- feols(
   data = dengue_df_agg_w_dengue)
 
 #########################
+## no land use variables?
+#########################
+
+
+
+#########################
 ## quadratic temp and precip terms (stable 3)
 #########################
 
