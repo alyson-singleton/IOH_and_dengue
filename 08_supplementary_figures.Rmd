@@ -54,15 +54,15 @@ write.csv(stable1, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/st
 ## STable S2
 #####################
 stable2 <- etable(dengue_ld_model_main,dengue_ld_model_no_PM,
-                  dengue_ld_model_pop_weight,dengue_ld_model_onekm,
-                  dengue_ld_model_tenkm,dengue_ld_model_no_buffer,
-                  dengue_ld_model_buffer_bigger,dengue_ld_model_cp, 
-                  dengue_ld_model_w_dengue, 
+                  dengue_ld_model_no_land_use,dengue_ld_model_pop_weight,
+                  dengue_ld_model_onekm,dengue_ld_model_tenkm,
+                  dengue_ld_model_no_buffer,dengue_ld_model_buffer_bigger,
+                  dengue_ld_model_cp,dengue_ld_model_w_dengue, 
                   digits = 3,
                   signif.code = c("*" = 0.05))
-stable2 <- stable2[c(3:9,16,15,14),2:10]
+stable2 <- stable2[c(3:9,16,15,14),2:11]
 stable2[10,] <- (as.numeric(gsub(",","",stable2[9,]))+1)/15
-colnames(stable2) <- c('Main model', 'No PM', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units w dengue')
+colnames(stable2) <- c('Main model', 'No PM', 'No LUC', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units w dengue')
 rownames(stable2) <- c("Urban", "Ag", "Sum Precip", "Mean Temp", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "R^2", "N", "Facilities")
 stable2 <- stable2[c(5:7,1:4, 8:10),]
 stable2
@@ -189,6 +189,7 @@ ggsave("SFig1.pdf", plot=sfig1all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 #load supplementary model results
 sfig3_df <- rbind(
   as.data.frame(cbind(dengue_yearly_model_no_PM$coeftable[1:22,],c(rep("No PM",22)))),
+  as.data.frame(cbind(dengue_yearly_model_no_land_use$coeftable[1:22,],c(rep("No LUC",22)))),
   as.data.frame(cbind(dengue_yearly_model_pop_weight$coeftable[1:22,],c(rep("Pop weight",22)))),
   as.data.frame(cbind(dengue_yearly_model_onekm$coeftable[1:22,],c(rep("1km",22)))),
   as.data.frame(cbind(dengue_yearly_model_tenkm$coeftable[1:22,],c(rep("10km",22)))),
@@ -205,7 +206,7 @@ sfig3_df$estimate <- as.numeric(sfig3_df$estimate)
 sfig3_df$std_error <- as.numeric(sfig3_df$std_error)
 sfig3_df$upper <- sfig3_df$estimate+1.96*sfig3_df$std_error
 sfig3_df$lower <- sfig3_df$estimate-1.96*sfig3_df$std_error
-sfig3_df$Model <- factor(as.character(sfig3_df$Model), levels=c('No PM', 'Pop weight','1km','10km','No buffer', 'Big buffer', 'Conf & prob cases', "Units w dengue", 'Main'))
+sfig3_df$Model <- factor(as.character(sfig3_df$Model), levels=c('No PM', 'No LUC', 'Pop weight','1km','10km','No buffer', 'Big buffer', 'Conf & prob cases', "Units w dengue", 'Main'))
 
 sfig3 <- ggplot(sfig3_df, aes(group=Model)) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
@@ -213,10 +214,22 @@ sfig3 <- ggplot(sfig3_df, aes(group=Model)) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate, fill=Model), color='black', size=3, shape=21, alpha=0.6) +
-  scale_color_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Conf & prob cases'="#648FFF", 'Units w dengue'="#785EF0", 'Main' = "#2b175e"),
-                     labels=list('No PM', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units w dengue', 'Main model'))+
-  scale_fill_manual(name = "Model specification", values=list('No PM'='#DC267F','Pop weight'="#FE6100",'1km'='#FFB000','10km'='#FFE518','No buffer'='#85CE76', 'Big buffer'='#126E29','Conf & prob cases'="#648FFF", 'Units w dengue'="#785EF0", 'Main' = '#2b175e'),
-                    labels=list('No PM', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units w dengue', 'Main model'))+
+  scale_color_manual(name = "Model specification", values=list('No PM'='darkred', 'No LUC' = '#DC267F', 
+                                                               'Pop weight'="#FE6100",'1km'='#FFB000','10km'='#FFE518',
+                                                               'No buffer'='#85CE76', 'Big buffer'='#126E29',
+                                                               'Conf & prob cases'="#648FFF", 'Units w dengue'="#785EF0", 
+                                                               'Main' = "black"),
+                     labels=list('No PM', 'No LUC', 'Pop weight','1km boundary','10km boundary',
+                                 'No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 
+                                 'Conf & prob cases', 'Units w dengue', 'Main model'))+
+  scale_fill_manual(name = "Model specification", values=list('No PM'='darkred', 'No LUC' = '#DC267F',
+                                                              'Pop weight'="#FE6100",'1km'='#FFB000','10km'='#FFE518',
+                                                              'No buffer'='#85CE76', 'Big buffer'='#126E29',
+                                                              'Conf & prob cases'="#648FFF", 'Units w dengue'="#785EF0", 
+                                                              'Main' = 'black'),
+                    labels=list('No PM', 'No LUC', 'Pop weight','1km boundary','10km boundary',
+                                'No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 
+                                'Conf & prob cases', 'Units w dengue', 'Main model'))+
   xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal()+
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
@@ -225,7 +238,7 @@ sfig3 <- ggplot(sfig3_df, aes(group=Model)) +
   theme(legend.position = "right",
         axis.title.y=element_text(size=12))
 sfig3
-ggsave("SFig3.pdf", plot=sfig3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 7, units = c("in"), device="pdf")
+ggsave("SFig3.pdf", plot=sfig3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 8, units = c("in"), device="pdf")
 ```
 
 ```{r, SFig S4}

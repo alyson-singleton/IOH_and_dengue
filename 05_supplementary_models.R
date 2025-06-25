@@ -151,10 +151,18 @@ dengue_ld_model_w_dengue <- feols(
   data = dengue_df_agg_w_dengue)
 
 #########################
-## no land use variables?
+## no land use variables
 #########################
 
+dengue_yearly_model_no_land_use <- feols(
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + sum_precip + mean_temp | key + year,
+  vcov = ~cluster,
+  data = dengue_yearly$connected_buffered)
 
+dengue_ld_model_no_land_use <- feols(
+  incidence ~ year_binary * fivekm + sum_precip + mean_temp | key + year,
+  vcov = ~cluster,
+  data = dengue_df_agg)
 
 #########################
 ## quadratic temp and precip terms (stable 3)
