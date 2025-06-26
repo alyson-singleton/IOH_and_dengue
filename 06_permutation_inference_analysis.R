@@ -6,13 +6,13 @@
 # main specification aggregated effect estimate (for comparison)
 dengue_df_agg <- dengue_yearly$connected_buffered %>%
   filter(as.Date(year) > as.Date("2007-01-01")) %>%
-  mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
+  mutate(year_binary = if_else(as.Date(year) == as.Date("2012-01-01"), 0, 1))
 
 dengue_yearly_agg_model <- feols(
   incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
   vcov = ~cluster,
   data = dengue_df_agg)
-
+dengue_yearly_agg_model
 dengue_yearly_model_agg_effect_est <- coeftable(dengue_yearly_agg_model)[5,1]
 
 #####################
@@ -41,9 +41,9 @@ for(i in 1:1000){
   set.seed(i)
   prob_1 <- length(which(dengue_df_agg$fivekm==1))/length(dengue_df_agg$fivekm)
   #randomly assign treatment to each spatial unit
-  for(k in 1:length(unique(dengue_df_agg$cluster))){
+  for(k in 1:length(unique(dengue_df_agg$key))){
     random_treatment <- rbinom(1, 1, prob_1)
-    dengue_df_yearly_permuted_block$fivekm[which(dengue_df_yearly_permuted_block$cluster==k)] <- if (random_treatment==1) {rep(1,15)} else {rep(0,15)}
+    dengue_df_yearly_permuted_block$fivekm[which(dengue_df_yearly_permuted_block$key==k)] <- if (random_treatment==1) {rep(1,15)} else {rep(0,15)}
   }
   dengue_yearly_model_permuted_block <- feols(incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
                                               vcov = ~cluster,
@@ -53,24 +53,56 @@ for(i in 1:1000){
 }
 
 #####################
-# Within (randomly assign the years that are flagged as treated within the districts that are truly part of the treatment group)
+# Within (randomly assign the years that are flagged as treated within the keys that are truly part of the treatment group)
 #####################
 
-dengue_df_yearly_permuted_within <- dengue_df_agg
+dengue_df_yearly_permuted_within <- dengue_yearly$full
+
+treated_keys <- dengue_df_yearly_permuted_within %>%
+  filter(fivekm == 1) %>%
+  pull(key) %>%
+  unique()
+
+years_available <- sort(unique(dengue_df_yearly_permuted_within$year))
+
 permuted_effects_stor_within <- c()
-for(i in 1:1000){
+
+for (i in 1:1000) {
   set.seed(i)
-  #randomly assign treatment to each spatial unit
-  for(k in 1:length(unique(dengue_df_agg$cluster))){
-    #random_treatment <- rbinom(1, 1, prob_1)
-    dengue_df_yearly_permuted_within$year_binary[which(dengue_df_yearly_permuted_within$cluster==k)] <- sample(c(0,rep(1,14)))
+  print(i)
+  
+  permuted_df <- dengue_df_yearly_permuted_within %>%
+    mutate(year_binary = 0)
+  
+  for (k in treated_keys) {
+    #get the years this key appears in
+    key_years <- permuted_df %>%
+      filter(key == k) %>%
+      pull(year)
+    
+    #randomly choose which of those years are treated
+    n_years <- length(key_years)
+    n_treated_years <- sample(1:(n_years - 1), 1)  # random number of treated years (not all or none)
+    treated_years <- sample(key_years, n_treated_years)
+    
+    #assign 1 to those years
+    permuted_df$year_binary[
+      permuted_df$key == k & permuted_df$year %in% treated_years
+    ] <- 1
   }
-  dengue_yearly_model_permuted_within <- feols(incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
-                                               vcov = ~cluster,
-                                               data = dengue_df_yearly_permuted_within)
-  permuted_effect_est_within <- coeftable(dengue_yearly_model_permuted_within)[5,1]
+  
+  permuted_df_agg <- permuted_df %>%
+    filter(as.Date(year) > as.Date("2007-01-01"))
+  
+  model <- feols(
+    incidence ~ year_binary:fivekm + urban + ag + sum_precip + mean_temp | key + year,
+    vcov = ~cluster,
+    data = permuted_df)
+  permuted_effect_est_within <- coeftable(model)["year_binary:fivekm", "Estimate"]
+
   permuted_effects_stor_within <- c(permuted_effects_stor_within, permuted_effect_est_within)
 }
+
 
 #####################
 # store results

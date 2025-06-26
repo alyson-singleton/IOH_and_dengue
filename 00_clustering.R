@@ -7,7 +7,7 @@ library(dismo)
 library(tidyverse)
 library(tmap)
 library(sf)
-library(rgdal)
+#library(rgdal)
 library(geosphere)
 library(terra)
 library(rgeos)
@@ -26,7 +26,7 @@ hcAllID <- hclust(as.dist(mdistAllID), method="complete")
 
 ##CHANGE THIS FOR ROBUSTNESS CHECKS (meters)
 # define the distance threshold
-d = 5000
+d = 7500
 
 # define clusters based on a tree "height"
 # cutoff "d" and add them to the SpDataFrame
@@ -115,10 +115,10 @@ centSF <- addClust %>%
   st_buffer(dist = d)
 
 
-write_csv(addClustRaw, "~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_5km/idClusterKey_5km.csv")
-write_csv(allFeatsCircleCentroid, "~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_5km/cluster_centroids_5km.csv")
-write_sf(allFeatsCircle,"~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_5km/clusterPolys_5km.shp")
-write_sf(allFeatsCircleCentroid,"~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_5km/clusterCentroids_5km.shp")
+write_csv(addClustRaw, "~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/idClusterKey_7.5km.csv")
+write_csv(allFeatsCircleCentroid, "~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
+write_sf(allFeatsCircle,"~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterPolys_7.5km.shp")
+write_sf(allFeatsCircleCentroid,"~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterCentroids_7.5km.shp")
 
 
 # Map of Methods, Red shows the convex hull of polygon clusters, and blue is the

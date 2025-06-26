@@ -245,7 +245,7 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 ## Fig 2a
 #####################
 ### yearly model
-y_lims <- c(-10,39)
+y_lims <- c(-10,57)
 
 theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
                     panel.grid.major.x = element_line(linewidth = 0.3),
@@ -449,7 +449,7 @@ regional_incidence_yearly <- dengue_yearly$connected_buffered %>%
     .groups = "drop") %>%
   left_join(regional_incidence_all, by = "year")
 
-# Reduce to just 2007 and 2008 (most conservative)
+# Reduce to just treated group in 2007 and 2008 (most conservative)
 treated_pre_avg_incidence <- regional_incidence_yearly %>%
   filter(fivekm == 1, year %in% as.Date(c("2007-01-01", "2008-01-01"))) %>%
   summarise(mean_incidence_treated_pre = mean(incidence_avg)) %>%
@@ -771,6 +771,3 @@ table1[] <- lapply(table1, function(col) {
 table1
 write.csv(table1, "~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/table1.csv")
 ```
-
-
-

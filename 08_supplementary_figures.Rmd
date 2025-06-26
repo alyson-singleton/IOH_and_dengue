@@ -61,7 +61,7 @@ stable2 <- etable(dengue_ld_model_main,dengue_ld_model_no_PM,
                   digits = 3,
                   signif.code = c("*" = 0.05))
 stable2 <- stable2[c(3:9,16,15,14),2:11]
-stable2[10,] <- (as.numeric(gsub(",","",stable2[9,]))+1)/15
+stable2[10,] <- (as.numeric(gsub(",","",stable2[9,])))/15
 colnames(stable2) <- c('Main model', 'No PM', 'No LUC', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units w dengue')
 rownames(stable2) <- c("Urban", "Ag", "Sum Precip", "Mean Temp", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "R^2", "N", "Facilities")
 stable2 <- stable2[c(5:7,1:4, 8:10),]
@@ -95,6 +95,47 @@ write.csv(stable3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/st
 
 ```{r, STable5*}
 #glmmtmb comparison
+```
+
+```{r, STable6}
+## load from gee
+cost_mapping <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/cost_mapping.csv")
+
+## load linked e_salud codes and cluster ids & link
+linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
+cost_mapping_linked <- full_join(linked_ids_codes, cost_mapping, by = 'key')
+cost_mapping_linked <- cost_mapping_linked %>%
+  dplyr::select("key", "latitude", "longitude", "clust", "cumulative_cost", ".geo")
+
+## load distance boundary vars and link
+boundary_dummy_vars <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_0km/boundary_dummy_vars_0km.csv")
+cost_mapping_linked_buffers <- left_join(cost_mapping_linked, boundary_dummy_vars, by='key')
+cost_mapping_linked_buffers <- cost_mapping_linked_buffers %>%
+  mutate(all_cutoffs = if_else(all_cutoffs == 7, 6, all_cutoffs)) %>%
+  group_by(all_cutoffs) %>%
+  summarize(cumulative_cost_mean_minutes = median(cumulative_cost, na.rm=T)) %>%
+  mutate(cumulative_cost_mean_hours = cumulative_cost_mean_minutes/60)
+
+#prep for nice export
+cost_mapping_linked_buffers_clean <- cost_mapping_linked_buffers %>%
+  mutate(distance_label = case_when(
+  all_cutoffs == 1 ~ '1km',
+  all_cutoffs == 2 ~ '5km',
+  all_cutoffs == 3 ~ '10km',
+  all_cutoffs == 4 ~ '15km',
+  all_cutoffs == 5 ~ '20km',
+  all_cutoffs == 6 ~ '40km',
+  all_cutoffs == 0 ~ '>40km')) %>%
+  mutate(distance_label = factor(distance_label, levels = c('1km', '5km', '10km', '15km', '20km', '40km', '>40km'))) %>%
+  arrange(distance_label) %>%
+  mutate(cumulative_cost_mean_minutes = round(cumulative_cost_mean_minutes)) %>%
+  rename(`Median Travel Time to Interoceanic Highway (min)` = cumulative_cost_mean_minutes,
+    `Distance Boundary` = distance_label) %>%
+  dplyr::select(`Distance Boundary`, `Median Travel Time to Interoceanic Highway (min)`)
+  
+cost_mapping_linked_buffers_clean
+
+write.csv(cost_mapping_linked_buffers_clean, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable6.csv")
 ```
 
 ```{r, SFig S1}
@@ -233,7 +274,7 @@ sfig3 <- ggplot(sfig3_df, aes(group=Model)) +
   xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal()+
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
-                     limits = c(-13,50)) +
+                     limits = c(-13,60)) +
   theme_stor +
   theme(legend.position = "right",
         axis.title.y=element_text(size=12))
@@ -248,7 +289,7 @@ ggsave("SFig3.pdf", plot=sfig3, "~/Desktop/doctorate/ch2 mdd highway/supplementa
 dengue_yearly_model_agg_effect_est <- coeftable(dengue_yearly_agg_model)[5,1]
 
 sfig4a <- ggplot() +
-  geom_histogram(aes(permuted_effects_stor_full), binwidth = 0.1, fill="grey") +
+  geom_histogram(aes(permuted_effects_stor_full), binwidth = 0.05, fill="grey") +
   geom_vline(xintercept=dengue_yearly_model_agg_effect_est, color='red') +
   xlab("Bootstrapped effect estimate") + ylab("") + 
   theme_bw()+
@@ -271,7 +312,7 @@ sfig4a
 #####################
 
 sfig4b <- ggplot() +
-  geom_histogram(aes(permuted_effects_stor_block), binwidth = 0.1, fill="grey") +
+  geom_histogram(aes(permuted_effects_stor_block), binwidth = 0.05, fill="grey") +
   geom_vline(xintercept=dengue_yearly_model_agg_effect_est, color='red') +
   xlab("Bootstrapped effect estimate") + ylab("") + 
   theme_bw()+
@@ -320,7 +361,7 @@ sfig4all <- grid.arrange(sfig4a, sfig4b, sfig4c,
 
 sfig4all <- as_ggplot(sfig4all) +                                
   draw_plot_label(label = c("A", "B","C"), size = 13,
-                  x = c(0.036, 0.369, 0.714), y = c(0.99, 0.99, 0.99)) 
+                  x = c(0.038, 0.371, 0.705), y = c(0.98, 0.98, 0.98)) 
 sfig4all
 
 ggsave("SFig4.pdf", plot=sfig4all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 12, height = 5, units="in", device = "pdf")
@@ -545,11 +586,12 @@ ggsave("SFig6.pdf", plot=sfig6all, path="~/Desktop/doctorate/ch2 mdd highway/sup
 
 ```{r, SFig S7}
 #####################
-## SFig 7a
+## SFig 7
 #####################
-#map of all 100 healthcare centers
-center_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_E_Salud_Coordinates_Key - best_choice.csv")
-center_lat_long <- data.frame(center_lat_long)
+
+linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
+
+center_lat_long <- data.frame(linked_ids_codes)
 center_lat_long <- center_lat_long %>%
   mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
@@ -582,73 +624,86 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
 
-sfig7a <- ggplot() +
+allFeatsCircle <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterPolys_7.5km.shp")
+allFeatsCircle <- allFeatsCircle %>%
+  st_transform(crs=4326)
+
+cluster_sizes <- center_lat_long %>%
+  group_by(clust) %>%
+  summarise(n_keys = n(), .groups = "drop") %>%
+  filter(n_keys > 1)  # Keep only clusters with >1 key
+
+allFeatsCircle_filtered <- allFeatsCircle %>%
+  filter(clust %in% cluster_sizes$clust)
+
+allFeatsCircleCentroid <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterCentroids_7.5km.shp")
+allFeatsCircleCentroid <- allFeatsCircleCentroid %>%
+  st_transform(crs=4326)
+allFeatsCircleCentroid_filtered <- allFeatsCircleCentroid %>%
+  filter(clust %in% cluster_sizes$clust)
+# Project to a metric CRS (e.g., UTM Zone 19S for Peru/Brazil)
+centroid_proj <- allFeatsCircleCentroid_filtered %>%
+  st_transform(crs = 32719)  # EPSG:32719 is UTM Zone 19S (meters)
+
+# Create 7.5km (7500 meter) buffer around each point
+buffer_circles <- centroid_proj %>%
+  st_buffer(dist = 7500) %>%
+  st_transform(crs = 4326)  # Back to lat/lon for plotting
+
+center_lat_long <- center_lat_long %>%
+  group_by(clust) %>%
+  mutate(clust_indicator = if_else(n() == 1, 0, 1)) %>%
+  ungroup()
+
+singletons <- center_lat_long %>% filter(clust_indicator == 0)
+clusters   <- center_lat_long %>% filter(clust_indicator == 1)
+
+sfig7 <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
-  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
+  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
-  geom_sf(data = center_lat_long, aes(geometry = geometry), fill='#648FFF', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
-  scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
-                     labels=c('Unpaved Roads','Highway','Rivers')) +
+  geom_sf(data = singletons, aes(geometry = geometry), fill = 'white', color='black', pch=21, size = 2, alpha=0.7) +
+  geom_sf(data = clusters, aes(geometry = geometry), fill = '#648FFF', color='black', pch=21, size = 2, alpha=0.7) +
+  geom_sf(data = buffer_circles, aes(geometry = geometry), color='red', fill=NA, linewidth=0.5) +
+  scale_fill_viridis_d(name = "Cluster") +
+  scale_color_manual(name = "", values = c('#a6a6a6','black','lightblue'),
+                     labels = c('Unpaved Roads','Highway','Rivers')) +
   theme_minimal() +
   no_axis +
-  theme(legend.text=element_text(size=12),
-        legend.title=element_text(size=14),
-        legend.position='bottom') +
-  guides(fill=guide_legend(override.aes=list(shape=21))) +
-  annotation_scale(location = "bl",height = unit(0.1, "cm"))
+  theme(legend.text = element_text(size=12),
+        legend.title = element_text(size=14),
+        legend.position = 'bottom') +
+  guides(fill = guide_legend(override.aes = list(shape=21)))
+sfig7
 
-sfig7a
-sfig7_legend <- get_legend(sfig7a)
-sfig7a <- sfig7a + theme(legend.position = "none")
+xlim_pm <- c(-69.30, -69.07)
+ylim_pm <- c(-12.83, -12.45)
 
-#####################
-## SFig 7b
-#####################
-#map of 1 healthcare center clusters w spatial boundaries
-cluster_lat_long <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
-cluster_lat_long <- data.frame(cluster_lat_long)
-cluster_lat_long <- cluster_lat_long %>%
-  mutate(latitude= as.numeric(latitude),longitude= as.numeric(longitude)) %>%
-  sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
-#load spatial boundaries
-cachement_areas <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/diresa_nn_raster_7.5kmclus_7.5kmbuff_20kgam_00sens.shp")
-cachement_areas <- st_as_sf(cachement_areas)
+sfig7_pm <- sfig7 +
+  coord_sf(xlim = xlim_pm, ylim = ylim_pm, expand = FALSE) +
+  theme(legend.text = element_text(size=12),
+        legend.title = element_text(size=14),
+        legend.position = 'none')
 
-sfig7b <- ggplot() +
-  geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
-  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), linewidth=0.2, show.legend = "line") +
-  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
-  geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
-  geom_sf(data = cachement_areas, aes(geometry = geometry), fill = 'lightgrey', color='black', alpha=0.5) +
-  geom_sf(data = cluster_lat_long, aes(geometry = geometry), fill='#E04490', color='black', pch=21, size = 2, alpha=0.7) + #colour='#25CED1',
-  scale_color_manual(name="", values=c('#a6a6a6','black','lightblue'),
-                     labels=c('Unpaved Roads','Highway','Rivers')) +
-  theme_minimal() +
-  no_axis +
-  theme(legend.text=element_text(size=12),
-        legend.title=element_text(size=14),
-        legend.position='none') +
-  guides(fill=guide_legend(override.aes=list(shape=21))) +
-  annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 6), 
-                         height = unit(0.7, "cm"), width = unit(0.7, "cm"))
-sfig7b
+sfig7_pm
 
-sfig7all <- grid.arrange(sfig7a, sfig7b, sfig7_legend,                     
-                         ncol = 6, nrow = 2,
-                         layout_matrix = rbind(c(1,2),c(1,2),c(1,2),c(1,2),c(1,2),c(3,3)))
-
-sfig7all <- as_ggplot(sfig7all) +                                
-  draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.01, 0.5), y = c(0.99, 0.99)) 
+sfig7all <- sfig7 + plot_spacer() + sfig7_pm +
+  plot_layout(ncol = 3, widths = c(2.5, 0.05, 0.8)) + 
+  plot_annotation(
+    tag_levels = 'A',
+    tag_prefix = '', tag_suffix = '',
+    theme = theme(
+      plot.tag = element_text(size = 18, face = "bold", hjust = -0.1, vjust = 1.2)
+    )
+  )
 
 sfig7all
 
-
-ggsave("SFig7.pdf", plot=sfig7all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 5, units = c("in"), device="pdf")
+ggsave("SFig7.pdf", plot=sfig7all, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 5, units = c("in"), device="pdf")
 ```
 
-```{r, SFig S8*}
+```{r, SFig S8}
 #####################
 ## SFig 8a
 #####################
@@ -756,7 +811,6 @@ sfig8all
 
 ggsave("SFig8.pdf", plot=sfig8all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 8, units="in", device = "pdf")
 ```
-
 
 
 ```{r, scratch (orginal clustering fig), eval=F}
