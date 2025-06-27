@@ -36,7 +36,7 @@ showtext_auto()
 #####################
 linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
 
-center_lat_long <- left_join(dengue_yearly$full[,c(3,20,21,23)], linked_ids_codes, by='key')
+center_lat_long <- left_join(unique(dengue_yearly$full[,c(3,20,21,23)]), linked_ids_codes, by='key')
 
 center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
@@ -245,7 +245,7 @@ ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manus
 ## Fig 2a
 #####################
 ### yearly model
-y_lims <- c(-10,57)
+y_lims <- c(-9.5,57)
 
 theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
                     panel.grid.major.x = element_line(linewidth = 0.3),
@@ -284,7 +284,8 @@ fig2a <- ggplot(dengue_yearly_df) +
   xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
-                     limits = y_lims) +
+                     limits = y_lims,
+                     breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor
 
 fig2a
@@ -302,7 +303,8 @@ fig2b <- ggplot(dengue_biannual_df) +
   xlab("Season") + ylab("") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
-                     limits = y_lims) +
+                     limits = y_lims,
+                     breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor +
   theme(axis.text.y=element_blank())
 
@@ -344,7 +346,8 @@ fig2c <- ggplot(leish_yearly_df) +
   xlab("Year") + ylab("change in\nleish\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
-                     limits = y_lims) +
+                     limits = y_lims,
+                     breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor
 fig2c
 
@@ -361,7 +364,8 @@ fig2d <- ggplot(leish_biannual_df) +
   xlab("Season") + ylab("") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
-                     limits = y_lims) +
+                     limits = y_lims,
+                     breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor +
   theme(axis.text.y=element_blank())
 fig2d
@@ -393,41 +397,7 @@ ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/
 
 ```
 
-```{r, attributable cases old, eval=F}
-## build df w information needed for IRR/attributable cases calculations
-incidence_df <- dengue_df_agg %>%
-  group_by(year_binary,fivekm) %>%
-  summarise(incidence_avg = mean(incidence),
-            yearly_cases = sum(yearly_cases),
-            pop_sum = sum(population)) %>%
-  pivot_wider(names_from = fivekm, values_from = c(incidence_avg,yearly_cases,pop_sum))
-
-# get IRR from model
-model_IRR <- df$estimate #mean
-model_IRR <- df$upper #max
-model_IRR <- df$lower #min
-
-# calculate attributable proportion, attributable number of cases, prop of total cases since paving
-attr_prop <- ((model_IRR-1)/model_IRR)*
-  (incidence_df$pop_sum_1[2]/(incidence_df$pop_sum_0[2]+incidence_df$pop_sum_1[2]))
-attr_prop
-attr_cases <- incidence_df$yearly_cases_1[2]*attr_prop
-attr_cases
-attr_cases/sum(incidence_df$yearly_cases_0[2]+incidence_df$yearly_cases_1[2])
-
-# percentage change
-df <- as.data.frame(dengue_yearly_agg_model$coeftable)
-df <- df[5,]
-colnames(df) <- c('estimate', 'std_error', 't_value', 'p_value')
-df$upper <- df$estimate+1.96*df$std_error
-df$lower <- df$estimate-1.96*df$std_error
-df$estimate <- exp(df$estimate)-1
-df$upper <- exp(df$upper)-1
-df$lower <- exp(df$lower)-1
-df
-```
-
-```{r, percent change & attributable cases new}
+```{r, percent change & attributable cases}
 ##"When reporting estimates in percentage terms, we use the nationally representative baseline mean of allcause death rates of 10.7 deaths per-1,000 people between 1988 to 1993, as reported by the United Nations Population Division." -SCKS
 
 ## Baseline: Recent Regional Unadjusted Incidence (2007–2008 average)
@@ -487,6 +457,21 @@ dengue_yearly_agg_df_test <- dengue_yearly_agg_df %>%
   mutate(attributable_cases = (pct_change / 100) * total_expected_cases,
          attributable_cases_upper = (pct_change_upper / 100) * total_expected_cases,
          attributable_cases_lower = (pct_change_lower / 100) * total_expected_cases)
+
+# Step 2: Calculate proportion of attributable cases
+# Step 1: Total observed cases in the entire region post-paving (2009–2022)
+total_observed_cases_region_post <- dengue_yearly$connected_buffered %>%
+  filter(year %in% post_years) %>%
+  summarise(total_cases = sum(yearly_cases, na.rm = TRUE)) %>%
+  pull(total_cases)
+
+# Step 2: Calculate proportion of attributable cases relative to entire region's burden
+dengue_yearly_agg_df_test <- dengue_yearly_agg_df_test %>%
+  mutate(
+    attributable_case_prop_region = attributable_cases / total_observed_cases_region_post,
+    attributable_case_prop_region_upper = attributable_cases_upper / total_observed_cases_region_post,
+    attributable_case_prop_region_lower = attributable_cases_lower / total_observed_cases_region_post
+  )
 ```
 
 ```{r, Fig3}

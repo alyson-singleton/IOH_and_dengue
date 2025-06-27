@@ -20,7 +20,7 @@ process_case_data <- function(df, case_col, date_col) {
     {
       df_clean <- .
       
-      keys_not_connected <- c(43, 78, 88:98) #see fig** for visualization
+      keys_not_connected <- c(43, 88:98) #see fig** for visualization
       
       keys_with_cases <- df_clean %>%
         group_by(key) %>%
