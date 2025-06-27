@@ -677,10 +677,32 @@ sfig7 <- ggplot() +
   guides(fill = guide_legend(override.aes = list(shape=21)))
 sfig7
 
+
+buffer_circles_smaller <- centroid_proj %>%
+  st_buffer(dist = 4700) %>%
+  st_transform(crs = 4326)  # Back to lat/lon for plotting
+sfig7a <- ggplot() +
+  geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
+  geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
+  geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
+  geom_sf(data = singletons, aes(geometry = geometry), fill = 'white', color='black', pch=21, size = 2, alpha=0.7) +
+  geom_sf(data = clusters, aes(geometry = geometry), fill = '#648FFF', color='black', pch=21, size = 2, alpha=0.7) +
+  geom_sf(data = buffer_circles_smaller, aes(geometry = geometry), color='red', fill=NA, linewidth=0.5) +
+  scale_fill_viridis_d(name = "Cluster") +
+  scale_color_manual(name = "", values = c('#a6a6a6','black','lightblue'),
+                     labels = c('Unpaved Roads','Highway','Rivers')) +
+  theme_minimal() +
+  no_axis +
+  theme(legend.text = element_text(size=12),
+        legend.title = element_text(size=14),
+        legend.position = 'bottom') +
+  guides(fill = guide_legend(override.aes = list(shape=21)))
+
 xlim_pm <- c(-69.30, -69.07)
 ylim_pm <- c(-12.83, -12.45)
 
-sfig7_pm <- sfig7 +
+sfig7_pm <- sfig7a +
   coord_sf(xlim = xlim_pm, ylim = ylim_pm, expand = FALSE) +
   theme(legend.text = element_text(size=12),
         legend.title = element_text(size=14),
@@ -812,6 +834,99 @@ sfig8all
 ggsave("SFig8.pdf", plot=sfig8all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 8, units="in", device = "pdf")
 ```
 
+```{r, SFig S9}
+#2006/2008/2010 as treatment year
+
+```
+
+```{r, SFig S10}
+#Madre de Dios Traffic Data, compare to Loreto
+
+# Load and reshape all datasets
+reshape_traffic_data <- function(df, name) {
+  df <- df %>%
+    rename_with(~ as.character(.), -1)  # make sure all column names are characters
+
+  # Force all year columns to numeric
+  year_cols <- setdiff(colnames(df), "Department")
+  df[year_cols] <- lapply(df[year_cols], function(x) as.numeric(as.character(x)))
+
+  df %>%
+    pivot_longer(-Department, names_to = "Year", values_to = "Value") %>%
+    mutate(
+      Year = as.integer(Year),
+      Metric = name
+    )
+}
+
+# Interprovincial Passenger Traffic
+interprovincial_passenger_traffic <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/TRÁFICO_DE_PASAJEROS_EN_EL_TRANSPORTE_INTERPROVINCIAL.xlsx") %>% 
+  filter(`TRÁFICO DE PASAJEROS EN EL TRANSPORTE INTERPROVINCIAL, SEGÚN DEPARTAMENTO DESTINO: 2007-2018` %in% c("Madre de Dios", "Loreto"))
+colnames(interprovincial_passenger_traffic) <- c("Department", as.character(2007:2018))
+interprovincial_passenger_traffic_long <- reshape_traffic_data(interprovincial_passenger_traffic, "Passenger Traffic")
+
+# Estimated Vehicle Fleet
+estimated_vehicle_fleet <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/PARQUE_VEHICULAR_ESTIMADO.xlsx") %>% 
+  filter(`PARQUE VEHICULAR ESTIMADO, SEGÚN DEPARTAMENTO: 2007-2018` %in% c("Madre de Dios", "Loreto"))
+colnames(estimated_vehicle_fleet) <- c("Department", as.character(2007:2018))
+estimated_vehicle_fleet_long <- reshape_traffic_data(estimated_vehicle_fleet, "Estimated Vehicle Fleet")
+
+# National Cargo Vehicle Fleet
+vehicle_fleet_for_national_cargo <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/PARQUE_VEHICULAR_AUTORIZADO_DEL_TRANSPORTE_DE_CARGA_GENERAL_NACIONAL.xlsx") %>% 
+  filter(`PARQUE VEHICULAR AUTORIZADO DEL TRANSPORTE DE CARGA GENERAL NACIONAL, SEGÚN DEPARTAMENTO: 2007-2018` %in% c("Madre de Dios", "Loreto"))
+colnames(vehicle_fleet_for_national_cargo) <- c("Department", as.character(2007:2018))
+vehicle_fleet_national_cargo_long <- reshape_traffic_data(vehicle_fleet_for_national_cargo, "National Cargo Vehicle Fleet")
+
+# Toll Unit Flow
+vehicular_flow_at_toll_units <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/FLUJO_VEHICULAR_EN_LAS_UNIDADES_DE_PEAJE.xlsx") %>% 
+  filter(`FLUJO VEHICULAR EN LAS UNIDADES DE PEAJE, SEGÚN DEPARTAMENTO: 2009-2018` %in% c("Madre de Dios", "Loreto"))
+colnames(vehicular_flow_at_toll_units) <- c("Department", as.character(2009:2018))
+vehicular_flow_toll_units_long <- reshape_traffic_data(vehicular_flow_at_toll_units, "Toll Unit Flow")
+
+# Combine all long-form datasets
+all_traffic_data <- bind_rows(
+  interprovincial_passenger_traffic_long,
+  estimated_vehicle_fleet_long,
+  vehicle_fleet_national_cargo_long,
+  vehicular_flow_toll_units_long
+)
+
+desired_order <- c(
+  "Passenger Traffic",
+  "Estimated Vehicle Fleet",
+  "National Cargo Vehicle Fleet",
+  "Toll Unit Flow"
+)
+
+labeled_titles <- c(
+  "Passenger Traffic" = "A. Passenger Traffic",
+  "Estimated Vehicle Fleet" = "B. Estimated Vehicle Fleet",
+  "National Cargo Vehicle Fleet" = "C. National Cargo Vehicle Fleet",
+  "Toll Unit Flow" = "D. Toll Unit Flow"
+)
+
+all_traffic_data <- all_traffic_data %>%
+  # mutate(Value = ifelse(Value == 0, NA, Value)) %>%
+  mutate(Metric = factor(Metric, levels = desired_order))
+
+sfig10 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = 2008, linetype = "dashed", color = "black", linewidth = 0.7) +
+  facet_wrap(~Metric, scales = "free_y", ncol = 2,
+             labeller = as_labeller(labeled_titles)) +
+  labs(x = "Year",
+       y = "",
+       color = "Department") +
+  scale_color_manual(values = c("Madre de Dios" = "#b22222",
+                                "Loreto" = "#4682b4")) +
+  theme_minimal(base_size = 14) +
+  theme_stor +
+  theme(strip.text = element_text(face = "bold", hjust = 0),
+        legend.position = "bottom")
+sfig10
+
+ggsave("SFig10.pdf", plot=sfig10, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 9, height = 7, units="in", device = "pdf")
+```
 
 ```{r, scratch (orginal clustering fig), eval=F}
 #####################
