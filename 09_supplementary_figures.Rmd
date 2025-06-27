@@ -41,7 +41,7 @@ stable1 <- stable1[c(3:10,37,11:31,35,34,36),2:3]
 stable1[33,] <- c(rep(length(unique(dengue_yearly$connected_buffered$key)),2))
 stable1[9,] <- c("----","----")
 colnames(stable1) <- c('Dengue Yearly', 'Leish Yearly')
-rownames(stable1) <- c("5km x 2000", "5km x 2001", "5km x 2002", "5km x 2003", "5km x 2004", "5km x 2005", "5km x 2006", "5km x 2007", "5km x 2008", "5km x 2009", "5km x 2010", "5km x 2011", "5km x 2012", "5km x 2013", "5km x 2014", "5km x 2015", "5km x 2016", "5km x 2017", "5km x 2018", "5km x 2019", "5km x 2020", "5km x 2021", "5km x 2022", "Urban", "Ag", "Sum Precip", "Mean Temp", "FEs", "Unit", "Year", "R^2", "N", "Facilities")
+rownames(stable1) <- c("5km x 2000", "5km x 2001", "5km x 2002", "5km x 2003", "5km x 2004", "5km x 2005", "5km x 2006", "5km x 2007", "5km x 2008", "5km x 2009", "5km x 2010", "5km x 2011", "5km x 2012", "5km x 2013", "5km x 2014", "5km x 2015", "5km x 2016", "5km x 2017", "5km x 2018", "5km x 2019", "5km x 2020", "5km x 2021", "5km x 2022", "Urban", "Ag", "Sum Precip", "Mean Temp^2", "FEs", "Unit", "Year", "R^2", "N", "Facilities")
 stable1[] <- lapply(stable1, function(col) {
   ifelse(col == "Yes", "X", ifelse(col == "No", "", col))
 })
@@ -63,7 +63,7 @@ stable2 <- etable(dengue_ld_model_main,dengue_ld_model_no_PM,
 stable2 <- stable2[c(3:9,16,15,14),2:11]
 stable2[10,] <- (as.numeric(gsub(",","",stable2[9,])))/15
 colnames(stable2) <- c('Main model', 'No PM', 'No LUC', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units w dengue')
-rownames(stable2) <- c("Urban", "Ag", "Sum Precip", "Mean Temp", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "R^2", "N", "Facilities")
+rownames(stable2) <- c("Urban", "Ag", "Sum Precip", "Mean Temp^2", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "R^2", "N", "Facilities")
 stable2 <- stable2[c(5:7,1:4, 8:10),]
 stable2
 write.csv(stable2, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable2.csv")
@@ -89,12 +89,67 @@ stable3
 write.csv(stable3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable3.csv")
 ```
 
-```{r, STable4*}
-#intercept terms from main models
+```{r, STable4}
+stable4 <- etable_glmmTMB[,c(2:7)]
+colnames(stable4) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
+stable4 <- as.data.frame(rbind(stable4, stable3[c(7:10),]))
+stable4 <- stable4 %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+rownames(stable4) <- c("5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "Urban", "Ag", "Sum Precip", "Mean Temp^2", "FEs", "Unit", "Year", "Biannual")
+stable4
+write.csv(stable4, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable4.csv")
 ```
 
-```{r, STable5*}
-#glmmtmb comparison
+```{r, STable5}
+coefs <- summary(dengue_yearly_model_glmmTMB)$coefficients$cond
+
+dengue_yearly_df_full <- as.data.frame(coefs) %>%
+  rownames_to_column("term") %>%
+  rename(
+    estimate = Estimate,
+    std_error = `Std. Error`,
+    z_value = `z value`,
+    p_value = `Pr(>|z|)`
+  ) %>%
+  mutate(
+    star = if_else(p_value < 0.05, "*", ""),
+    formatted = sprintf("%.3f%s (%.3f)", estimate, star, std_error),
+    term_clean = case_when(
+      grepl("factor\\(key\\)", term) ~ gsub("factor\\(key\\)", "Unit FE: ", term),
+      grepl("factor\\(year\\)", term) ~ gsub("factor\\(year\\)", "Year FE: ", term),
+      TRUE ~ term
+    )
+  )%>%
+  mutate(formatted = ifelse(is.na(estimate), "Dropped (collinear)", 
+                            sprintf("%.3f%s (%.3f)", estimate, star, std_error)))
+
+# --- Optional: move main variables to the top ---
+main_vars <- c("(Intercept)", "year_binary:fivekm", "year_binary", "fivekm", "sum_precip", "mean_temp", "urban", "ag")
+dengue_yearly_df_full <- dengue_yearly_df_full %>%
+  mutate(
+    term_rank = match(term, main_vars),
+    key_num = ifelse(grepl("^Unit FE: ", term_clean),
+                     as.numeric(gsub("Unit FE: ", "", term_clean)),
+                     NA),
+    year_str = ifelse(grepl("^Year FE: ", term_clean),
+                      term_clean,
+                      NA)
+  ) %>%
+  arrange(
+    is.na(term_rank), term_rank,          # Main vars first
+    is.na(key_num), key_num,              # Then order Key FEs numerically
+    year_str                              # Then Year FEs alphabetically
+  )
+
+# --- Final clean table ---
+stable5 <- dengue_yearly_df_full %>%
+  dplyr::select(Term = term_clean, `Estimate (SE)` = formatted)
+stable5 <- final_table[c(1,2,4,3,7,8,5,6,9:101),]
+stable5[2:8,1] <- c("5km x Post-2008 Yearly", "5km", "Post-2008 Yearly", "Urban", "Ag", "Sum Precip", "Mean Temp^2")
+stable5
+
+write.csv(stable5, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable5.csv")
+
 ```
 
 ```{r, STable6}

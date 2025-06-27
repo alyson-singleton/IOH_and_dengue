@@ -763,7 +763,7 @@ table1 <- fixest::etable(dengue_yearly_agg_model,
 table1 <- table1[c(3:8,9:12,16,15,14),2:7]
 table1[13,] <- c(rep(length(unique(dengue_yearly$connected_buffered$key)),6))
 colnames(table1) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
-rownames(table1) <- c("Urban", "Ag", "Sum Precip", "Mean Temp", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Unit", "Year", "Biannual", "R^2", "N", "Facilities")
+rownames(table1) <- c("Urban", "Ag", "Sum Precip", "Mean Temp^2", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Unit", "Year", "Biannual", "R^2", "N", "Facilities")
 table1 <- table1[c(5:6,1:4,7:13),]
 table1[] <- lapply(table1, function(col) {
   ifelse(col == "Yes", "X", ifelse(col == "No", "", col))
