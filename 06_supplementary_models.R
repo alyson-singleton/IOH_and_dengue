@@ -199,6 +199,39 @@ leish_biannual_ld_model_rainy_quad<- feols(
   data = leish_df_rainy)
 
 #########################
+## change tx year
+#########################
+
+dengue_yearly_model_2007 <- feols(
+  incidence ~ i(year, fivekm, ref = '2006-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  vcov = ~cluster,
+  data = dengue_yearly$connected_buffered)
+summary(dengue_yearly_model_2007)
+dengue_yearly_df_2007 <- as.data.frame(dengue_yearly_model_2007$coeftable)[1:22, ]
+colnames(dengue_yearly_df_2007) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_df_2007$year <- c(seq(as.Date("2000-01-01"), as.Date("2005-01-01"), by = "year"),
+                           seq(as.Date("2007-01-01"), as.Date("2022-01-01"), by = "year"))
+dengue_yearly_df_2007 <- dengue_yearly_df_2007 %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+
+dengue_yearly_model_2008 <- feols(
+  incidence ~ i(year, fivekm, ref = '2007-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  vcov = ~cluster,
+  data = dengue_yearly$connected_buffered)
+summary(dengue_yearly_model_2008)
+dengue_yearly_df_2008 <- as.data.frame(dengue_yearly_model_2008$coeftable)[1:22, ]
+colnames(dengue_yearly_df_2008) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_df_2008$year <- c(seq(as.Date("2000-01-01"), as.Date("2006-01-01"), by = "year"),
+                                seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by = "year"))
+dengue_yearly_df_2008 <- dengue_yearly_df_2008 %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+
+
+#########################
 ## glmmTMB comparison
 #########################
 
