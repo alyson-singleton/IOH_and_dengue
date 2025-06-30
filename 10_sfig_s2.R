@@ -31,7 +31,7 @@ dengue_df_yearly_summary <- dengue_df_yearly %>%
   group_by(year) %>%
   summarize(dengue_cases = sum(yearly_cases),
             population = sum(population))
-dengue_df_yearly_summary$incidence <- (dengue_df_yearly_summary$dengue_cases+1)/dengue_df_yearly_summary$population
+dengue_df_yearly_summary$incidence <- (dengue_df_yearly_summary$dengue_cases)/dengue_df_yearly_summary$population*1000
 dengue_df_yearly_summary$region <- 'A. Madre de Dios, Peru'
 dengue_df_yearly_summary$year <- format(as.Date(dengue_df_yearly_summary$year, format="%Y-%m-%d"),"%Y")
 dengue_df_yearly_summary$year <- as.numeric(dengue_df_yearly_summary$year)
@@ -80,7 +80,7 @@ to_link <- data.frame(c(2000:2009),
 colnames(to_link) <- c("year", "dengue_cases")
 peru_case_data_summary <- rbind(to_link,peru_case_data_summary)
 peru_case_data_summary <- left_join(peru_case_data_summary, peru_population_national, by="year")
-peru_case_data_summary$incidence <- peru_case_data_summary$dengue_cases/peru_case_data_summary$population
+peru_case_data_summary$incidence <- peru_case_data_summary$dengue_cases/peru_case_data_summary$population*1000
 peru_case_data_summary$region <- 'D. Peru (national)'
 
 ## cusco peru 
@@ -102,7 +102,7 @@ to_link <- data.frame(c(2000:2009),
 colnames(to_link) <- c("year", "dengue_cases")
 cusco_peru_case_data_summary <- rbind(to_link,cusco_peru_case_data_summary)
 cusco_peru_case_data_summary <- left_join(cusco_peru_case_data_summary, peru_population_cusco, by="year")
-cusco_peru_case_data_summary$incidence <- (cusco_peru_case_data_summary$dengue_cases+1)/cusco_peru_case_data_summary$population
+cusco_peru_case_data_summary$incidence <- (cusco_peru_case_data_summary$dengue_cases)/cusco_peru_case_data_summary$population*1000
 cusco_peru_case_data_summary$region <- 'G. Cusco, Peru'
 
 ## loreto peru
@@ -124,7 +124,7 @@ to_link <- data.frame(c(2000:2009),
 colnames(to_link) <- c("year", "dengue_cases")
 loreto_peru_case_data_summary <- rbind(to_link,loreto_peru_case_data_summary)
 loreto_peru_case_data_summary <- left_join(loreto_peru_case_data_summary, peru_population_cusco, by="year")
-loreto_peru_case_data_summary$incidence <- (loreto_peru_case_data_summary$dengue_cases+1)/loreto_peru_case_data_summary$population
+loreto_peru_case_data_summary$incidence <- (loreto_peru_case_data_summary$dengue_cases)/loreto_peru_case_data_summary$population*1000
 loreto_peru_case_data_summary$region <- 'H. Loreto, Peru'
 
 ## brazil national
@@ -133,7 +133,7 @@ brazil_case_data_summary <- brazil_case_data %>%
   group_by(year) %>%
   summarize(dengue_cases = sum(dengue_cases),
             population = sum(population),
-            incidence = mean(incidence/100000))  
+            incidence = mean(incidence/100000)*1000)  
 brazil_case_data_summary$region <- 'E. Brazil (national)'
 
 ## acre brazil
@@ -143,7 +143,7 @@ acre_brazil_case_data_summary <- acre_brazil_case_data %>%
   group_by(year) %>%
   summarize(dengue_cases = sum(dengue_cases),
             population = sum(population),
-            incidence = mean(incidence/100000))  
+            incidence = mean(incidence/100000)*1000)  
 acre_brazil_case_data_summary$region <- 'B. Acre, Brazil'
 
 ## bolivia national
@@ -171,7 +171,7 @@ colnames(to_link) <- c("year", "dengue_cases")
 colnames(to_link2) <- c("year", "dengue_cases")
 bol_case_data_summary <- rbind(to_link,to_link2)
 bol_case_data_summary <- left_join(bol_case_data_summary, bolivia_population_national, by="year")
-bol_case_data_summary$incidence <- bol_case_data_summary$dengue_cases/bol_case_data_summary$population
+bol_case_data_summary$incidence <- bol_case_data_summary$dengue_cases/bol_case_data_summary$population*1000
 bol_case_data_summary$region <- 'F. Bolivia (national)'
 
 ## pando, bolivia
@@ -189,7 +189,7 @@ to_link <- data.frame(c(2014:2023),
 colnames(to_link) <- c("year", "dengue_cases")
 pando_case_data_summary <- to_link
 pando_case_data_summary <- left_join(pando_case_data_summary, bolivia_population_pando, by="year")
-pando_case_data_summary$incidence <- pando_case_data_summary$dengue_cases/pando_case_data_summary$population
+pando_case_data_summary$incidence <- pando_case_data_summary$dengue_cases/pando_case_data_summary$population*1000
 pando_case_data_summary$region <- 'C. Pando, Bolivia'
 
 ## link all together in long format to build facet plot
@@ -206,7 +206,7 @@ region_comp_fig <- ggplot(regional_groupings_case_data) +
   geom_line(aes(x=year, y=incidence)) +
   facet_wrap(~region, scales = "free_y") +
   geom_vline(xintercept=2008,linetype='dashed', color="red") +
-  ggtitle("Dengue incidence") +
+  ggtitle("Dengue incidence\nper 1,000") +
   xlab("Year") + ylab("") + 
   theme_bw()+
   theme(plot.title = element_text(size=14, face="bold"),
@@ -312,8 +312,8 @@ highway_final$geometry <- st_transform(highway_final$geometry, 4326)
 brazil_norte_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/norte-latest-free.shp/gis_osm_roads_free_1.shp")
 #brazil_norte_roads_primary <- brazil_norte_roads[which(brazil_norte_roads$fclass == 'primary'),]
 brazil_norte_roads_primary_estrada <- brazil_norte_roads[which(brazil_norte_roads$name == 'Estrada do Pacífico'),]
-#brazil_norte_roads_primary_bool <- st_covers(brazil_acre,brazil_norte_roads_primary_estrada$geometry, sparse = FALSE)
-#brazil_norte_roads_primary_estrada <- brazil_norte_roads_primary_estrada[brazil_norte_roads_primary_bool[1,],]
+brazil_norte_roads_primary_bool <- st_covers(brazil_acre,brazil_norte_roads_primary_estrada$geometry, sparse = FALSE)
+brazil_norte_roads_primary_estrada <- brazil_norte_roads_primary_estrada[brazil_norte_roads_primary_bool[1,],]
 
 # bolivia roads
 bolivia_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bolivia-latest-free.shp/gis_osm_roads_free_1.shp")
@@ -329,8 +329,8 @@ sfig2 <- ggdraw() +
               geom_sf(data = brazil_acre, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = mdd_peru, fill='#EEEEEE', color='#a6a6a6', size=.5, show.legend = FALSE) +
               geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
-              geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
-              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+              geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.6, show.legend = "line") +
+              geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.6, show.legend = "line") +
               theme_minimal() +
               no_axis +
               theme(legend.text=element_text(size=12),
@@ -341,7 +341,7 @@ sfig2 <- ggdraw() +
               geom_line(aes(x=year, y=incidence)) +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Madre de Dios, Peru") +
-              xlab("Year") + ylab("Dengue\nincidence") + 
+              xlab("Year") + ylab("Dengue\nincidence\nper 1,000") + 
               theme_classic()+
               xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
@@ -361,7 +361,7 @@ sfig2 <- ggdraw() +
               geom_line(aes(x=year, y=incidence)) +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Cusco, Peru") +
-              xlab("Year") + ylab("Dengue\nincidence") + 
+              xlab("Year") + ylab("Dengue\nincidence\nper 1,000") + 
               theme_classic()+
               xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
@@ -381,7 +381,7 @@ sfig2 <- ggdraw() +
               geom_line(aes(x=year, y=incidence)) +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Loreto, Peru") +
-              xlab("Year") + ylab("Dengue\nincidence") + 
+              xlab("Year") + ylab("Dengue\nincidence\nper 1,000") + 
               theme_classic()+
               xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
@@ -401,7 +401,7 @@ sfig2 <- ggdraw() +
               geom_line(aes(x=year, y=incidence)) +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Acre, Brazil") +
-              xlab("Year") + ylab("Dengue\nincidence") + 
+              xlab("Year") + ylab("Dengue\nincidence\nper 1,000") + 
               theme_classic()+
               xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
@@ -421,7 +421,7 @@ sfig2 <- ggdraw() +
               geom_line(aes(x=year, y=incidence)) +
               geom_vline(xintercept=2008,linetype='dashed', color="red") +
               ggtitle("Pando, Bolivia") +
-              xlab("Year") + ylab("Dengue\nincidence") + 
+              xlab("Year") + ylab("Dengue\nincidence\nper 1,000") + 
               theme_classic()+
               xlim(2000,2022)+
               theme(plot.title = element_text(size=12, face="bold"),
@@ -447,7 +447,7 @@ sfig2 <- sfig2 +
   draw_plot_label(label = c("Peru", "Brazil", "Bolivia"), size = 14, color = "darkred",
                   x = c(0.35, 0.53, 0.7), y = c(0.6, 0.62, 0.4)) +                                
   draw_plot_label(label = c("Interoceanic\nHighway"), size = 8, color = "red",
-                  x = c(0.58), y = c(0.5)) 
+                  x = c(0.577), y = c(0.5)) 
 sfig2
 
 ggsave("SFig2.pdf", plot=sfig2, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 11.29, height = 7.29, units="in", device = "pdf")
@@ -467,8 +467,8 @@ sfig2a <- ggplot() +
   geom_sf(data = brazil_acre, fill=NA, color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = mdd_peru, fill='#DDDDDD', color='#a6a6a6', size=.5, show.legend = FALSE) +
   geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
-  geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
-  geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
+  geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.6, show.legend = "line") +
+  #geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.8, show.legend = "line") +
   theme_minimal() +
   no_axis +
   theme(legend.text=element_text(size=12),
