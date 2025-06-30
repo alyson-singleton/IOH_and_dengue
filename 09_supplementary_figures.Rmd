@@ -41,10 +41,11 @@ stable1 <- stable1[c(3:10,37,11:31,35,34,36),2:3]
 stable1[33,] <- c(rep(length(unique(dengue_yearly$connected_buffered$key)),2))
 stable1[9,] <- c("----","----")
 colnames(stable1) <- c('Dengue Yearly', 'Leish Yearly')
-rownames(stable1) <- c("5km x 2000", "5km x 2001", "5km x 2002", "5km x 2003", "5km x 2004", "5km x 2005", "5km x 2006", "5km x 2007", "5km x 2008", "5km x 2009", "5km x 2010", "5km x 2011", "5km x 2012", "5km x 2013", "5km x 2014", "5km x 2015", "5km x 2016", "5km x 2017", "5km x 2018", "5km x 2019", "5km x 2020", "5km x 2021", "5km x 2022", "Urban", "Ag", "Sum Precip", "Mean Temp^2", "FEs", "Unit", "Year", "R^2", "N", "Facilities")
+rownames(stable1) <- c("5km x 2000", "5km x 2001", "5km x 2002", "5km x 2003", "5km x 2004", "5km x 2005", "5km x 2006", "5km x 2007", "5km x 2008", "5km x 2009", "5km x 2010", "5km x 2011", "5km x 2012", "5km x 2013", "5km x 2014", "5km x 2015", "5km x 2016", "5km x 2017", "5km x 2018", "5km x 2019", "5km x 2020", "5km x 2021", "5km x 2022", "Urban", "Ag", "Sum Precip", "Mean Temp^2", "FEs", "Unit", "Year", "R^2", "N", "Units")
 stable1[] <- lapply(stable1, function(col) {
   ifelse(col == "Yes", "X", ifelse(col == "No", "", col))
 })
+stable1[31,] <- round(as.numeric(stable1[31,]),3)
 stable1
 write.csv(stable1, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable1.csv")
 ```
@@ -63,8 +64,9 @@ stable2 <- etable(dengue_ld_model_main,dengue_ld_model_no_PM,
 stable2 <- stable2[c(3:9,16,15,14),2:11]
 stable2[10,] <- (as.numeric(gsub(",","",stable2[9,])))/15
 colnames(stable2) <- c('Main model', 'No PM', 'No LUC', 'Pop weight','1km boundary','10km boundary','No buffer (<5km v >5km)', 'Large buffer (<5km v >20km)', 'Conf & prob cases', 'Units w dengue')
-rownames(stable2) <- c("Urban", "Ag", "Sum Precip", "Mean Temp^2", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "R^2", "N", "Facilities")
+rownames(stable2) <- c("Urban", "Ag", "Sum Precip", "Mean Temp^2", "5km x Post-2008", "1km x Post-2008", "10km x Post-2008", "R^2", "N", "Units")
 stable2 <- stable2[c(5:7,1:4, 8:10),]
+stable2[8,] <- round(as.numeric(stable2[8,]),3)
 stable2
 write.csv(stable2, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable2.csv")
 ```
@@ -80,11 +82,12 @@ stable3 <- etable(dengue_yearly_ld_model_quad,dengue_biannual_ld_model_dry_quad,
 stable3 <- stable3[c(3:8,9:12,16,15,14),2:7]
 stable3[13,] <- c(rep(length(unique(dengue_yearly$connected_buffered$key)),6))
 colnames(stable3) <- c('Dengue Yearly', 'Dengue Biannual Dry', 'Dengue Biannual Rainy','Leish Yearly','Leish Biannual Dry', 'Leish Biannual Rainy')
-rownames(stable3) <- c("Urban", "Ag", "Sum Precip^2", "Mean Temp^2", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Unit", "Year", "Biannual", "R^2", "N", "Facilities")
+rownames(stable3) <- c("Urban", "Ag", "Sum Precip^2", "Mean Temp^2", "5km x Post-2008 Yearly", "5km x Post-2008 Biannual", "FEs", "Unit", "Year", "Biannual", "R^2", "N", "Units")
 stable3 <- stable3[c(5:6,1:4,7:13),]
 stable3[] <- lapply(stable3, function(col) {
   ifelse(col == "Yes", "X", ifelse(col == "No", "", col))
 })
+stable3[11,] <- round(as.numeric(stable3[11,]),3)
 stable3
 write.csv(stable3, "~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/stable3.csv")
 ```
@@ -154,7 +157,7 @@ dengue_yearly_df_full <- as.data.frame(coefs) %>%
   ) %>%
   mutate(
     star = if_else(p_value < 0.05, "*", ""),
-    formatted = sprintf("%.3f%s (%.3f)", estimate, star, std_error),
+    formatted = sprintf("%.2f%s (%.2f)", estimate, star, std_error),
     term_clean = case_when(
       grepl("factor\\(key\\)", term) ~ gsub("factor\\(key\\)", "Unit FE: ", term),
       grepl("factor\\(year\\)", term) ~ gsub("factor\\(year\\)", "Year FE: ", term),
@@ -162,7 +165,7 @@ dengue_yearly_df_full <- as.data.frame(coefs) %>%
     )
   )%>%
   mutate(formatted = ifelse(is.na(estimate), "Dropped (collinear)", 
-                            sprintf("%.3f%s (%.3f)", estimate, star, std_error)))
+                            sprintf("%.2f%s (%.2f)", estimate, star, std_error)))
 
 # --- Optional: move main variables to the top ---
 main_vars <- c("(Intercept)", "year_binary:fivekm", "year_binary", "fivekm", "sum_precip", "mean_temp", "urban", "ag")
@@ -185,7 +188,7 @@ dengue_yearly_df_full <- dengue_yearly_df_full %>%
 # --- Final clean table ---
 stable6 <- dengue_yearly_df_full %>%
   dplyr::select(Term = term_clean, `Estimate (SE)` = formatted)
-stable6 <- final_table[c(1,2,4,3,7,8,5,6,9:101),]
+stable6 <- stable6[c(1,2,4,3,7,8,5,6,9:101),]
 stable6[2:8,1] <- c("5km x Post-2008 Yearly", "5km", "Post-2008 Yearly", "Urban", "Ag", "Sum Precip", "Mean Temp^2")
 stable6
 
@@ -960,7 +963,7 @@ sfig9all <- as_ggplot(sfig9all) +
                   x = c(0.11, 0.11), y = c(0.99, 0.49)) 
 sfig9all
 
-ggsave("sfig9.pdf", plot=sfig9all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 8, units="in", device = "pdf")
+ggsave("SFig9.pdf", plot=sfig9all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 8, units="in", device = "pdf")
 ```
 
 ```{r, SFig S10}
