@@ -4,14 +4,11 @@
 > Please feel free to email me with any specific, code-related questions at asinglet@stanford.edu.
 
 ## Requirements and timing
-___
 All analyses were run in the R (version 4.4.2) programming language or on Python via Google Colab (which provides a ready-to-use Python environment). Installing R usually takes less than 30 minutes, but may vary. Installing the necessary R packages takes usually 1-2 minutes per package, unless packages are installed from source which takes longer.
 
 ## Data processing and analysis pipeline
-___
 
 ### Download/extract data
-___
 
 #### Remotely-sensed covariates
 
@@ -22,13 +19,9 @@ ___
 #### Clustering
 
 ### Clean and merge data
-___
 
 ### Fit regressions and run senstivity analyses
-___
 
 ### Make main text figures and tables
-___
 
 ### Make supplementary figures and tables
-___
