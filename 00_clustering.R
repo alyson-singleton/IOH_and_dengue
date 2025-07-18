@@ -15,7 +15,7 @@ library(rgeos)
 tmap_mode("view")
 
 # Cluster All IDs ---------------------------------------------------------
-allID <- read_csv("~/Desktop/doctorate/ch2 mdd highway/data/DIRESA_E_Salud_Coordinates_Key.csv")
+allID <- read_csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_esalud_coordinates_key.csv")
 allIDSpatialPoints <- SpatialPointsDataFrame(allID[,c("longitude", "latitude")], allID[,1])
 
 # use the distm function to generate a geodesic distance matrix in meters
