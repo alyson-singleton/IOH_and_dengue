@@ -11,6 +11,7 @@ All analyses were run in the R (version 4.4.2) programming language or on Python
 
 ### Remotely-sensed covariates
 
+
 ### Population data
 
 ### Dengue data
