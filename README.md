@@ -9,7 +9,7 @@ All analyses were run in the R (version 4.4.2) programming language or on Python
 
 ## Download/extract data
 
-#### Remotely-sensed covariates
+#### Remotely-sensed environmental data
 1) Download the spatial data located in the data/spatial_data folder and upload to your GEE assests.
 2) Download all environmental covariates and highway buffer files (example output in data/covariates_data folder).
    - [00_IOH_and_dengue_GEE_downloads.ipynb](https://colab.research.google.com/drive/1NuFvsgjjnNCU4ZElD4kMuuzfHIACS-fD?usp=sharing)
