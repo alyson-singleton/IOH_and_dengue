@@ -22,7 +22,7 @@ head(case_data)
 ### preprocess dengue data
 #################################
 ## keep dengue data only (in this case do not include A97.1--alarm--or A97.2--severe
-##  becuase neither were reported before paving)
+##  because neither were reported before paving)
 dengue_data <- case_data[which(case_data$DIAGNOSTIC=="A97.0"),]
 table(dengue_data$TIPO_DX)
 
