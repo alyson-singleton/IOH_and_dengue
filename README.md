@@ -10,30 +10,25 @@ All analyses were run in the R (version 4.4.2) programming language or on Python
 ## Download/extract data
 
 ### Remotely-sensed covariates
-
 1) Download the spatial data located in the data/spatial_data folder and upload to your GEE assests.
 2) Download all environmental covariates and highway buffer files (example output in data/covariates_data folder).
    - [00_IOH_and_dengue_GEE_downloads.ipynb](https://colab.research.google.com/drive/1NuFvsgjjnNCU4ZElD4kMuuzfHIACS-fD?usp=sharing)
   
 ### Population data
-
 3) Clean and do manual name matching on DIRESA-provided population data.
    - 01_clean_diresa_pop_data.R 
 4) Link DIRESA data to WorldPop data and use to impute years with missing DIRESA data.
    - 02_impute_missing_pop_data.R 
 
 ### Clustering
-
 5) Identify spatial groups for clustering standard errors.
    - 03_clustering.R 
 
 ### Disease data
-
 6) Process DIRESA dengue and leishmaniasis case data.
   - 04_process_diresa_case_data.R
 
 ## Clean and merge data
-
 7) Link cases with covariates and build final panel dataset.
    - 05_link_cases_w_covariates.R
    - 06_construct_final_panel_data.R
