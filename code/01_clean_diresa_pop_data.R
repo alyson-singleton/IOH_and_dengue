@@ -6,11 +6,6 @@ require(readxl)
 require(tidyverse)
 library(ggplot2)
 
-#add back in arial font
-library(showtext)
-font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
-showtext_auto()
-
 #################################### 
 # load all diresa pop files (after some preprocessing done first in excel by hand)
 #################################### 
@@ -154,8 +149,9 @@ pop_2009_2017$`2014-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2014-01-01`)
 pop_2009_2017$`2017-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2017-01-01`))
 
 ### link names with e_salud codes
-key_esalud_clusterid <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
+key_esalud_clusterid <- read.csv("data/spatial_data/diresa_esalud_coordinates_key.csv")
 pop_2009_2017_linked <- full_join(key_esalud_clusterid, pop_2009_2017, by=join_by('name'=='pop_name'))
+
 ## export to complete mis-matches by hand in excel
 write.csv(pop_2009_2017_linked, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_unmatched.csv")
 
@@ -166,7 +162,7 @@ colnames(cleaned_diresa_pop_2009_2017)[c(7:15)] <- c(as.character(seq(as.Date("2
 write.csv(cleaned_diresa_pop_2009_2017, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2009_2017_final.csv")
 
 #################################### 
-### build diresa combined total dataset for 2020--2023 (other consistent format type)
+### build diresa combined total dataset for 2020-2023 (other consistent format type)
 #################################### 
 
 pop_2020_2023 <- pop_2020[,c(3,4,20)] %>% 
@@ -179,11 +175,10 @@ pop_2020_2023$`2021-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2021-01-01`)
 pop_2020_2023$`2022-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2022-01-01`))
 pop_2020_2023$`2023-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2023-01-01`))
 
-### link names with e_salud codes
-key_esalud_clusterid <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid.csv")
 #remove "P.S." and "C.S." for matching"
 key_esalud_clusterid$name_short <- substr(key_esalud_clusterid$name, 6, 100)
 pop_2020_2023_linked <- full_join(key_esalud_clusterid, pop_2020_2023, by=join_by('name_short'=='health_center'))
+
 ## export to complete mis-matches by hand in excel
 write.csv(pop_2020_2023_linked, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_2020_2023_unmatched.csv")
 
