@@ -26,7 +26,7 @@ All analyses were run in the R (version 4.4.2) programming language or on Python
 
 ### Disease data
 6) Process DIRESA dengue and leishmaniasis case data.
-  - 04_process_diresa_case_data.R
+   - 04_process_diresa_case_data.R
 
 ## Clean and merge data
 7) Link cases with covariates and build final panel dataset.
