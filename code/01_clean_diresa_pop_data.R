@@ -1,5 +1,10 @@
-# ID ----------------------------------------------------------------------
-## Aly Singleton
+# Script written by:
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Clean and do manual name matching on DIRESA-provided population data.
+#
+# Date created: 7/21/2025
 
 #read in required packages
 require(readxl)
@@ -175,7 +180,7 @@ pop_2020_2023$`2021-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2021-01-01`)
 pop_2020_2023$`2022-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2022-01-01`))
 pop_2020_2023$`2023-01-01` <- as.numeric(gsub(",","",pop_2020_2023$`2023-01-01`))
 
-#remove "P.S." and "C.S." for matching"
+#remove "P.S." and "C.S." for matching
 key_esalud_clusterid$name_short <- substr(key_esalud_clusterid$name, 6, 100)
 pop_2020_2023_linked <- full_join(key_esalud_clusterid, pop_2020_2023, by=join_by('name_short'=='health_center'))
 
