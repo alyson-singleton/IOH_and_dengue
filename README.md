@@ -17,7 +17,7 @@ All analyses were run in the R (version 4.4.2) programming language or on Python
 #### Population data
 3) Clean and do manual name matching on DIRESA-provided population data.
    - 01_clean_diresa_pop_data.R 
-4) Link DIRESA data to WorldPop data and use to impute years with missing DIRESA data.
+4) Link DIRESA data to WorldPop data and use WorldPop to impute years with missing DIRESA data.
    - 02_impute_missing_pop_data.R 
 
 #### Clustering
