@@ -54,7 +54,7 @@ process_case_data <- function(df, case_col, date_col) {
 ###################
 
 # yearly
-dengue_df_yearly_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_c.csv")
+dengue_df_yearly_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_c_test.csv")
 dengue_yearly <- process_case_data(dengue_df_yearly_raw, "yearly_cases", year)
 
 # yearly (conf & prob)
