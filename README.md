@@ -13,18 +13,16 @@ All analyses were run in the R (version 4.4.2) programming language or on Python
 1) Download the spatial data located in the data/spatial_data folder and upload to your GEE assests.
 2) Download all environmental covariates and highway buffer files (example output in data/environmental_data folder).
    - [00_IOH_and_dengue_GEE_downloads.ipynb](https://colab.research.google.com/drive/1NuFvsgjjnNCU4ZElD4kMuuzfHIACS-fD?usp=sharing)
-  
-#### Population data
-3) Clean and do manual name matching on DIRESA-provided population data.
-   - 01_clean_diresa_pop_data.R 
-4) Link DIRESA data to WorldPop data and use WorldPop to impute years with missing DIRESA data.
-   - 02_impute_missing_pop_data.R 
 
 #### Clustering
-5) Identify spatial groups for clustering standard errors.
-   - 03_clustering.R 
+3) Identify spatial groups for clustering standard errors.
+   - 01_clustering.R 
 
-#### Disease data
+#### DIRESA data
+4) Clean and do manual name matching on DIRESA-provided population data. Output provided in data/diresa_data folder.
+   - 02_clean_diresa_pop_data.R 
+5) Link DIRESA data to WorldPop data and use WorldPop to impute years with missing DIRESA data.
+   - 03_impute_missing_pop_data.R 
 6) Process DIRESA dengue and leishmaniasis case data.
    - 04_process_diresa_case_data.R
 
