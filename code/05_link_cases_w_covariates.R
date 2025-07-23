@@ -106,7 +106,7 @@ dengue_data_w_buffers$year <- format(as.Date(dengue_data_w_buffers$year, format=
 dengue_data_w_buffers$year <- as.Date(dengue_data_w_buffers$year)
 
 #link population data
-adjusted_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final_0km.csv")
+adjusted_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final.csv")
 adjusted_diresa_pop$year <- as.Date(adjusted_diresa_pop$year)
 adjusted_diresa_pop <- adjusted_diresa_pop[which(adjusted_diresa_pop$year!=as.Date("2023-01-01")),]#remove 2023 because no case data
 adjusted_diresa_pop <- adjusted_diresa_pop[,c(2:4)]
@@ -203,7 +203,7 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
             ag = max(ag),
             all_cutoffs = max(all_cutoffs),
             cluster = max(clust))
-write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_c.csv")
+write.csv(dengue_data_w_covariates_yearly, "~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_c_test.csv")
 
 ## group biannually
 dengue_data_w_covariates_biannual <- dengue_data_w_covariates_monthly 

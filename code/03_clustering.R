@@ -1,5 +1,11 @@
-# ID ----------------------------------------------------------------------
-## TJ Sipin and Aly Singleton
+# Script written by:
+# TJ Sipin, tjsipin@ucsb.edu
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Identify spatial groups for clustering standard errors.
+#
+# Date created: 7/23/2025
 
 # Load Packages -----------------------------------------------------------
 
@@ -7,15 +13,13 @@ library(dismo)
 library(tidyverse)
 library(tmap)
 library(sf)
-#library(rgdal)
 library(geosphere)
 library(terra)
-library(rgeos)
 
 tmap_mode("view")
 
 # Cluster All IDs ---------------------------------------------------------
-allID <- read_csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_esalud_coordinates_key.csv")
+allID <- read_csv("data/spatial_data/diresa_esalud_coordinates_key.csv")
 allIDSpatialPoints <- SpatialPointsDataFrame(allID[,c("longitude", "latitude")], allID[,1])
 
 # use the distm function to generate a geodesic distance matrix in meters
@@ -24,7 +28,6 @@ mdistAllID <- distm(allIDSpatialPoints)
 # cluster all points using a hierarchical clustering approach
 hcAllID <- hclust(as.dist(mdistAllID), method="complete")
 
-##CHANGE THIS FOR ROBUSTNESS CHECKS (meters)
 # define the distance threshold
 d = 7500
 
@@ -56,12 +59,10 @@ addCl <- addClustRaw2 %>%
     numPoints = n()
   )
 
-
 # Cluster with 1 location
 points <- addCl %>%
   filter(numPoints == 1) %>%
   dplyr::summarise()
-
 
 # Clusters with 2 locations
 lines <- addCl %>%
@@ -76,7 +77,6 @@ polys <- addCl %>%
   # Need to cast to polygon and create convex hull around points
   st_cast("POLYGON") %>%
   st_convex_hull()
-
 
 # Get lines and polys to make circumscribing circle
 allFeats <- lines %>%
@@ -99,29 +99,15 @@ allFeatsCircleCentroid <- rbind(allFeatsCircleCentroid, points)
 allFeatsCircleCentroid <- st_transform(allFeatsCircleCentroid, crs = "EPSG:4326") %>%
   mutate(longitude = sf::st_coordinates(.)[,1],
          latitude = sf::st_coordinates(.)[,2])
-allFeatsCircleCentroid
 
-# Mean Method of Finding center (deprecated) ------------------------------
+# Save clustering data -----------------------------------------------------
 
-addClust <- addClustRaw2 %>%
-  summarize(
-    latitude = mean(y),
-    longitude = mean(x)
-  )
+write_csv(addClustRaw, "data/clustering_data/key_cluster_match.csv")
+write_sf(allFeatsCircleCentroid,"data/clustering_data/cluster_centroids.shp")
+#write_sf(allFeatsCircle,"data/clustering_data/cluster_polygons.shp")
 
-centSF <- addClust %>%
-  st_as_sf(coords = c("longitude", "latitude"), crs = "EPSG:4326") %>%
-  st_transform(crs = "EPSG:3310") %>%
-  st_buffer(dist = d)
-
-
-write_csv(addClustRaw, "~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/idClusterKey_7.5km.csv")
-write_csv(allFeatsCircleCentroid, "~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/cluster_centroids_7.5km.csv")
-write_sf(allFeatsCircle,"~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterPolys_7.5km.shp")
-write_sf(allFeatsCircleCentroid,"~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterCentroids_7.5km.shp")
-
-
-# Map of Methods, Red shows the convex hull of polygon clusters, and blue is the
+# Map of Methods -----------------------------------------------------------
+# Red shows the convex hull of polygon clusters, and blue is the
 # final shape. Clusters are grouped by color points
 tm_shape(allFeats) +
   tm_borders(col = "red") +
@@ -130,16 +116,7 @@ tm_shape(allFeats) +
   tm_shape(allIDSpatialPoints %>% st_as_sf()) +
   tm_dots(col = "clust", style = "pretty", palette = "Set3")
 
-tm_shape(allFeats ) +
-  tm_borders(col = "red") +
-  tm_shape(allIDSpatialPoints %>% st_as_sf() ) +
-  tm_dots() +
-  tm_shape(allFeatsCircle ) +
-  tm_borders(col = "blue") +
-  tm_shape(centSF) +
-  tm_borders(col = "green")
-
-tm_shape(allFeats ) +
+tm_shape(allFeats) +
   tm_borders(col = "red") +
   tm_shape(allIDSpatialPoints %>% st_as_sf() ) +
   tm_dots() +

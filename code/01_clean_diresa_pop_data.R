@@ -203,4 +203,4 @@ cleaned_diresa_pop_2020_2023 <- cleaned_diresa_pop_2020_2023[,-c(6)]
 cleaned_diresa_pop_all_years <- full_join(cleaned_diresa_pop_2009_2017,cleaned_diresa_pop_2020_2023, by=c("key", "name", "e_salud", "latitude", "longitude"))
 cleaned_diresa_pop_all_years <- cleaned_diresa_pop_all_years[,c(1:3, 5:15, 18:21)]
 colnames(cleaned_diresa_pop_all_years)[c(6:18)] <- as.character(c(2009:2017,2020:2023))                                   
-write.csv(cleaned_diresa_pop_all_years, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_all_years_final.csv")
+write.csv(cleaned_diresa_pop_all_years, "data/diresa_data/diresa_pop_all_years_final.csv")

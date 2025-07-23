@@ -768,17 +768,10 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
 
-allFeatsCircle <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterPolys_7.5km.shp")
-allFeatsCircle <- allFeatsCircle %>%
-  st_transform(crs=4326)
-
 cluster_sizes <- center_lat_long %>%
   group_by(clust) %>%
   summarise(n_keys = n(), .groups = "drop") %>%
   filter(n_keys > 1)  # Keep only clusters with >1 key
-
-allFeatsCircle_filtered <- allFeatsCircle %>%
-  filter(clust %in% cluster_sizes$clust)
 
 allFeatsCircleCentroid <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/spatial_units/buffer_7.5km/clusterCentroids_7.5km.shp")
 allFeatsCircleCentroid <- allFeatsCircleCentroid %>%

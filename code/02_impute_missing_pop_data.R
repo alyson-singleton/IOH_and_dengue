@@ -17,7 +17,7 @@ library(purrr)
 ### load worldpop data (downloaded from google earth engine)
 #################################### 
 
-population_mdd <- read.csv("data/covariates_data/mdd_population_yearly_sum.csv")
+population_mdd <- read.csv("data/environmental_data/mdd_population_yearly_sum.csv")
 population_mdd <- population_mdd[,c(2:22,24)]
 colnames(population_mdd) <- c(as.character(seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by="years")), 'key')
 population_mdd$`2021-01-01` <- NA
@@ -33,7 +33,7 @@ population_mdd_long$year <- as.Date(population_mdd_long$year)
 ### load cleaned diresa pop data
 #################################### 
 
-cleaned_diresa_pop <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/diresa_pop_all_years_final.csv")
+cleaned_diresa_pop <- read.csv("data/diresa_data/diresa_pop_all_years_final.csv")
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(2:19)]
 colnames(cleaned_diresa_pop)[c(6:14)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
 colnames(cleaned_diresa_pop)[c(15:18)] <- c(as.character(seq(as.Date("2020-01-01"), as.Date("2023-01-01"), by="years")))
@@ -380,7 +380,7 @@ adjusted_diresa_pop <- all_pop[,c('key', 'year', 'adjusted_pop')]
 colnames(adjusted_diresa_pop) <- c('key', 'year', 'population')
 
 #export imputed population data
-write.csv(adjusted_diresa_pop, "~/Desktop/doctorate/ch2 mdd highway/data/diresa_pop_data_processing/adjusted_pop_all_years_clusters_final_0km.csv")
+write.csv(adjusted_diresa_pop, "data/diresa_data/imputed_population_data.csv")
 
 #################################### 
 ## Plot to visualize
