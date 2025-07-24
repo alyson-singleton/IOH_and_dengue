@@ -1,5 +1,11 @@
 # ID ----------------------------------------------------------------------
-## Aly Singleton
+# Script written by:
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Process DIRESA dengue and leishmaniasis case data.
+#
+# Date created: 7/23/2025
 
 ## load libraries
 library(dplyr)
@@ -8,47 +14,9 @@ library(ggplot2)
 library(plm)
 library(fixest)
 
-#add back in arial font
-library(showtext)
-font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
-showtext_auto()
-
-## load raw mdd case data (all diseases)
-#case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/mdd_case_data.csv")
-case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/Datos vigilancia MDD 2000-2022_SubsetStanford.csv")
-head(case_data)
-
-#################################
-### preprocess dengue data
-#################################
-## keep dengue data only (in this case do not include A97.1--alarm--or A97.2--severe
-##  because neither were reported before paving)
-dengue_data <- case_data[which(case_data$DIAGNOSTIC=="A97.0"),]
-table(dengue_data$TIPO_DX)
-
-## remove "descartado" cases (options are D/C/P)
-#dengue_data <- dengue_data[which(dengue_data$TIPO_DX=="C" | dengue_data$TIPO_DX=="P"),]
-dengue_data <- dengue_data[which(dengue_data$TIPO_DX=="C"),]
-
-## remove cases listed as being from outside madre de dios
-mdd_districts <- unique(dengue_data$UBIGEO)[1:11]
-dengue_data <- dengue_data[which(dengue_data$UBIGEO %in% mdd_districts),]
-
-## group into months
-dengue_data$SEMANA <- ifelse(dengue_data$SEMANA==53,52,dengue_data$SEMANA)
-dengue_data <- dengue_data %>%
-  mutate(month = lubridate::month(as.Date(paste0(ANO, "-", SEMANA, "-", 1), format = "%Y-%U-%u")))
-dengue_data$month_date <- as.Date(paste0(dengue_data$ANO, "-", dengue_data$month, "-", 01), format = "%Y-%m-%d")
-
-monthly_dengue_data <- dengue_data %>%
-  group_by(month = month_date, e_salud = E_SALUD) %>%
-  summarize(monthly_cases = n())
-
-## load linked e_salud codes and cluster ids
-linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
-
-## link to cluster ids and group into healthcare center clusters
-dengue_data_linked <- full_join(linked_ids_codes, monthly_dengue_data, by = 'e_salud')
+## load diresa disease case data
+dengue_case_data <- read.csv("data/diresa_data/diresa_dengue_data.csv")
+leish_case_data <- read.csv("data/diresa_data/diresa_leishmaniasis_data.csv")
 
 #################################
 ### create dataframe of road buffers
@@ -81,17 +49,6 @@ boundary_dummy_vars <- boundary_dummy_vars %>%
     )
   )
 write.csv(boundary_dummy_vars,  "~/Desktop/doctorate/ch2 mdd highway/data/boundary_dummy_vars_0km/boundary_dummy_vars_0km.csv")
-
-## add zeroes to cluster-months with no recorded cases
-dengue_data_complete_time_steps <- dengue_data_linked %>%
-  group_by(key) %>%
-  complete(month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by = "month"),
-    fill = list(monthly_cases = 0)) %>%
-  fill(everything(), .direction = "downup") %>%
-  ungroup() %>%
-  distinct(key, month, .keep_all = TRUE) %>%  # Remove duplicate key-month pair
-  filter(!is.na(key)) %>%
-  as.data.frame()
 
 #link buffer data to case data
 dengue_data_w_buffers <- left_join(dengue_data_complete_time_steps, boundary_dummy_vars, by='key')
@@ -239,42 +196,6 @@ write.csv(dengue_data_w_covariates_biannual, "~/Desktop/doctorate/ch2 mdd highwa
 ### preprocess leish data 
 ### (abbreviated from above, need to run lines above for this to work)
 ################################
-case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/Datos vigilancia MDD 2000-2022_SubsetStanford.csv")
-
-## keep leish data only (in this case include both B55.1--CL--and--B55.2--ML)
-leish_data <- case_data[which(case_data$DIAGNOSTIC=="B55.1" | case_data$DIAGNOSTIC=="B55.2"),]
-table(leish_data$TIPO_DX)
-
-## remove "descartado" and/or restrict to confirmed cases (options are D/C/P)
-#leish_data <- leish_data[which(leish_data$TIPO_DX=="C" | leish_data$TIPO_DX=="P"),]
-leish_data <- leish_data[which(leish_data$TIPO_DX=="C"),]
-
-## remove cases listed as being from outside madre de dios
-mdd_districts <- unique(leish_data$UBIGEO)[1:11]
-leish_data <- leish_data[which(leish_data$UBIGEO %in% mdd_districts),]
-
-#group by month
-leish_data$SEMANA <- ifelse(leish_data$SEMANA==53,52,leish_data$SEMANA)
-leish_data <- leish_data %>%
-  mutate(month = lubridate::month(as.Date(paste0(ANO, "-", SEMANA, "-", 1), format = "%Y-%U-%u")))
-leish_data$month_date <- as.Date(paste0(leish_data$ANO, "-", leish_data$month, "-", 01), format = "%Y-%m-%d")
-monthly_leish_data <- leish_data %>%
-  group_by(month = month_date, e_salud = E_SALUD) %>%
-  summarize(monthly_cases = n())
-
-## link to cluster ids and group into healthcare center clusters (loaded from above)
-leish_data_linked <- full_join(linked_ids_codes, monthly_leish_data, by = 'e_salud')
-
-## add zeroes to cluster-months with no recorded cases
-leish_data_complete_time_steps <- leish_data_linked %>%
-  group_by(key) %>%
-  complete(month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by = "month"),
-           fill = list(monthly_cases = 0)) %>%
-  fill(everything(), .direction = "downup") %>%
-  ungroup() %>%
-  distinct(key, month, .keep_all = TRUE) %>%  # remove duplicate key-month pairs
-  filter(!is.na(key)) %>%
-  as.data.frame()
 
 #link buffer data to case data (loaded from above)
 leish_data_w_buffers <- full_join(leish_data_complete_time_steps, boundary_dummy_vars, by='key')
