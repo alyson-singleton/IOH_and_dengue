@@ -1,4 +1,3 @@
-# ID ----------------------------------------------------------------------
 # Script written by:
 # Alyson Singleton, asinglet@stanford.edu
 #
@@ -179,7 +178,7 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
     .groups = "drop"
   )
 
-write.csv(dengue_data_w_covariates_biannual, "data/merged_data/dengue_biannual_merged_dataset.csv")
+write.csv(dengue_data_w_covariates_biannual, "data/merged_data/dengue_biannual_merged_dataset.csv", row.names=F)
 
 ################################
 ### link to monthly leish data & aggregate
@@ -213,7 +212,8 @@ write.csv(leish_data_w_covariates_yearly, "data/merged_data/leish_yearly_merged_
 leish_data_w_covariates_biannual <- leish_data_w_covariates_monthly 
 leish_data_w_covariates_biannual$month_wo_year <- format(as.Date(leish_data_w_covariates_biannual$month, format="%Y-%m-%d"),"%m")
 leish_data_w_covariates_biannual$biannual_index <- ifelse(leish_data_w_covariates_biannual$month_wo_year %in% c('01', '02', '03', 10, 11, 12), 1, 0)
-leish_data_w_covariates_biannual$biannual_date <- ifelse(leish_data_w_covariates_biannual$month_wo_year==10 | leish_data_w_covariates_biannual$month_wo_year=='04', 
+leish_data_w_covariates_biannual$biannual_date <- ifelse((leish_data_w_covariates_biannual$month_wo_year==10 | 
+                                                            leish_data_w_covariates_biannual$month_wo_year=='04'), 
                                                           as.character(leish_data_w_covariates_biannual$month), NA)
 leish_data_w_covariates_biannual$biannual_date <- as.Date(leish_data_w_covariates_biannual$biannual_date, format="%Y-%m-%d")
 leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>% 
@@ -228,4 +228,4 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
     .groups = "drop"
   )
 
-write.csv(leish_data_w_covariates_biannual, "data/merged_data/leish_biannual_merged_dataset.csv")
+write.csv(leish_data_w_covariates_biannual, "data/merged_data/leish_biannual_merged_dataset.csv", row.names=F)

@@ -388,7 +388,7 @@ fig2combined <- grid.arrange(fig2ab, fig2cd,
 
 fig2combined
 
-ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 9, height = 8, units="in", device = "pdf")
+#ggsave("Fig2.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 9, height = 8, units="in", device = "pdf")
 
 ```
 

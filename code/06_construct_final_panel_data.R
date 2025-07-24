@@ -1,10 +1,14 @@
+# Script written by:
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Build final, analysis-ready panel datasets.
+#
+# Date created: 7/23/2025
+
 library(dplyr)
 library(readr)
 library(rlang)
-
-################################
-### process case data helper ###
-################################
 
 process_case_data <- function(df, case_col, date_col) {
   date_col <- enquo(date_col)
@@ -20,7 +24,7 @@ process_case_data <- function(df, case_col, date_col) {
     {
       df_clean <- .
       
-      keys_not_connected <- c(43, 88:98) #see fig** for visualization
+      keys_not_connected <- c(43, 88:98) #see Fig1 for visualization
       
       keys_with_cases <- df_clean %>%
         group_by(key) %>%
@@ -34,14 +38,14 @@ process_case_data <- function(df, case_col, date_col) {
       
       list(
         full = df_clean,
-        no_pm = filter(df_clean, cluster != 1), #change this to specific keys eventually
+        no_pm = filter(df_clean, clust != 1),
         buffered = filter(df_clean, all_cutoffs %in% c(0,1,2,4,5,6,7)),
-        buffered_no_pm = filter(df_clean, all_cutoffs %in% c(0,1,2,4,5,6,7), cluster != 1),
+        buffered_no_pm = filter(df_clean, all_cutoffs %in% c(0,1,2,4,5,6,7), clust != 1),
         
         connected = filter(df_clean, key_connected==T),
-        connected_no_pm = filter(df_clean, key_connected==T, cluster != 1),
+        connected_no_pm = filter(df_clean, key_connected==T, clust != 1),
         connected_buffered = filter(df_clean, key_connected==T, all_cutoffs %in% c(0,1,2,4,5,6,7)),
-        connected_buffered_no_pm = filter(df_clean, key_connected==T, all_cutoffs %in% c(0,1,2,4,5,6,7), cluster != 1),
+        connected_buffered_no_pm = filter(df_clean, key_connected==T, all_cutoffs %in% c(0,1,2,4,5,6,7), clust != 1),
         
         no_zero_case_keys = filter(df_clean, key_w_dengue==T),
         buffered_no_zero_case_keys = filter(df_clean, key_w_dengue==T, all_cutoffs %in% c(0,1,2,4,5,6,7))
@@ -54,25 +58,28 @@ process_case_data <- function(df, case_col, date_col) {
 ###################
 
 # yearly
-dengue_df_yearly_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_c_test.csv")
-dengue_yearly <- process_case_data(dengue_df_yearly_raw, "yearly_cases", year)
+dengue_df_yearly_raw <- read.csv("data/merged_data/dengue_yearly_merged_dataset.csv")
+dengue_yearly <- process_case_data(dengue_df_yearly_raw, "yearly_cases_C", year)
 
 # yearly (conf & prob)
-dengue_df_yearly_raw_cp <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_yearly_full_dataset_cp.csv")
-dengue_yearly_cp <- process_case_data(dengue_df_yearly_raw_cp, "yearly_cases", year)
+dengue_df_yearly_raw_cp <- read.csv("data/merged_data/dengue_yearly_merged_dataset.csv")
+dengue_yearly_cp <- process_case_data(dengue_df_yearly_raw_cp, "yearly_cases_CP", year)
 
 # biannual
-dengue_df_biannual_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/dengue_biannual_full_dataset_c.csv")
-dengue_biannual <- process_case_data(dengue_df_biannual_raw, "biannual_cases", biannual_date)
+dengue_df_biannual_raw <- read.csv("data/merged_data/dengue_biannual_merged_dataset.csv")
+dengue_biannual <- process_case_data(dengue_df_biannual_raw, "biannual_cases_C", biannual_date)
 
 ###################
 ### leish data ####
 ###################
 
 # yearly
-leish_df_yearly_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/leish_yearly_full_dataset_c.csv")
-leish_yearly <- process_case_data(leish_df_yearly_raw, "yearly_cases", year)
+leish_df_yearly_raw <- read.csv("data/merged_data/leish_yearly_merged_dataset.csv")
+leish_yearly <- process_case_data(leish_df_yearly_raw, "yearly_cases_C", year)
 
 # biannual
-leish_df_biannual_raw <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/processed_case_data_0km/leish_biannual_full_dataset_c.csv")
-leish_biannual <- process_case_data(leish_df_biannual_raw, "biannual_cases", biannual_date)
+leish_df_biannual_raw <- read.csv("data/merged_data/leish_biannual_merged_dataset.csv")
+leish_biannual <- process_case_data(leish_df_biannual_raw, "biannual_cases_C", biannual_date)
+
+
+# start here, find a way to store the lists, make note edits/rename so it's clear these are lists
