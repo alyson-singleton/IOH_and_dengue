@@ -31,8 +31,8 @@ dengue_case_data <- dengue_case_data %>%
     values_from = dengue_cases,
     names_prefix = "cases_") %>%
   replace_na(list(cases_C = 0, cases_P = 0)) %>%
-  mutate(cases_CP = cases_C + cases_P) %>%
-  dplyr::select(-cases_P)
+  mutate(cases_CP = cases_C + cases_P) #%>%
+ # dplyr::select(-cases_P)
 
 ## load e_salud, key, and cluster information
 diresa_esalud_coordinates_key <- read.csv("data/spatial_data/diresa_esalud_coordinates_key.csv")
@@ -44,15 +44,18 @@ dengue_data_linked <- left_join(linked_ids_codes, dengue_case_data, by = 'e_salu
 
 ## add zeroes to unit-months with no recorded cases
 dengue_data_complete_time_steps <- dengue_data_linked %>%
+  mutate(monthly_cases_C = cases_C,
+         monthly_cases_CP = cases_CP) %>%
   group_by(key) %>%
-  complete(month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by = "month"),
-           fill = list(monthly_cases = 0)) %>%
+  complete(
+    month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by = "month"),
+    fill = list(monthly_cases_C = 0, monthly_cases_CP = 0)
+  ) %>%
   fill(everything(), .direction = "downup") %>%
   ungroup() %>%
   distinct(key, month, .keep_all = TRUE) %>%
   filter(!is.na(key)) %>%
-  dplyr::select(month, key, e_salud, clust, cases_C, cases_CP) %>%
-  as.data.frame()
+  dplyr::select(month, key, e_salud, clust, monthly_cases_C, monthly_cases_CP)
 
 #################################
 ### preprocess leish data 
@@ -88,15 +91,18 @@ leish_data_linked <- left_join(linked_ids_codes, leish_case_data, by = 'e_salud'
 
 ## add zeroes to unit-months with no recorded cases
 leish_data_complete_time_steps <- leish_data_linked %>%
+  mutate(monthly_cases_C = cases_C,
+         monthly_cases_CP = cases_CP) %>%
   group_by(key) %>%
-  complete(month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by = "month"),
-           fill = list(monthly_cases = 0)) %>%
+  complete(
+    month = seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by = "month"),
+    fill = list(monthly_cases_C = 0, monthly_cases_CP = 0)
+  ) %>%
   fill(everything(), .direction = "downup") %>%
   ungroup() %>%
   distinct(key, month, .keep_all = TRUE) %>%
   filter(!is.na(key)) %>%
-  dplyr::select(month, key, e_salud, clust, cases_C, cases_CP) %>%
-  as.data.frame()
+  dplyr::select(month, key, e_salud, clust, monthly_cases_C, monthly_cases_CP)
 
 #################################
 ### save processed datasets
