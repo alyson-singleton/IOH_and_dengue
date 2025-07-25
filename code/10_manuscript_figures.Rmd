@@ -54,7 +54,7 @@ theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
 #####################
 linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
 
-center_lat_long <- left_join(unique(dengue_yearly$full[,c(3,20,21,23)]), linked_ids_codes, by='key')
+center_lat_long <- left_join(unique(dengue_yearly$full[,c(2,18,23,24)]), linked_ids_codes, by='key')
 
 center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
@@ -102,12 +102,12 @@ center_lat_long_fig1 <- center_lat_long %>%
   mutate(
     all_cutoffs = if_else(!key_connected, '2', all_cutoffs),
     all_cutoffs = factor(all_cutoffs, levels = c('1', '0', '3', '2')),
-    pm_indicator = if_else(cluster == 1, 24, 21),
-    pm_indicator2 = if_else(cluster == 1, 3.2, 2.5)) %>%
-  arrange(if_else(cluster == 1, 1, 0))
+    pm_indicator = if_else(clust == 1, 24, 21),
+    pm_indicator2 = if_else(clust == 1, 3.2, 2.5)) %>%
+  arrange(if_else(clust == 1, 1, 0))
 
 # Coordinates for labeling
-cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(cluster == 1))
+cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(clust == 1))
 arrow_x <- cluster1_coords[1, "X"] + 0.15
 arrow_y <- cluster1_coords[1, "Y"] - 0.05
 label_x <- arrow_x + 0.1
@@ -119,7 +119,7 @@ mdd_map <- ggplot() +
   geom_sf(data = rivers, aes(geometry = geometry, color='Rivers'), linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='Unpaved Roads'), linewidth=0.5, show.legend = "line") +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='Highway'), linewidth=0.7, show.legend = "line") +
-  geom_sf(data = center_lat_long_fig1, aes(geometry = geometry, fill=all_cutoffs), color='black', shape = 21, size = 2.2) +
+  geom_sf(data = center_lat_long_fig1, aes(geometry = geometry, fill=all_cutoffs), color='black', shape = 21, size = 3) +
   scale_fill_manual(name= "", values=c("1" = "#E04490", "0" = "#648FFF", "3" = "grey80", "2" = "#ffffff"),
                     labels=c("Exposed (<5km)", "Unexposed (>10km)", "Buffer (removed)", "Disconnected (removed)")) +
   scale_color_manual(name = "", values = c("Unpaved Roads" = '#a6a6a6', "Highway" = 'black',"Rivers" = 'lightblue')) +
@@ -152,6 +152,8 @@ mdd_map <- ggplot() +
              color = "black", 
              size = 8, shape = 1, stroke = 1)
 mdd_map
+ggsave("OnePager.pdf", plot=mdd_map, path="~/Desktop/", width = 6, height = 6, units="in", device = "pdf")
+
 fig1_legend <- get_legend(mdd_map)
 mdd_map <- mdd_map + theme(legend.position = "none")
 
@@ -179,7 +181,7 @@ fig1a
 
 dengue_raw_plotting <- dengue_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases)/sum(population)*1000)
+  summarize(new_incidence = sum(yearly_cases_C)/sum(population)*1000)
 
 dengue_raw_plotting$year <- as.Date(dengue_raw_plotting$year)
 dengue_raw_plotting$fivekm <- as.character(dengue_raw_plotting$fivekm)
@@ -189,7 +191,7 @@ fig1b <- ggplot(dengue_raw_plotting) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   ggtitle("Dengue incidence per 1,000") +
   xlab("Year") + ylab("") + 
-  scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
+  scale_color_manual(name = "", values=c("#648FFF","#E04490"), labels=c('Unexposed (>10km)', 'Exposed (<5km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -201,9 +203,10 @@ fig1b <- ggplot(dengue_raw_plotting) +
         axis.text = element_text(size=10),
         legend.text=element_text(size=10),
         legend.title=element_text(size=10),
-        legend.position = "none",
+        legend.position = "bottom",
         strip.text.x = element_text(size = 10))
 fig1b
+ggsave("OnePager2_legend.pdf", plot=fig1b, path="~/Desktop/", width = 7, height = 3, units="in", device = "pdf")
 
 #####################
 ## Fig 1c
@@ -211,7 +214,7 @@ fig1b
 
 leish_raw_plotting <- leish_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases)/sum(population)*1000)
+  summarize(new_incidence = sum(yearly_cases_C)/sum(population)*1000)
 
 leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
 leish_raw_plotting$fivekm <- as.character(leish_raw_plotting$fivekm)
@@ -236,6 +239,7 @@ fig1c <- ggplot(leish_raw_plotting) +
         legend.position = "none",
         strip.text.x = element_text(size = 10))
 fig1c
+ggsave("OnePager3.pdf", plot=fig1c, path="~/Desktop/", width = 7, height = 3, units="in", device = "pdf")
 
 #####################
 ## Fig 1all

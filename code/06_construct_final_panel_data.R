@@ -2,7 +2,8 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build final, analysis-ready panel datasets.
+# Build final, analysis-ready panel datasets 
+# (each RDS file is a list of datasets for main and sensitivity analyses).
 #
 # Date created: 7/23/2025
 
@@ -60,14 +61,17 @@ process_case_data <- function(df, case_col, date_col) {
 # yearly
 dengue_df_yearly_raw <- read.csv("data/merged_data/dengue_yearly_merged_dataset.csv")
 dengue_yearly <- process_case_data(dengue_df_yearly_raw, "yearly_cases_C", year)
+saveRDS(dengue_yearly, "data/analysis_ready_data/dengue_yearly_panels.rds")
 
 # yearly (conf & prob)
 dengue_df_yearly_raw_cp <- read.csv("data/merged_data/dengue_yearly_merged_dataset.csv")
 dengue_yearly_cp <- process_case_data(dengue_df_yearly_raw_cp, "yearly_cases_CP", year)
+saveRDS(dengue_yearly_cp, "data/analysis_ready_data/dengue_yearly_cp_panels.rds")
 
 # biannual
 dengue_df_biannual_raw <- read.csv("data/merged_data/dengue_biannual_merged_dataset.csv")
 dengue_biannual <- process_case_data(dengue_df_biannual_raw, "biannual_cases_C", biannual_date)
+saveRDS(dengue_biannual, "data/analysis_ready_data/dengue_biannual_panels.rds")
 
 ###################
 ### leish data ####
@@ -76,10 +80,9 @@ dengue_biannual <- process_case_data(dengue_df_biannual_raw, "biannual_cases_C",
 # yearly
 leish_df_yearly_raw <- read.csv("data/merged_data/leish_yearly_merged_dataset.csv")
 leish_yearly <- process_case_data(leish_df_yearly_raw, "yearly_cases_C", year)
+saveRDS(leish_yearly, "data/analysis_ready_data/leish_yearly_panels.rds")
 
 # biannual
 leish_df_biannual_raw <- read.csv("data/merged_data/leish_biannual_merged_dataset.csv")
 leish_biannual <- process_case_data(leish_df_biannual_raw, "biannual_cases_C", biannual_date)
-
-
-# start here, find a way to store the lists, make note edits/rename so it's clear these are lists
+saveRDS(leish_biannual, "data/analysis_ready_data/leish_biannual_panels.rds")
