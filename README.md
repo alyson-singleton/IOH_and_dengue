@@ -27,7 +27,7 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
    - 04_process_diresa_case_data.R
 
 ## Merge data
-7) Link cases with covariates and build final panel dataset.
+7) Link cases with covariates and build final panel datasets.
    - 05_link_cases_w_covariates.R
    - 06_construct_final_panel_data.R
 
