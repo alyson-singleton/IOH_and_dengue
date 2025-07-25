@@ -34,8 +34,8 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
 ## Fit regressions and run senstivity analyses
 8) Run main models with fixest and glmmTMB packages.
    - 07_main_models_fixest.R
-  - 08_main_models_glmmTMB.R
-  - 09_percent_change_attributable_cases.R
+   - 08_main_models_glmmTMB.R
+   - 09_percent_change_attributable_cases.R
     
 10) Fit supplementary models for sensitivity analyses.
     - 10_distance_het_models_and_bootstrapping.R
