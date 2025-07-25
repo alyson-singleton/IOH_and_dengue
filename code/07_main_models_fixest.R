@@ -189,10 +189,10 @@ leish_biannual_df <- leish_biannual_df %>%
 ### save output
 #########################
 
-saveRDS(dengue_yearly_df, "model_results/main/dengue_yearly_model_results.rds")
-saveRDS(dengue_biannual_df, "model_results/main/dengue_biannual_ld_results.rds")
-saveRDS(dengue_yearly_agg_df, "model_results/main/dengue_yearly_ld_results.rds")
-saveRDS(leish_yearly_df, "model_results/main/leish_yearly_model_results.rds")
-saveRDS(leish_biannual_df, "model_results/main/leish_biannual_ld_results.rds")
-saveRDS(leish_yearly_agg_df, "model_results/main/leish_yearly_ld_results.rds")
+saveRDS(dengue_yearly_df, "results/main/dengue_yearly_model_results.rds")
+saveRDS(dengue_biannual_df, "results/main/dengue_biannual_ld_results.rds")
+saveRDS(dengue_yearly_agg_df, "results/main/dengue_yearly_ld_results.rds")
+saveRDS(leish_yearly_df, "results/main/leish_yearly_model_results.rds")
+saveRDS(leish_biannual_df, "results/main/leish_biannual_ld_results.rds")
+saveRDS(leish_yearly_agg_df, "results/main/leish_yearly_ld_results.rds")
 
