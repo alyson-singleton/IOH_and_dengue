@@ -33,23 +33,23 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
 
 ## Fit regressions and run senstivity analyses
 8) Run main models with fixest and glmmTMB packages.
-  - 07_main_models_fixest.R
-  - 08_main_models_glmmTMB.R
-  - 09_percent_change_attributable_cases.R
+   - 07_main_models_fixest.R
+   - 08_main_models_glmmTMB.R
+   - 09_percent_change_attributable_cases.R
     
 9) Fit supplementary models for sensitivity analyses.
-  - 10_distance_het_models_and_bootstrapping.R
-  - 11_robustness_checks_models.R
+   - 10_distance_het_models_and_bootstrapping.R
+   - 11_robustness_checks_models.R
 
 10) Conduct permutation inference analysis.
-  - 12_permutation_inference_analysis.R
+   - 12_permutation_inference_analysis.R
 
 ## Make main text figures and tables
-  - 13_fig1.R
-  - 14_fig2.R
-  - 15_fig3.R
-  - 16_table1.R
+   - 13_fig1.R
+   - 14_fig2.R
+   - 15_fig3.R
+   - 16_table1.R
 
 ## Make supplementary figures and tables
-  - 17_stable1.R
-  - 18_sfig1.R
+   - 17_stable1.R
+   - 18_sfig1.R
