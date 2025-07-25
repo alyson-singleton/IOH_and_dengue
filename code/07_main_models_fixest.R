@@ -1,10 +1,27 @@
+# Script written by:
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Run main models with fixest.
+#
+# Date created: 7/25/2025
+
 library(fixest)
 library(dplyr)
 library(readr)
 library(ggplot2)
 
+# Load dengue panel datasets
+dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
+dengue_yearly_cp <- readRDS("data/analysis_ready_data/dengue_yearly_cp_panels.rds")
+dengue_biannual <- readRDS("data/analysis_ready_data/dengue_biannual_panels.rds")
+
+# Load leishmaniasis panel datasets
+leish_yearly <- readRDS("data/analysis_ready_data/leish_yearly_panels.rds")
+leish_biannual <- readRDS("data/analysis_ready_data/leish_biannual_panels.rds")
+
 #########################
-### dengue yearly 
+### dengue yearly main specification
 #########################
 
 dengue_yearly_model <- feols(
@@ -22,7 +39,7 @@ dengue_yearly_df <- dengue_yearly_df %>%
          lower = estimate - 1.96 * std_error)
 
 #########################
-### dengue yearly long difference
+### dengue yearly long difference main specification
 #########################
 
 dengue_df_agg <- dengue_yearly$connected_buffered %>%
@@ -41,10 +58,9 @@ dengue_yearly_agg_df <- dengue_yearly_agg_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
-dengue_yearly_agg_df
 
 #########################
-### dengue biannual
+### dengue biannual main specification
 #########################
 
 dengue_biannual_model <- feols(
@@ -53,7 +69,7 @@ dengue_biannual_model <- feols(
   data = dengue_biannual$connected_buffered)
 
 #########################
-### dengue biannual long difference
+### dengue biannual long difference main specification
 #########################
 
 # data set up
@@ -90,7 +106,7 @@ dengue_biannual_df <- dengue_biannual_df %>%
 dengue_biannual_df
 
 #########################
-### leish yearly model
+### leish yearly model main specification
 #########################
 
 leish_yearly_model <- feols(
@@ -108,7 +124,7 @@ leish_yearly_df <- leish_yearly_df %>%
          lower = estimate - 1.96 * std_error)
 
 #########################
-### leish long difference
+### leish long difference main specification
 #########################
 
 leish_df_agg <- leish_yearly$connected_buffered %>%
@@ -127,10 +143,9 @@ leish_yearly_agg_df <- leish_yearly_agg_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
-leish_yearly_agg_df
 
 #########################
-### leish biannual
+### leish biannual main specification
 #########################
 
 leish_biannual_model <- feols(
@@ -139,7 +154,7 @@ leish_biannual_model <- feols(
   data = leish_biannual$connected_buffered)
 
 #########################
-### leish biannual long difference 
+### leish biannual long difference main specification
 #########################
 
 leish_df_agg_biannual <- leish_biannual$connected_buffered %>%
@@ -169,16 +184,15 @@ leish_biannual_df <- leish_biannual_df %>%
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error,
          rainy = c("Dry", "Rainy"))
-leish_biannual_df
 
 #########################
 ### save output
 #########################
 
-# saveRDS(dengue_yearly_df, "model_results/dengue_yearly_model_results.rds")
-# saveRDS(dengue_biannual_df, "model_results/dengue_biannual_ld_results.rds")
-# saveRDS(dengue_yearly_agg_df, "model_results/dengue_yearly_ld_results.rds")
-# saveRDS(leish_yearly_df, "model_results/leish_yearly_model_results.rds")
-# saveRDS(leish_biannual_df, "model_results/leish_biannual_ld_results.rds")
-# saveRDS(leish_yearly_agg_df, "model_results/leish_yearly_ld_results.rds")
+saveRDS(dengue_yearly_df, "model_results/main/dengue_yearly_model_results.rds")
+saveRDS(dengue_biannual_df, "model_results/main/dengue_biannual_ld_results.rds")
+saveRDS(dengue_yearly_agg_df, "model_results/main/dengue_yearly_ld_results.rds")
+saveRDS(leish_yearly_df, "model_results/main/leish_yearly_model_results.rds")
+saveRDS(leish_biannual_df, "model_results/main/leish_biannual_ld_results.rds")
+saveRDS(leish_yearly_agg_df, "model_results/main/leish_yearly_ld_results.rds")
 

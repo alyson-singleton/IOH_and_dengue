@@ -230,13 +230,6 @@ dengue_yearly_df_2008 <- dengue_yearly_df_2008 %>%
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
 
-
-#########################
-## glmmTMB comparison
-#########################
-
-
-
 #########################
 ## store results
 #########################
