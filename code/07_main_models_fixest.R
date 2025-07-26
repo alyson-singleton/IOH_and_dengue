@@ -29,11 +29,11 @@ dengue_yearly_model <- feols(
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
 summary(dengue_yearly_model)
-dengue_yearly_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
-colnames(dengue_yearly_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-dengue_yearly_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
+dengue_yearly_results_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
+colnames(dengue_yearly_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_results_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
                            seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by = "year"))
-dengue_yearly_df <- dengue_yearly_df %>%
+dengue_yearly_results_df <- dengue_yearly_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
@@ -52,9 +52,9 @@ dengue_yearly_agg_model <- feols(
   data = dengue_df_agg)
 
 dengue_yearly_agg_model
-dengue_yearly_agg_df <- as.data.frame(dengue_yearly_agg_model$coeftable)["year_binary:fivekm", ]
-colnames(dengue_yearly_agg_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-dengue_yearly_agg_df <- dengue_yearly_agg_df %>%
+dengue_yearly_agg_results_df <- as.data.frame(dengue_yearly_agg_model$coeftable)["year_binary:fivekm", ]
+colnames(dengue_yearly_agg_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_agg_results_df <- dengue_yearly_agg_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
@@ -95,15 +95,15 @@ dengue_biannual_agg_model_rainy <- feols(
 dengue_biannual_agg_model_rainy
 
 # store main results
-dengue_biannual_df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable["biannual_binary:fivekm", ],
+dengue_biannual_results_df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable["biannual_binary:fivekm", ],
                                           dengue_biannual_agg_model_rainy$coeftable["biannual_binary:fivekm", ]))
-colnames(dengue_biannual_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-dengue_biannual_df <- dengue_biannual_df %>%
+colnames(dengue_biannual_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_biannual_results_df <- dengue_biannual_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error,
          rainy = c("Dry", "Rainy"))
-dengue_biannual_df
+dengue_biannual_results_df
 
 #########################
 ### leish yearly model main specification
@@ -114,11 +114,11 @@ leish_yearly_model <- feols(
   vcov = ~clust,
   data = leish_yearly$connected_buffered)
 
-leish_yearly_df <- as.data.frame(leish_yearly_model$coeftable)[1:22, ]
-colnames(leish_yearly_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-leish_yearly_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
+leish_yearly_results_df <- as.data.frame(leish_yearly_model$coeftable)[1:22, ]
+colnames(leish_yearly_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+leish_yearly_results_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
                           seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by = "year"))
-leish_yearly_df <- leish_yearly_df %>%
+leish_yearly_results_df <- leish_yearly_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
@@ -137,9 +137,9 @@ leish_yearly_agg_model <- feols(
   data = leish_df_agg)
 
 leish_yearly_agg_model
-leish_yearly_agg_df <- as.data.frame(leish_yearly_agg_model$coeftable)[5, ]
-colnames(leish_yearly_agg_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-leish_yearly_agg_df <- leish_yearly_agg_df %>%
+leish_yearly_agg_results_df <- as.data.frame(leish_yearly_agg_model$coeftable)[5, ]
+colnames(leish_yearly_agg_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+leish_yearly_agg_results_df <- leish_yearly_agg_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
@@ -175,11 +175,11 @@ leish_biannual_agg_model_rainy <- feols(
   vcov = ~clust,
   data = leish_df_rainy)
 
-leish_biannual_df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable[5, ],
+leish_biannual_results_df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable[5, ],
                                          leish_biannual_agg_model_rainy$coeftable[5, ]))
 
-colnames(leish_biannual_df) <- c('estimate', 'std_error', 't_value', 'p_value')
-leish_biannual_df <- leish_biannual_df %>%
+colnames(leish_biannual_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+leish_biannual_results_df <- leish_biannual_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error,
@@ -189,10 +189,10 @@ leish_biannual_df <- leish_biannual_df %>%
 ### save output
 #########################
 
-saveRDS(dengue_yearly_df, "results/main/dengue_yearly_model_results.rds")
-saveRDS(dengue_biannual_df, "results/main/dengue_biannual_ld_results.rds")
-saveRDS(dengue_yearly_agg_df, "results/main/dengue_yearly_ld_results.rds")
-saveRDS(leish_yearly_df, "results/main/leish_yearly_model_results.rds")
-saveRDS(leish_biannual_df, "results/main/leish_biannual_ld_results.rds")
-saveRDS(leish_yearly_agg_df, "results/main/leish_yearly_ld_results.rds")
+saveRDS(dengue_yearly_results_df, "results/main_models/dengue_yearly_model_results.rds")
+saveRDS(dengue_biannual_results_df, "results/main_models/dengue_biannual_ld_results.rds")
+saveRDS(dengue_yearly_agg_results_df, "results/main_models/dengue_yearly_ld_results.rds")
+saveRDS(leish_yearly_results_df, "results/main_models/leish_yearly_model_results.rds")
+saveRDS(leish_biannual_results_df, "results/main_models/leish_biannual_ld_results.rds")
+saveRDS(leish_yearly_agg_results_df, "results/main_models/leish_yearly_ld_results.rds")
 

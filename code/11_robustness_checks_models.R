@@ -1,3 +1,11 @@
+# Script written by:
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Run main models with glmmTMB.
+#
+# Date created: 7/25/2025
+
 library(fixest)
 library(dplyr)
 library(readr)

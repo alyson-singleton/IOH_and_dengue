@@ -1,8 +1,25 @@
+# Script written by:
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Run main models with glmmTMB.
+#
+# Date created: 7/25/2025
+
 library(dplyr)
 library(readr)
 library(glmmTMB)
 library(tibble)
 library(performance)
+
+# Load dengue panel datasets
+dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
+dengue_yearly_cp <- readRDS("data/analysis_ready_data/dengue_yearly_cp_panels.rds")
+dengue_biannual <- readRDS("data/analysis_ready_data/dengue_biannual_panels.rds")
+
+# Load leishmaniasis panel datasets
+leish_yearly <- readRDS("data/analysis_ready_data/leish_yearly_panels.rds")
+leish_biannual <- readRDS("data/analysis_ready_data/leish_biannual_panels.rds")
 
 #########################
 ### dengue yearly long difference glmmTMB
@@ -16,8 +33,7 @@ dengue_df_agg_glmmTMB <- dengue_yearly$connected_buffered %>%
 dengue_yearly_model_glmmTMB <- glmmTMB(
   incidence ~ year_binary * fivekm + sum_precip + mean_temp^2 + urban + ag +
     factor(key) + factor(year),
-  data = dengue_df_agg_glmmTMB
-)
+  data = dengue_df_agg_glmmTMB)
 
 coefs <- summary(dengue_yearly_model_glmmTMB)$coefficients$cond
 selected_terms_yearly <- c("year_binary:fivekm", "sum_precip", "mean_temp", "urban", "ag")
@@ -49,7 +65,6 @@ dengue_biannual_model_rainy_glmmTMB <- glmmTMB(
   data = dengue_df_rainy_glmmTMB
 )
 
-# Extract coefficient
 selected_terms_biannual <- c("biannual_binary:fivekm", "sum_precip", "mean_temp", "urban", "ag")
 
 dengue_biannual_df_glmmTMB <- bind_rows(
@@ -57,14 +72,11 @@ dengue_biannual_df_glmmTMB <- bind_rows(
     as.data.frame() %>%
     rownames_to_column("term") %>%
     mutate(model = "Dengue Biannual Dry"),
-  
   summary(dengue_biannual_model_rainy_glmmTMB)$coefficients$cond[selected_terms_biannual, , drop = FALSE] %>%
     as.data.frame() %>%
     rownames_to_column("term") %>%
-    mutate(model = "Dengue Biannual Rainy")
-) %>%
+    mutate(model = "Dengue Biannual Rainy")) %>%
   rename(estimate = Estimate, std_error = `Std. Error`)
-dengue_biannual_df_glmmTMB
 
 #########################
 ### leish yearly long difference glmmTMB
@@ -122,7 +134,15 @@ leish_biannual_df_glmmTMB <- bind_rows(
     mutate(model = "Leish Biannual Rainy")
 ) %>%
   rename(estimate = Estimate, std_error = `Std. Error`)
-leish_biannual_df_glmmTMB
+
+#########################
+### save output
+#########################
+
+saveRDS(dengue_yearly_df_glmmTMB, "results/main_models/dengue_yearly_model_results_glmmTMB.rds")
+saveRDS(dengue_biannual_df_glmmTMB, "results/main_models/dengue_biannual_ld_results_glmmTMB.rds")
+saveRDS(leish_yearly_df_glmmTMB, "results/main_models/leish_yearly_model_results_glmmTMB.rds")
+saveRDS(leish_biannual_df_glmmTMB, "results/main_models/leish_biannual_ld_results_glmmTMB.rds")
 
 #########################
 # build nice table
@@ -147,5 +167,4 @@ etable_glmmTMB <- all_glmmTMB_models %>%
 
 etable_glmmTMB <- etable_glmmTMB[c(1,6,4:5,2:3),]
 etable_glmmTMB
-
 
