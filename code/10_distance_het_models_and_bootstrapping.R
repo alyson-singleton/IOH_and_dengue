@@ -110,4 +110,4 @@ dengue_distance_het_results_df <- dengue_distance_het_results_df %>%
          lower = estimate - 1.96 * std_error_boot)
 
 # store output
-saveRDS(dengue_distance_het_results_df, "results/supplementary_models/dengue_distance_het_results_df.rds")
+saveRDS(dengue_distance_het_results_df, "results/main_models/fig3_dengue_distance_het_results_df.rds")

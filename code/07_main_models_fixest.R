@@ -28,11 +28,12 @@ dengue_yearly_model <- feols(
   incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
-summary(dengue_yearly_model)
+
 dengue_yearly_results_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
 colnames(dengue_yearly_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 dengue_yearly_results_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
                            seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by = "year"))
+
 dengue_yearly_results_df <- dengue_yearly_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
@@ -51,7 +52,6 @@ dengue_yearly_agg_model <- feols(
   vcov = ~clust,
   data = dengue_df_agg)
 
-dengue_yearly_agg_model
 dengue_yearly_agg_results_df <- as.data.frame(dengue_yearly_agg_model$coeftable)["year_binary:fivekm", ]
 colnames(dengue_yearly_agg_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 dengue_yearly_agg_results_df <- dengue_yearly_agg_results_df %>%
@@ -86,13 +86,11 @@ dengue_biannual_agg_model_dry <- feols(
   incidence ~ biannual_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
   vcov = ~clust,
   data = dengue_df_dry)
-dengue_biannual_agg_model_dry
 
 dengue_biannual_agg_model_rainy <- feols(
   incidence ~ biannual_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
   vcov = ~clust,
   data = dengue_df_rainy)
-dengue_biannual_agg_model_rainy
 
 # store main results
 dengue_biannual_results_df <- as.data.frame(rbind(dengue_biannual_agg_model_dry$coeftable["biannual_binary:fivekm", ],
@@ -103,7 +101,6 @@ dengue_biannual_results_df <- dengue_biannual_results_df %>%
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error,
          rainy = c("Dry", "Rainy"))
-dengue_biannual_results_df
 
 #########################
 ### leish yearly model main specification
@@ -118,6 +115,7 @@ leish_yearly_results_df <- as.data.frame(leish_yearly_model$coeftable)[1:22, ]
 colnames(leish_yearly_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 leish_yearly_results_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
                           seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by = "year"))
+
 leish_yearly_results_df <- leish_yearly_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
@@ -136,9 +134,9 @@ leish_yearly_agg_model <- feols(
   vcov = ~clust,
   data = leish_df_agg)
 
-leish_yearly_agg_model
 leish_yearly_agg_results_df <- as.data.frame(leish_yearly_agg_model$coeftable)[5, ]
 colnames(leish_yearly_agg_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+
 leish_yearly_agg_results_df <- leish_yearly_agg_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
