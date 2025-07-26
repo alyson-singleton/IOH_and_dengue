@@ -38,11 +38,11 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
    - 09_percent_change_attributable_cases.R
     
 10) Fit supplementary models for sensitivity analyses.
-    - 10_distance_het_models_and_bootstrapping.R
-    - 11_robustness_checks_models.R
+   - 10_distance_het_models_and_bootstrapping.R
+   - 11_robustness_checks_models.R
 
 11) Conduct permutation inference analysis.
-    - 12_permutation_inference_analysis.R
+   - 12_permutation_inference_analysis.R
 
 ## Make main text figures and tables
    - 13_fig1.R
