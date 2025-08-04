@@ -187,6 +187,7 @@ leish_biannual_results_df <- leish_biannual_results_df %>%
 ### save output
 #########################
 
+# Figure 2
 saveRDS(dengue_yearly_results_df, "results/main_text_results/fig2_dengue_yearly_results.rds")
 saveRDS(dengue_biannual_results_df, "results/main_text_results/fig2_dengue_biannual_ld_results.rds")
 saveRDS(dengue_yearly_agg_results_df, "results/main_text_results/fig2_dengue_yearly_ld_results.rds")
@@ -194,6 +195,7 @@ saveRDS(leish_yearly_results_df, "results/main_text_results/fig2_leish_yearly_re
 saveRDS(leish_biannual_results_df, "results/main_text_results/fig2_leish_biannual_ld_results.rds")
 saveRDS(leish_yearly_agg_results_df, "results/main_text_results/fig2_leish_yearly_ld_results.rds")
 
+# Table 1
 table1 <- fixest::etable(dengue_yearly_agg_model,
                          dengue_biannual_agg_model_dry,
                          dengue_biannual_agg_model_rainy,
@@ -204,7 +206,12 @@ table1 <- fixest::etable(dengue_yearly_agg_model,
                          signif.code = c("*" = 0.05))
 saveRDS(table1, "results/main_text_results/table1_main.rds")
 
+# STable 1
 stable1 <- fixest::etable(dengue_yearly_model, leish_yearly_model, 
                           digits = 3,
                           signif.code = c("*" = 0.05))
 saveRDS(stable1, "results/supplementary_text_results/stable1_yearly_estimates.rds")
+
+# STable 5
+saveRDS(dengue_yearly_agg_model, "results/supplementary_text_results/stable5_dengue_yearly_agg_model.rds")
+saveRDS(leish_yearly_agg_model, "results/supplementary_text_results/stable5_leish_yearly_agg_model.rds")

@@ -1,0 +1,8 @@
+"Distance Boundary","Median Travel Time to Interoceanic Highway (min)"
+"1km",0
+"5km",9
+"10km",26
+"15km",32
+"20km",130
+"40km",154
+">40km",1139

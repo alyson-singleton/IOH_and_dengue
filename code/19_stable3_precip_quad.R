@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build STable 3.
+# Build Supplementary Table S3.
 #
 # Date created: 8/4/2025
 

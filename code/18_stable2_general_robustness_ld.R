@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build STable 2.
+# Build Supplementary Table S2.
 #
 # Date created: 8/4/2025
 

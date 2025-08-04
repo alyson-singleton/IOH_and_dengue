@@ -136,18 +136,10 @@ leish_biannual_df_glmmTMB <- bind_rows(
   rename(estimate = Estimate, std_error = `Std. Error`)
 
 #########################
-### save output
+# save output
 #########################
 
-saveRDS(dengue_yearly_df_glmmTMB, "results/supplementary_text_results/stable6_dengue_yearly_glmmTMB_results.rds")
-saveRDS(dengue_biannual_df_glmmTMB, "results/supplementary_text_results/stable6_dengue_biannual_ld_glmmTMB_results.rds")
-saveRDS(leish_yearly_df_glmmTMB, "results/supplementary_text_results/stable6_leish_yearly_glmmTMB_results.rds")
-saveRDS(leish_biannual_df_glmmTMB, "results/supplementary_text_results/stable6_leish_biannual_ld_glmmTMB_results.rds")
-
-#########################
-# build nice table
-#########################
-# Combine all model results
+# STable6
 all_glmmTMB_models <- bind_rows(
   dengue_yearly_df_glmmTMB %>% mutate(model = "Dengue Yearly"),
   dengue_biannual_df_glmmTMB,
@@ -155,8 +147,7 @@ all_glmmTMB_models <- bind_rows(
   leish_biannual_df_glmmTMB
 )
 
-# Combine and reshape
-etable_glmmTMB <- all_glmmTMB_models %>%
+summary_table_glmmTMB <- all_glmmTMB_models %>%
   mutate(
     p_value = 2 * pnorm(-abs(estimate / std_error)),
     star = if_else(p_value < 0.05, "*", ""),
@@ -165,6 +156,9 @@ etable_glmmTMB <- all_glmmTMB_models %>%
   dplyr::select(term, model, estimate_se) %>%
   tidyr::pivot_wider(names_from = model, values_from = estimate_se)
 
-etable_glmmTMB <- etable_glmmTMB[c(1,6,4:5,2:3),]
-etable_glmmTMB
+summary_table_glmmTMB <- summary_table_glmmTMB[c(1,6,4:5,2:3),]
+summary_table_glmmTMB
+saveRDS(summary_table_glmmTMB, "results/supplementary_text_results/stable6_summary_table_glmmTMB.rds")
 
+# STable7
+saveRDS(dengue_yearly_model_glmmTMB, "results/supplementary_text_results/stable7_dengue_yearly_model_glmmTMB.rds")
