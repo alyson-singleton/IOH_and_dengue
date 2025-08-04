@@ -8,39 +8,56 @@
 
 library(sf)
 library(dplyr)
+library(gridExtra)
+library(ggpubr)
+library(readr)
+library(ggplot2)
 
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+  
+# Load dengue panel datasets
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
+dengue_biannual <- readRDS("data/clean/dengue_biannual_panels.rds")
 
-#####################
-## Fig 1a
-#####################
+# Load leishmaniasis panel datasets
+leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
+leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
 
 # Load spatial data
 linked_ids_codes <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
-center_lat_long <- left_join(unique(dengue_yearly$full[,c(2,18,23,24)]), linked_ids_codes, by='key')
+center_lat_long <- dengue_yearly$full %>%
+  dplyr::select(key, clust, all_cutoffs, key_connected, key_w_dengue) %>%
+  distinct() %>%
+  left_join(linked_ids_codes, by = "key")
 center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
-peru_depts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/per_admbnda_adm1_ign_20200714.shp")
+peru_depts <- read_sf("data/raw/spatial_data/peru_department_shapefiles.shp")
 peru_depts <- st_as_sf(peru_depts) 
 peru_depts$geometry <- st_transform(peru_depts$geometry, 4326)
 peru_outline <- st_union(peru_depts$geometry)
 
-districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/Madre_de_Dios.shp")
+districts <- read_sf("data/raw/spatial_data/mdd_districts.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
 mdd_region <- st_union(districts$geometry)
 
-rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/mdd_rivers2.shp")
+rivers <- read_sf("data/raw/spatial_data/mdd_rivers.shp")
 rivers <- st_as_sf(rivers, crs=4326) 
 rivers$geometry <- st_transform(rivers$geometry, "EPSG:4326")
 
-roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/mdd_roads.shp")
+roads <- read_sf("data/raw/spatial_data/mdd_roads.shp")
 roads <- st_as_sf(roads) 
 roads$geometry <- st_transform(roads$geometry, 4326)
 roads_mdd <- st_covers(mdd_region,roads$geometry, sparse = FALSE)
 roads_mdd <- roads[roads_mdd[1,],]
 
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
+highway <- read_sf("data/raw/spatial_data/peru_roads_important.shp")
 highway <- highway[which(highway$ref=="PE-30C"),]
 highway <- st_as_sf(highway) 
 highway$geometry <- st_transform(highway$geometry, 4326)
@@ -52,6 +69,10 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.text=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
+
+#####################
+## Fig 1a
+#####################
 
 # Build columns for plotting
 center_lat_long_fig1 <- center_lat_long %>%
@@ -83,7 +104,7 @@ mdd_map <- ggplot() +
   geom_sf(data = center_lat_long_fig1, aes(geometry = geometry, fill=all_cutoffs), color='black', shape = 21, size = 3) +
   scale_fill_manual(name= "", values=c("1" = "#E04490", "0" = "#648FFF", "3" = "grey80", "2" = "#ffffff"),
                     labels=c("Exposed (<5km)", "Unexposed (>10km)", "Buffer (removed)", "Disconnected (removed)")) +
-  scale_color_manual(name = "", values = c("Unpaved Roads" = '#a6a6a6', "Highway" = 'black',"Rivers" = 'lightblue')) +
+  scale_color_manual(name = "", values = c("Unpaved Roads" = '#8c8c8c', "Highway" = 'black',"Rivers" = 'lightblue')) +
   theme_minimal() +
   no_axis +
   theme(legend.position = "bottom",
@@ -91,7 +112,7 @@ mdd_map <- ggplot() +
         legend.key.height = unit(0.3, "cm"),
         legend.spacing.x = unit(0.02, "cm"),
         legend.box.spacing = unit(0.01, "cm"),
-        legend.text = element_text(size = 10),
+        legend.text = element_text(size = 12),
         legend.title = element_text(size = 10),
         legend.direction = "horizontal") +
   guides(color = guide_legend(nrow = 2),
@@ -113,8 +134,6 @@ mdd_map <- ggplot() +
              color = "black", 
              size = 8, shape = 1, stroke = 1)
 mdd_map
-ggsave("OnePager.pdf", plot=mdd_map, path="~/Desktop/", width = 6, height = 6, units="in", device = "pdf")
-
 fig1_legend <- get_legend(mdd_map)
 mdd_map <- mdd_map + theme(legend.position = "none")
 
@@ -164,10 +183,9 @@ fig1b <- ggplot(dengue_raw_plotting) +
         axis.text = element_text(size=10),
         legend.text=element_text(size=10),
         legend.title=element_text(size=10),
-        legend.position = "bottom",
+        legend.position = "none",
         strip.text.x = element_text(size = 10))
 fig1b
-ggsave("OnePager2_legend.pdf", plot=fig1b, path="~/Desktop/", width = 7, height = 3, units="in", device = "pdf")
 
 #####################
 ## Fig 1c
@@ -200,7 +218,6 @@ fig1c <- ggplot(leish_raw_plotting) +
         legend.position = "none",
         strip.text.x = element_text(size = 10))
 fig1c
-ggsave("OnePager3.pdf", plot=fig1c, path="~/Desktop/", width = 7, height = 3, units="in", device = "pdf")
 
 #####################
 ## Fig 1all
@@ -214,6 +231,5 @@ fig1all <- grid.arrange(fig1a, fig1b, fig1c, fig1_legend,
 fig1all <- as_ggplot(fig1all) +                                
   draw_plot_label(label = c("A", "B", "C"), size = 14,
                   x = c(0.01, 0.48, 0.48), y = c(1, 1, 0.57)) 
-#fig1all
 
-ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
+ggsave("fig1.pdf", plot=fig1all, path="figures/", width = 10, height = 6, units="in", device = "pdf")

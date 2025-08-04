@@ -194,3 +194,12 @@ saveRDS(leish_yearly_results_df, "results/main_text_results/fig2_leish_yearly_re
 saveRDS(leish_biannual_results_df, "results/main_text_results/fig2_leish_biannual_ld_results.rds")
 saveRDS(leish_yearly_agg_results_df, "results/main_text_results/fig2_leish_yearly_ld_results.rds")
 
+table1 <- fixest::etable(dengue_yearly_agg_model,
+                         dengue_biannual_agg_model_dry,
+                         dengue_biannual_agg_model_rainy,
+                         leish_yearly_agg_model,
+                         leish_biannual_agg_model_dry,
+                         leish_biannual_agg_model_rainy, 
+                         digits = 3,
+                         signif.code = c("*" = 0.05))
+saveRDS(table1, "results/main_text_results/table1_main.rds")
