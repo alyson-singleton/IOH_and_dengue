@@ -286,10 +286,12 @@ leish_biannual_ld_model_rainy_quad <- feols(
   vcov = ~clust,
   data = leish_df_rainy)
 
-# update this**
-# make this into three .R files?
-# either way add df conversions and store here
-# saveRDS(general_robustness_sfig3_df, "results/supplementary_models/sfig3_general_robustness_df.rds")
+stable3_precip_quad_df <- etable(dengue_yearly_ld_model_quad,dengue_biannual_ld_model_dry_quad,dengue_biannual_ld_model_rainy_quad, 
+                  leish_yearly_ld_model_quad,leish_biannual_ld_model_dry_quad,leish_biannual_ld_model_rainy_quad, 
+                  digits = 3,
+                  signif.code = c("*" = 0.05))
+
+saveRDS(stable3_precip_quad_df, "results/supplementary_models/stable3_precip_quad_df.rds")
 
 # -----------------------------------------------------------
 # SFig S4 Change Treatment Year -----------------------------
