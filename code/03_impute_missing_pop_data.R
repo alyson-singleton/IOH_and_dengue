@@ -17,7 +17,7 @@ library(purrr)
 ### load worldpop data (downloaded from google earth engine)
 #################################### 
 
-population_mdd <- read.csv("data/environmental_data/mdd_population_yearly_sum.csv")
+population_mdd <- read.csv("data/raw/environmental_data/mdd_population_yearly_sum.csv")
 population_mdd <- population_mdd[,c(2:22,24)]
 colnames(population_mdd) <- c(as.character(seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by="years")), 'key')
 population_mdd$`2021-01-01` <- NA
@@ -33,7 +33,7 @@ population_mdd_long$year <- as.Date(population_mdd_long$year)
 ### load cleaned diresa pop data
 #################################### 
 
-cleaned_diresa_pop <- read.csv("data/diresa_data/diresa_pop_all_years_final.csv")
+cleaned_diresa_pop <- read.csv("data/raw/diresa_data/diresa_pop_all_years_final.csv")
 cleaned_diresa_pop <- cleaned_diresa_pop[,c(2:19)]
 colnames(cleaned_diresa_pop)[c(6:14)] <- c(as.character(seq(as.Date("2009-01-01"), as.Date("2017-01-01"), by="years")))
 colnames(cleaned_diresa_pop)[c(15:18)] <- c(as.character(seq(as.Date("2020-01-01"), as.Date("2023-01-01"), by="years")))
@@ -175,7 +175,7 @@ key100_interp <- population_mdd_long %>%
     adjusted_pop = adj_2017 + interp_factor * (adj_2021 - adj_2017)
   ) %>%
   filter(year %in% as.Date(c("2018-01-01", "2019-01-01", "2020-01-01"))) %>%
-  select(key, year, adjusted_pop)
+  dplyr::select(key, year, adjusted_pop)
 all_pop <- all_pop %>%
   left_join(key100_interp, by = c("key", "year"), suffix = c("", "_interp")) %>%
   mutate(adjusted_pop = if_else(key == 100 & is.na(adjusted_pop), adjusted_pop_interp, adjusted_pop)) %>%
@@ -238,7 +238,7 @@ backcast_values <- shape %>%
   filter(year < as.Date("2009-01-01")) %>%
   left_join(adjusted_2009_vals, by = "key") %>%
   mutate(adjusted_pop = adjusted_2009 * shape_ratio) %>%
-  select(key, year, adjusted_pop)
+  dplyr::select(key, year, adjusted_pop)
 
 # Step 3: Merge back into all_pop
 all_pop <- all_pop %>%
@@ -246,7 +246,7 @@ all_pop <- all_pop %>%
   mutate(
     adjusted_pop = if_else(is.na(adjusted_pop) & !is.na(adjusted_pop_backcasted), adjusted_pop_backcasted, adjusted_pop)
   ) %>%
-  select(-adjusted_pop_backcasted)
+  dplyr::select(-adjusted_pop_backcasted)
 
 #################################### 
 ## No DIRESA data from 2018-2019 for any facility
@@ -380,7 +380,7 @@ adjusted_diresa_pop <- all_pop[,c('key', 'year', 'adjusted_pop')]
 colnames(adjusted_diresa_pop) <- c('key', 'year', 'population')
 
 #export imputed population data
-write.csv(adjusted_diresa_pop, "data/diresa_data/imputed_population_data.csv")
+write.csv(adjusted_diresa_pop, "data/intermediate/imputed_population_data.csv")
 
 #################################### 
 ## Plot to visualize

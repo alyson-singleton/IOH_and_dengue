@@ -3,6 +3,8 @@
 #
 # Script description: 
 # Clean and do manual name matching on DIRESA-provided population data.
+# NOTE: This is the only code that is not reproducible due to hand cleaning.
+# Skip and use provided output file: "data/raw/diresa_data/diresa_pop_all_years_final.csv".
 #
 # Date created: 7/21/2025
 
@@ -154,7 +156,7 @@ pop_2009_2017$`2014-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2014-01-01`)
 pop_2009_2017$`2017-01-01` <- as.numeric(gsub(",","",pop_2009_2017$`2017-01-01`))
 
 ### link names with e_salud codes
-key_esalud_clusterid <- read.csv("data/spatial_data/diresa_esalud_coordinates_key.csv")
+key_esalud_clusterid <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
 pop_2009_2017_linked <- full_join(key_esalud_clusterid, pop_2009_2017, by=join_by('name'=='pop_name'))
 
 ## export to complete mis-matches by hand in excel
@@ -203,4 +205,4 @@ cleaned_diresa_pop_2020_2023 <- cleaned_diresa_pop_2020_2023[,-c(6)]
 cleaned_diresa_pop_all_years <- full_join(cleaned_diresa_pop_2009_2017,cleaned_diresa_pop_2020_2023, by=c("key", "name", "e_salud", "latitude", "longitude"))
 cleaned_diresa_pop_all_years <- cleaned_diresa_pop_all_years[,c(1:3, 5:15, 18:21)]
 colnames(cleaned_diresa_pop_all_years)[c(6:18)] <- as.character(c(2009:2017,2020:2023))                                   
-write.csv(cleaned_diresa_pop_all_years, "data/diresa_data/diresa_pop_all_years_final.csv")
+write.csv(cleaned_diresa_pop_all_years, "data/raw/diresa_data/diresa_pop_all_years_final.csv")

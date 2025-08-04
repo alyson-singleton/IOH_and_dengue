@@ -59,30 +59,30 @@ process_case_data <- function(df, case_col, date_col) {
 ###################
 
 # yearly
-dengue_df_yearly_raw <- read.csv("data/merged_data/dengue_yearly_merged_dataset.csv")
+dengue_df_yearly_raw <- read.csv("data/intermediate/dengue_yearly_covariate_df.csv")
 dengue_yearly <- process_case_data(dengue_df_yearly_raw, "yearly_cases_C", year)
-saveRDS(dengue_yearly, "data/analysis_ready_data/dengue_yearly_panels.rds")
+saveRDS(dengue_yearly, "data/clean/dengue_yearly_panels.rds")
 
 # yearly (conf & prob)
-dengue_df_yearly_raw_cp <- read.csv("data/merged_data/dengue_yearly_merged_dataset.csv")
+dengue_df_yearly_raw_cp <- read.csv("data/intermediate/dengue_yearly_covariate_df.csv")
 dengue_yearly_cp <- process_case_data(dengue_df_yearly_raw_cp, "yearly_cases_CP", year)
-saveRDS(dengue_yearly_cp, "data/analysis_ready_data/dengue_yearly_cp_panels.rds")
+saveRDS(dengue_yearly_cp, "data/clean/dengue_yearly_cp_panels.rds")
 
 # biannual
-dengue_df_biannual_raw <- read.csv("data/merged_data/dengue_biannual_merged_dataset.csv")
+dengue_df_biannual_raw <- read.csv("data/intermediate/dengue_biannual_covariate_df.csv")
 dengue_biannual <- process_case_data(dengue_df_biannual_raw, "biannual_cases_C", biannual_date)
-saveRDS(dengue_biannual, "data/analysis_ready_data/dengue_biannual_panels.rds")
+saveRDS(dengue_biannual, "data/clean/dengue_biannual_panels.rds")
 
 ###################
 ### leish data ####
 ###################
 
 # yearly
-leish_df_yearly_raw <- read.csv("data/merged_data/leish_yearly_merged_dataset.csv")
+leish_df_yearly_raw <- read.csv("data/intermediate/leish_yearly_covariate_df.csv")
 leish_yearly <- process_case_data(leish_df_yearly_raw, "yearly_cases_C", year)
-saveRDS(leish_yearly, "data/analysis_ready_data/leish_yearly_panels.rds")
+saveRDS(leish_yearly, "data/clean/leish_yearly_panels.rds")
 
 # biannual
-leish_df_biannual_raw <- read.csv("data/merged_data/leish_biannual_merged_dataset.csv")
+leish_df_biannual_raw <- read.csv("data/intermediate/leish_biannual_covariate_df.csv")
 leish_biannual <- process_case_data(leish_df_biannual_raw, "biannual_cases_C", biannual_date)
-saveRDS(leish_biannual, "data/analysis_ready_data/leish_biannual_panels.rds")
+saveRDS(leish_biannual, "data/clean/leish_biannual_panels.rds")

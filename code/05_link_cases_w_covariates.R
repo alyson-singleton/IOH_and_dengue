@@ -16,8 +16,8 @@ library(plm)
 ### load diresa disease case data
 #################################
 
-dengue_case_data_processed <- read.csv("data/diresa_data/diresa_dengue_data_processed.csv")
-leish_case_data_processed <- read.csv("data/diresa_data/diresa_leishmaniasis_data_processed.csv")
+dengue_case_data_processed <- read.csv("data/intermediate/diresa_dengue_data_processed.csv")
+leish_case_data_processed <- read.csv("data/intermediate/diresa_leishmaniasis_data_processed.csv")
 
 #################################
 ### create dataframe of road buffer variables
@@ -28,7 +28,7 @@ buffer_name_map <- c(
   "10km" = "tenkm", "15km" = "fifteenkm", "20km" = "twentykm",
   "30km" = "thirtykm", "40km" = "fortykm")
 
-boundary_files <- list.files(path="data/environmental_data", pattern="buffered", all.files=FALSE, full.names=TRUE, recursive=TRUE)
+boundary_files <- list.files(path="data/raw/environmental_data", pattern="buffered", all.files=FALSE, full.names=TRUE, recursive=TRUE)
 boundary_dummy_vars <- data.frame(key = unique(dengue_data_linked$key))
 
 for (file in boundary_files) {
@@ -74,7 +74,7 @@ boundary_dummy_vars <- boundary_dummy_vars %>%
 ### load imputed population data
 #################################
 
-imputed_population_data <- read.csv("data/diresa_data/imputed_population_data.csv")
+imputed_population_data <- read.csv("data/intermediate/imputed_population_data.csv")
 imputed_population_data <- imputed_population_data %>%
   dplyr::select(year, key, population) 
 imputed_population_data$year <- format(as.Date(imputed_population_data$year, format="%Y-01-01"),"%Y")
@@ -84,7 +84,7 @@ imputed_population_data$year <- format(as.Date(imputed_population_data$year, for
 #################################
 
 ### precip data
-precip_monthly <- read.csv("data/environmental_data/mdd_precipitation_monthly_sum.csv")
+precip_monthly <- read.csv("data/raw/environmental_data/mdd_precipitation_monthly_sum.csv")
 precip_monthly <- precip_monthly[,c(2:279)]
 precip_monthly <- precip_monthly[,c(278,1:276)]
 colnames(precip_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -96,7 +96,7 @@ precip_monthly_mdd_long <- precip_monthly %>%
 precip_monthly_mdd_long$year <- format(as.Date(precip_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 
 ### temp data
-temp_monthly <- read.csv("data/environmental_data/mdd_temperature_monthly_mean.csv")
+temp_monthly <- read.csv("data/raw/environmental_data/mdd_temperature_monthly_mean.csv")
 temp_monthly <- temp_monthly[,c(2:279)]
 temp_monthly <- temp_monthly[,c(278,1:276)]
 colnames(temp_monthly)[2:277] <- as.character(seq(as.Date("2000-01-01"), as.Date("2022-12-01"), by="months"))
@@ -108,7 +108,7 @@ temp_monthly_mdd_long <- temp_monthly %>%
 temp_monthly_mdd_long$year <- format(as.Date(temp_monthly_mdd_long$month, format="%Y-%m-%d"),"%Y")
 
 ### land use data
-mapbiomas_areas <- read.csv("data/environmental_data/mdd_mapbiomas_yearly_sum.csv")
+mapbiomas_areas <- read.csv("data/raw/environmental_data/mdd_mapbiomas_yearly_sum.csv")
 mapbiomas_areas <- mapbiomas_areas[,c(2:5)]
 mapbiomas_areas <- mapbiomas_areas[which(mapbiomas_areas$class %in% c(15,18,21,24)),]
 mapbiomas_areas$class <- ifelse(mapbiomas_areas$class %in% c(15,18,21),"ag","urban")
@@ -137,7 +137,7 @@ covariates <- covariates %>%
 dengue_case_data_processed$month <- as.Date(dengue_case_data_processed$month)
 dengue_data_w_covariates_monthly <- full_join(dengue_case_data_processed, covariates, by=c("key"="key", "month"="month"))
 dengue_data_w_covariates_monthly <- dengue_data_w_covariates_monthly[complete.cases(dengue_data_w_covariates_monthly),]
-write.csv(dengue_data_w_covariates_monthly, "data/merged_data/dengue_monthly_merged_dataset.csv", row.names=F)
+write.csv(dengue_data_w_covariates_monthly, "data/intermediate/dengue_monthly_covariate_df.csv", row.names=F)
 
 # pull "max" for these columns so they don't get dropped (they are the same across months)
 max_columns <- c("onekm", "twokm", "threekm", "fourkm", "fivekm",
@@ -157,7 +157,7 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
     .groups = "drop"
   )
 
-write.csv(dengue_data_w_covariates_yearly, "data/merged_data/dengue_yearly_merged_dataset.csv", row.names=F)
+write.csv(dengue_data_w_covariates_yearly, "data/intermediate/dengue_yearly_covariate_df.csv", row.names=F)
 
 ## group biannually
 dengue_data_w_covariates_biannual <- dengue_data_w_covariates_monthly 
@@ -178,7 +178,7 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
     .groups = "drop"
   )
 
-write.csv(dengue_data_w_covariates_biannual, "data/merged_data/dengue_biannual_merged_dataset.csv", row.names=F)
+write.csv(dengue_data_w_covariates_biannual, "data/intermediate/dengue_biannual_covariate_df.csv", row.names=F)
 
 ################################
 ### link to monthly leish data & aggregate
@@ -186,7 +186,7 @@ write.csv(dengue_data_w_covariates_biannual, "data/merged_data/dengue_biannual_m
 leish_case_data_processed$month <- as.Date(leish_case_data_processed$month)
 leish_data_w_covariates_monthly <- full_join(leish_case_data_processed, covariates, by=c("key"="key", "month"="month"))
 leish_data_w_covariates_monthly <- leish_data_w_covariates_monthly[complete.cases(leish_data_w_covariates_monthly),]
-write.csv(leish_data_w_covariates_monthly, "data/merged_data/leish_monthly_merged_dataset.csv", row.names=F)
+write.csv(leish_data_w_covariates_monthly, "data/intermediate/leish_monthly_covariate_df.csv", row.names=F)
 
 # pull "max" for these columns so they don't get dropped (they are the same across months)
 max_columns <- c("onekm", "twokm", "threekm", "fourkm", "fivekm",
@@ -206,7 +206,7 @@ leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
     .groups = "drop"
   )
 
-write.csv(leish_data_w_covariates_yearly, "data/merged_data/leish_yearly_merged_dataset.csv", row.names=F)
+write.csv(leish_data_w_covariates_yearly, "data/intermediate/leish_yearly_covariate_df.csv", row.names=F)
 
 ## group biannually
 leish_data_w_covariates_biannual <- leish_data_w_covariates_monthly 
@@ -228,4 +228,4 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
     .groups = "drop"
   )
 
-write.csv(leish_data_w_covariates_biannual, "data/merged_data/leish_biannual_merged_dataset.csv", row.names=F)
+write.csv(leish_data_w_covariates_biannual, "data/intermediate/leish_biannual_covariate_df.csv", row.names=F)

@@ -19,7 +19,7 @@ library(terra)
 tmap_mode("view")
 
 # Cluster All IDs ---------------------------------------------------------
-allID <- read_csv("data/spatial_data/diresa_esalud_coordinates_key.csv")
+allID <- read_csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
 allIDSpatialPoints <- SpatialPointsDataFrame(allID[,c("longitude", "latitude")], allID[,1])
 
 # use the distm function to generate a geodesic distance matrix in meters
@@ -102,9 +102,9 @@ allFeatsCircleCentroid <- st_transform(allFeatsCircleCentroid, crs = "EPSG:4326"
 
 # Save clustering data -----------------------------------------------------
 
-write_csv(addClustRaw, "data/clustering_data/key_cluster_match.csv")
-write_sf(allFeatsCircleCentroid,"data/clustering_data/cluster_centroids.shp")
-#write_sf(allFeatsCircle,"data/clustering_data/cluster_polygons.shp")
+write_csv(addClustRaw, "data/intermediate/clustering_data/key_cluster_match.csv")
+write_sf(allFeatsCircleCentroid,"data/intermediate/clustering_data/cluster_centroids.shp")
+#write_sf(allFeatsCircle,"data/intermediate/clustering_data/cluster_polygons.shp")
 
 # Map of Methods -----------------------------------------------------------
 # Red shows the convex hull of polygon clusters, and blue is the

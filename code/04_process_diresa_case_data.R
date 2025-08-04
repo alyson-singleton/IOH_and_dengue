@@ -6,8 +6,8 @@
 #
 # Date created: 7/23/2025
 ## load diresa disease case data
-dengue_case_data <- read.csv("data/diresa_data/diresa_dengue_data_raw.csv")
-leish_case_data <- read.csv("data/diresa_data/diresa_leishmaniasis_data_raw.csv")
+dengue_case_data <- read.csv("data/raw/diresa_data/diresa_dengue_data_raw.csv")
+leish_case_data <- read.csv("data/raw/diresa_data/diresa_leishmaniasis_data_raw.csv")
 
 #################################
 ### preprocess dengue data
@@ -35,7 +35,7 @@ dengue_case_data <- dengue_case_data %>%
  # dplyr::select(-cases_P)
 
 ## load e_salud, key, and cluster information
-diresa_esalud_coordinates_key <- read.csv("data/spatial_data/diresa_esalud_coordinates_key.csv")
+diresa_esalud_coordinates_key <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
 
 ## link to dengue data, only retain e_salud codes that are in MdD and have lat/lon info
 dengue_data_linked <- left_join(linked_ids_codes, dengue_case_data, by = 'e_salud') %>%
@@ -81,9 +81,6 @@ leish_case_data <- leish_case_data %>%
   mutate(cases_CP = cases_C + cases_P) %>%
   dplyr::select(-cases_P)
 
-## load e_salud, key, and cluster information
-diresa_esalud_coordinates_key <- read.csv("data/spatial_data/diresa_esalud_coordinates_key.csv")
-
 ## link to leish data, only retain e_salud codes that are in MdD and have lat/lon info
 leish_data_linked <- left_join(linked_ids_codes, leish_case_data, by = 'e_salud') %>%
   mutate(month = as.Date(month)) %>%
@@ -108,5 +105,5 @@ leish_data_complete_time_steps <- leish_data_linked %>%
 ### save processed datasets
 #################################
 
-write.csv(dengue_data_complete_time_steps, "data/diresa_data/diresa_dengue_data_processed.csv", row.names = FALSE)
-write.csv(leish_data_complete_time_steps, "data/diresa_data/diresa_leishmaniasis_data_processed.csv", row.names = FALSE)
+write.csv(dengue_data_complete_time_steps, "data/intermediate/diresa_dengue_data_processed.csv", row.names = FALSE)
+write.csv(leish_data_complete_time_steps, "data/intermediate/diresa_leishmaniasis_data_processed.csv", row.names = FALSE)

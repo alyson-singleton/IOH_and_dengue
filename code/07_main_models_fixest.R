@@ -12,13 +12,13 @@ library(readr)
 library(ggplot2)
 
 # Load dengue panel datasets
-dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
-dengue_yearly_cp <- readRDS("data/analysis_ready_data/dengue_yearly_cp_panels.rds")
-dengue_biannual <- readRDS("data/analysis_ready_data/dengue_biannual_panels.rds")
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
+dengue_yearly_cp <- readRDS("data/clean/dengue_yearly_cp_panels.rds")
+dengue_biannual <- readRDS("data/clean/dengue_biannual_panels.rds")
 
 # Load leishmaniasis panel datasets
-leish_yearly <- readRDS("data/analysis_ready_data/leish_yearly_panels.rds")
-leish_biannual <- readRDS("data/analysis_ready_data/leish_biannual_panels.rds")
+leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
+leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
 
 #########################
 ### dengue yearly main specification
@@ -187,10 +187,10 @@ leish_biannual_results_df <- leish_biannual_results_df %>%
 ### save output
 #########################
 
-saveRDS(dengue_yearly_results_df, "results/main_models/dengue_yearly_model_results.rds")
-saveRDS(dengue_biannual_results_df, "results/main_models/dengue_biannual_ld_results.rds")
-saveRDS(dengue_yearly_agg_results_df, "results/main_models/dengue_yearly_ld_results.rds")
-saveRDS(leish_yearly_results_df, "results/main_models/leish_yearly_model_results.rds")
-saveRDS(leish_biannual_results_df, "results/main_models/leish_biannual_ld_results.rds")
-saveRDS(leish_yearly_agg_results_df, "results/main_models/leish_yearly_ld_results.rds")
+saveRDS(dengue_yearly_results_df, "results/main_model_results/fig2_dengue_yearly_results.rds")
+saveRDS(dengue_biannual_results_df, "results/main_model_results/fig2_dengue_biannual_ld_results.rds")
+saveRDS(dengue_yearly_agg_results_df, "results/main_model_results/fig2_dengue_yearly_ld_results.rds")
+saveRDS(leish_yearly_results_df, "results/main_model_results/fig2_leish_yearly_results.rds")
+saveRDS(leish_biannual_results_df, "results/main_model_results/fig2_leish_biannual_ld_results.rds")
+saveRDS(leish_yearly_agg_results_df, "results/main_model_results/fig2_leish_yearly_ld_results.rds")
 
