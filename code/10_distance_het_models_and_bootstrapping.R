@@ -11,7 +11,7 @@ library(tidyverse)
 library(readr)
 
 ### load data
-dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
 
 ### build aggregated data
 dengue_df_agg <- dengue_yearly$connected
@@ -110,4 +110,4 @@ dengue_distance_het_results_df <- dengue_distance_het_results_df %>%
          lower = estimate - 1.96 * std_error_boot)
 
 # store output
-saveRDS(dengue_distance_het_results_df, "results/main_models/fig3_dengue_distance_het_results_df.rds")
+saveRDS(dengue_distance_het_results_df, "results/main_text_results/fig3_dengue_distance_het_results_df.rds")

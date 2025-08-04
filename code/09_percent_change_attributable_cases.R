@@ -10,9 +10,9 @@ library(tidyverse)
 library(readr)
 
 # Load datasets and results
-dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
-dengue_yearly_agg_results_df <- readRDS("results/main_models/dengue_yearly_ld_results.rds")
-dengue_yearly_results_df <- readRDS("results/main_models/dengue_yearly_model_results.rds")
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
+dengue_yearly_agg_results_df <- readRDS("results/main_text_results/fig2_dengue_yearly_ld_results.rds")
+dengue_yearly_results_df <- readRDS("results/main_text_results/fig2_dengue_yearly_results.rds")
 
 ##############################
 # Calculate percent change
@@ -123,6 +123,6 @@ dengue_results_percent_att_df_long <- dengue_results_percent_att_df %>%
 
 # Step 5: Report values in main text and store in results
 View(dengue_results_percent_att_df_long)
-write.csv(dengue_results_percent_att_df_long, "results/main_models/dengue_percent_change_attribution_results.csv", row.names=F)
+write.csv(dengue_results_percent_att_df_long, "results/main_text_results/dengue_percent_change_attribution_results.csv", row.names=F)
 View(dengue_yearly_percent_results_df)
-write.csv(dengue_yearly_percent_results_df, "results/main_models/dengue_percent_change_yearly_results.csv", row.names=F)
+write.csv(dengue_yearly_percent_results_df, "results/main_text_results/dengue_percent_change_yearly_results.csv", row.names=F)

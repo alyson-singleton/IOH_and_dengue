@@ -14,7 +14,7 @@ library(dplyr)
 #####################
 
 # main specification aggregated effect estimate (for comparison)
-dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
 
 dengue_df_agg <- dengue_yearly$connected_buffered %>%
   filter(as.Date(year) > as.Date("2007-01-01")) %>%
@@ -128,4 +128,4 @@ permuted_effects_df <- data.frame(
              permuted_effects_stor_within),
   group = rep(c("full", "block", "within"), each = 1000))
 
-write_rds(permuted_effects_df, "results/supplementary_models/sfig5_permuted_effects_df.rds")
+write_rds(permuted_effects_df, "results/supplementary_text_results/sfig5_permuted_effects_df.rds")

@@ -13,13 +13,13 @@ library(tibble)
 library(performance)
 
 # Load dengue panel datasets
-dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
-dengue_yearly_cp <- readRDS("data/analysis_ready_data/dengue_yearly_cp_panels.rds")
-dengue_biannual <- readRDS("data/analysis_ready_data/dengue_biannual_panels.rds")
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
+dengue_yearly_cp <- readRDS("data/clean/dengue_yearly_cp_panels.rds")
+dengue_biannual <- readRDS("data/clean/dengue_biannual_panels.rds")
 
 # Load leishmaniasis panel datasets
-leish_yearly <- readRDS("data/analysis_ready_data/leish_yearly_panels.rds")
-leish_biannual <- readRDS("data/analysis_ready_data/leish_biannual_panels.rds")
+leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
+leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
 
 #########################
 ### dengue yearly long difference glmmTMB
@@ -139,10 +139,10 @@ leish_biannual_df_glmmTMB <- bind_rows(
 ### save output
 #########################
 
-saveRDS(dengue_yearly_df_glmmTMB, "results/main_models/dengue_yearly_model_results_glmmTMB.rds")
-saveRDS(dengue_biannual_df_glmmTMB, "results/main_models/dengue_biannual_ld_results_glmmTMB.rds")
-saveRDS(leish_yearly_df_glmmTMB, "results/main_models/leish_yearly_model_results_glmmTMB.rds")
-saveRDS(leish_biannual_df_glmmTMB, "results/main_models/leish_biannual_ld_results_glmmTMB.rds")
+saveRDS(dengue_yearly_df_glmmTMB, "results/supplementary_text_results/stable6_dengue_yearly_glmmTMB_results.rds")
+saveRDS(dengue_biannual_df_glmmTMB, "results/supplementary_text_results/stable6_dengue_biannual_ld_glmmTMB_results.rds")
+saveRDS(leish_yearly_df_glmmTMB, "results/supplementary_text_results/stable6_leish_yearly_glmmTMB_results.rds")
+saveRDS(leish_biannual_df_glmmTMB, "results/supplementary_text_results/stable6_leish_biannual_ld_glmmTMB_results.rds")
 
 #########################
 # build nice table

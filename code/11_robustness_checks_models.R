@@ -14,13 +14,13 @@ library(purrr)
 library(tibble)
 
 # Load dengue panel datasets
-dengue_yearly <- readRDS("data/analysis_ready_data/dengue_yearly_panels.rds")
-dengue_yearly_cp <- readRDS("data/analysis_ready_data/dengue_yearly_cp_panels.rds")
-dengue_biannual <- readRDS("data/analysis_ready_data/dengue_biannual_panels.rds")
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
+dengue_yearly_cp <- readRDS("data/clean/dengue_yearly_cp_panels.rds")
+dengue_biannual <- readRDS("data/clean/dengue_biannual_panels.rds")
 
 # Load leishmaniasis panel datasets
-leish_yearly <- readRDS("data/analysis_ready_data/leish_yearly_panels.rds")
-leish_biannual <- readRDS("data/analysis_ready_data/leish_biannual_panels.rds")
+leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
+leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
 
 # -----------------------------------------------------------
 # SFig S3 General Robustness Checks -------------------------
@@ -228,7 +228,7 @@ general_robustness_sfig3_df <- general_robustness_sfig3_df %>%
                                      'No buffer', 'Big buffer', 'Conf & prob cases',
                                      'Units w dengue', 'Main')))
 
-saveRDS(general_robustness_sfig3_df, "results/supplementary_models/sfig3_general_robustness_df.rds")
+saveRDS(general_robustness_sfig3_df, "results/supplementary_text_results/sfig3_general_robustness_df.rds")
 
 # -----------------------------------------------------------
 # STable S3 Quadratic Precip --------------------------------
@@ -291,7 +291,7 @@ stable3_precip_quad_df <- etable(dengue_yearly_ld_model_quad,dengue_biannual_ld_
                   digits = 3,
                   signif.code = c("*" = 0.05))
 
-saveRDS(stable3_precip_quad_df, "results/supplementary_models/stable3_precip_quad_df.rds")
+saveRDS(stable3_precip_quad_df, "results/supplementary_text_results/stable3_precip_quad_df.rds")
 
 # -----------------------------------------------------------
 # SFig S4 Change Treatment Year -----------------------------
@@ -333,5 +333,5 @@ dengue_yearly_2008_df <- dengue_yearly_2008_df %>%
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
 
-saveRDS(dengue_yearly_2007_df, "results/supplementary_models/sfig4_dengue_yearly_2007_df.rds")
-saveRDS(dengue_yearly_2008_df, "results/supplementary_models/sfig4_dengue_yearly_2008_df.rds")
+saveRDS(dengue_yearly_2007_df, "results/supplementary_text_results/sfig4_dengue_yearly_2007_df.rds")
+saveRDS(dengue_yearly_2008_df, "results/supplementary_text_results/sfig4_dengue_yearly_2008_df.rds")

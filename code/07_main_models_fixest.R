@@ -187,10 +187,10 @@ leish_biannual_results_df <- leish_biannual_results_df %>%
 ### save output
 #########################
 
-saveRDS(dengue_yearly_results_df, "results/main_model_results/fig2_dengue_yearly_results.rds")
-saveRDS(dengue_biannual_results_df, "results/main_model_results/fig2_dengue_biannual_ld_results.rds")
-saveRDS(dengue_yearly_agg_results_df, "results/main_model_results/fig2_dengue_yearly_ld_results.rds")
-saveRDS(leish_yearly_results_df, "results/main_model_results/fig2_leish_yearly_results.rds")
-saveRDS(leish_biannual_results_df, "results/main_model_results/fig2_leish_biannual_ld_results.rds")
-saveRDS(leish_yearly_agg_results_df, "results/main_model_results/fig2_leish_yearly_ld_results.rds")
+saveRDS(dengue_yearly_results_df, "results/main_text_results/fig2_dengue_yearly_results.rds")
+saveRDS(dengue_biannual_results_df, "results/main_text_results/fig2_dengue_biannual_ld_results.rds")
+saveRDS(dengue_yearly_agg_results_df, "results/main_text_results/fig2_dengue_yearly_ld_results.rds")
+saveRDS(leish_yearly_results_df, "results/main_text_results/fig2_leish_yearly_results.rds")
+saveRDS(leish_biannual_results_df, "results/main_text_results/fig2_leish_biannual_ld_results.rds")
+saveRDS(leish_yearly_agg_results_df, "results/main_text_results/fig2_leish_yearly_ld_results.rds")
 
