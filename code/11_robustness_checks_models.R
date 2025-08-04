@@ -197,6 +197,15 @@ dengue_ld_model_no_land_use <- feols(
 ## store results
 #########################
 
+stable2 <- etable(dengue_ld_model_main,dengue_ld_model_no_PM,
+                  dengue_ld_model_no_land_use,dengue_ld_model_pop_weight,
+                  dengue_ld_model_onekm,dengue_ld_model_tenkm,
+                  dengue_ld_model_no_buffer,dengue_ld_model_buffer_bigger,
+                  dengue_ld_model_cp,dengue_ld_model_w_dengue, 
+                  digits = 3,
+                  signif.code = c("*" = 0.05))
+saveRDS(stable2, "results/supplementary_text_results/stable2_general_robustness_ld.rds")
+
 model_list <- list(
   "No PM" = dengue_yearly_model_no_PM,
   "No LUC" = dengue_yearly_model_no_land_use,

@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Figure 3.
+# Build Table 1.
 #
 # Date created: 8/4/2025
 

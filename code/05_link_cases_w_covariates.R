@@ -69,6 +69,7 @@ boundary_dummy_vars <- boundary_dummy_vars %>%
       TRUE ~ 0
     )
   )
+write.csv(boundary_dummy_vars, "data/intermediate/boundary_dummy_vars.csv", row.names = F)
 
 #################################
 ### load imputed population data

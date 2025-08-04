@@ -203,3 +203,8 @@ table1 <- fixest::etable(dengue_yearly_agg_model,
                          digits = 3,
                          signif.code = c("*" = 0.05))
 saveRDS(table1, "results/main_text_results/table1_main.rds")
+
+stable1 <- fixest::etable(dengue_yearly_model, leish_yearly_model, 
+                          digits = 3,
+                          signif.code = c("*" = 0.05))
+saveRDS(stable1, "results/supplementary_text_results/stable1_yearly_estimates.rds")
