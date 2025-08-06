@@ -140,26 +140,26 @@ dengue_raw_plotting$fivekm <- factor(dengue_raw_plotting$fivekm,
                                      labels = c("Expuesto (<5km)", "No expuesto (>10km)"))
 
 fig1b <- ggplot(dengue_raw_plotting) +
-  geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
+  geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth = 0.8) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   ggtitle("Incidencia de dengue por cada 1.000 personas") +
   xlab("Año") + ylab("") + 
-  scale_color_manual(name = "", values=c("#E04490","#648FFF"), labels=c('Expuesto (<5km)','No espuesto (>10km)')) +
+  scale_color_manual(values=c("#E04490","#648FFF"), labels=c('Expuesto (<5km)','No expuesto (>10km)')) +
   theme_bw()+
-  theme(plot.title = element_text(size=15, face="bold"),
+  theme(plot.title = element_text(size=18, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=16),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=15),
-        axis.title.x=element_text(size=15),
-        axis.text.x=element_text(size=15),
-        axis.text = element_text(size=10),
-        legend.text=element_text(size=15),
-        legend.title=element_text(size=10),
-        legend.position = "bottom",
-        strip.text.x = element_text(size = 10))
+        axis.title=element_text(size=18),
+        axis.title.y=element_text(size=18,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=18),
+        axis.title.x=element_text(size=18),
+        axis.text.x=element_text(size=18),
+        axis.text = element_text(size=18),
+        legend.text=element_text(size=18),
+        legend.title=element_blank(),
+        legend.position = "right",
+        strip.text.x = element_text(size = 18))
 fig1b
-ggsave("OnePager2_legend.pdf", plot=fig1b, path="~/Desktop/", width = 7, height = 4, units="in", device = "pdf")
+ggsave("OnePager2_legend.pdf", plot=fig1b, path="~/Desktop/", width = 12, height = 4, units="in", device = "pdf")
 
 #####################
 ## Fig 1c
