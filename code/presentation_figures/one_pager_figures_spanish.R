@@ -142,7 +142,6 @@ dengue_raw_plotting$fivekm <- factor(dengue_raw_plotting$fivekm,
 fig1b <- ggplot(dengue_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth = 0.8) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
-  ggtitle("Incidencia de dengue por cada 1.000 personas") +
   xlab("Año") + ylab("") + 
   scale_color_manual(values=c("#E04490","#648FFF"), labels=c('Expuesto (<5km)','No expuesto (>10km)')) +
   theme_bw()+
@@ -156,7 +155,7 @@ fig1b <- ggplot(dengue_raw_plotting) +
         axis.text = element_text(size=18),
         legend.text=element_text(size=18),
         legend.title=element_blank(),
-        legend.position = "right",
+        legend.position = "none",
         strip.text.x = element_text(size = 18))
 fig1b
 ggsave("OnePager2_legend.pdf", plot=fig1b, path="~/Desktop/", width = 12, height = 4, units="in", device = "pdf")
