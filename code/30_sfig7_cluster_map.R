@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S5.
+# Build Supplementary Figure S7.
 #
 # Date created: 8/6/2025
 
