@@ -16,8 +16,8 @@ library(patchwork)
 library(ggrepel)
 
 # Load results
-dengue_biannual_df <- read_rds("results/main_text_results/fig2_dengue_biannual_ld_results.rds")
-leish_biannual_df <- read_rds("results/main_text_results/fig2_leish_biannual_ld_results.rds")
+dengue_biannual_results_df <- read_rds("results/supplementary_text_results/sfigure10_dengue_biannual_results.rds")
+leish_biannual_results_df <- read_rds("results/supplementary_text_results/sfigure10_leish_biannual_results.rds")
 
 # Create standard figure theme
 theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
@@ -44,7 +44,7 @@ y_lims_biannual <- c(-7,50)
 #####################
 ## SFig 10a
 #####################
-sfig10a <- ggplot(dengue_biannual_df) +
+sfig10a <- ggplot(dengue_biannual_results_df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
@@ -55,7 +55,8 @@ sfig10a <- ggplot(dengue_biannual_df) +
   xlab("Biannual time period") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal()+
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
-                     limits = y_lims_biannual) +
+                     limits = y_lims_biannual,
+                     breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor +
   theme(legend.position = "bottom")
 sfig10a
@@ -65,7 +66,7 @@ sfig10a <- sfig10a + theme(legend.position = "none")
 #####################
 ## SFig 10b
 #####################
-sfig10b <- ggplot(leish_biannual_df) +
+sfig10b <- ggplot(leish_biannual_results_df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
@@ -76,7 +77,8 @@ sfig10b <- ggplot(leish_biannual_df) +
   xlab("Biannual time period") + ylab("change in\nleish\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal()+
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
-                     limits = y_lims_biannual) +
+                     limits = y_lims_biannual,
+                     breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor
 
 sfig10b
@@ -95,4 +97,4 @@ sfig10all <- as_ggplot(sfig10all) +
                   x = c(0.14, 0.14), y = c(0.99, 0.535)) 
 sfig10all
 
-ggsave("sfig10.pdf", plot=sfig10all, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 8, height = 11, units="in", device = "pdf")
+ggsave("sfig10.pdf", plot=sfig10all, path="figures/", width = 8, height = 11, units="in", device = "pdf")

@@ -22,10 +22,11 @@ get_legend<-function(myggplot){
 
 # Load results
 dengue_yearly_df <- read_rds("results/main_text_results/fig2_dengue_yearly_results.rds")
-dengue_biannual_df <- read_rds("results/main_text_results/fig2_dengue_biannual_ld_results.rds")
+dengue_biannual_agg_df <- read_rds("results/main_text_results/fig2_dengue_biannual_ld_results.rds")
 dengue_yearly_agg_df <- read_rds("results/main_text_results/fig2_dengue_yearly_ld_results.rds")
 leish_yearly_df <- read_rds("results/main_text_results/fig2_leish_yearly_results.rds")
-leish_biannual_df <- read_rds("results/main_text_results/fig2_leish_biannual_ld_results.rds")
+leish_biannual_agg_df <- read_rds("results/main_text_results/fig2_leish_biannual_ld_results.rds")
+leish_yearly_agg_df <- read_rds("results/main_text_results/fig2_leish_yearly_ld_results.rds")
 
 # Create standard figure theme
 theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
