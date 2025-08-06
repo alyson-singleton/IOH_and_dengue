@@ -68,6 +68,16 @@ dengue_biannual_model <- feols(
   vcov = ~clust,
   data = dengue_biannual$connected_buffered)
 
+dengue_biannual_results_df <- as.data.frame(dengue_biannual_model$coeftable)[1:22, ]
+colnames(dengue_yearly_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_results_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
+                                   seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by = "year"))
+
+dengue_yearly_results_df <- dengue_yearly_results_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+
 #########################
 ### dengue biannual long difference main specification
 #########################
@@ -151,6 +161,16 @@ leish_biannual_model <- feols(
   vcov = ~clust,
   data = leish_biannual$connected_buffered)
 
+leish_biannual_results_df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable[5, ],
+                                                 leish_biannual_agg_model_rainy$coeftable[5, ]))
+
+colnames(leish_biannual_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+leish_biannual_results_df <- leish_biannual_results_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error,
+         rainy = c("Dry", "Rainy"))
+
 #########################
 ### leish biannual long difference main specification
 #########################
@@ -213,5 +233,9 @@ stable1 <- fixest::etable(dengue_yearly_model, leish_yearly_model,
 saveRDS(stable1, "results/supplementary_text_results/stable1_yearly_estimates.rds")
 
 # STable 5
+saveRDS(dengue_yearly_agg_model, "results/supplementary_text_results/stable5_dengue_yearly_agg_model.rds")
+saveRDS(leish_yearly_agg_model, "results/supplementary_text_results/stable5_leish_yearly_agg_model.rds")
+
+# SFigure 10
 saveRDS(dengue_yearly_agg_model, "results/supplementary_text_results/stable5_dengue_yearly_agg_model.rds")
 saveRDS(leish_yearly_agg_model, "results/supplementary_text_results/stable5_leish_yearly_agg_model.rds")

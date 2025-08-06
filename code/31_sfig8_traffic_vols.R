@@ -33,25 +33,25 @@ reshape_traffic_data <- function(df, name) {
 
 # Load and process data
 # Interprovincial Passenger Traffic
-interprovincial_passenger_traffic <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/TRÁFICO_DE_PASAJEROS_EN_EL_TRANSPORTE_INTERPROVINCIAL.xlsx") %>% 
+interprovincial_passenger_traffic <- read_excel("data/raw/mtc_peru_traffic_data/TRÁFICO_DE_PASAJEROS_EN_EL_TRANSPORTE_INTERPROVINCIAL.xlsx") %>% 
   filter(`TRÁFICO DE PASAJEROS EN EL TRANSPORTE INTERPROVINCIAL, SEGÚN DEPARTAMENTO DESTINO: 2007-2018` %in% c("Madre de Dios", "Loreto"))
 colnames(interprovincial_passenger_traffic) <- c("Department", as.character(2007:2018))
 interprovincial_passenger_traffic_long <- reshape_traffic_data(interprovincial_passenger_traffic, "Passenger Traffic")
 
 # Estimated Vehicle Fleet
-estimated_vehicle_fleet <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/PARQUE_VEHICULAR_ESTIMADO.xlsx") %>% 
+estimated_vehicle_fleet <- read_excel("data/raw/mtc_peru_traffic_data/PARQUE_VEHICULAR_ESTIMADO.xlsx") %>% 
   filter(`PARQUE VEHICULAR ESTIMADO, SEGÚN DEPARTAMENTO: 2007-2018` %in% c("Madre de Dios", "Loreto"))
 colnames(estimated_vehicle_fleet) <- c("Department", as.character(2007:2018))
 estimated_vehicle_fleet_long <- reshape_traffic_data(estimated_vehicle_fleet, "Estimated Vehicle Fleet")
 
 # National Cargo Vehicle Fleet
-vehicle_fleet_for_national_cargo <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/PARQUE_VEHICULAR_AUTORIZADO_DEL_TRANSPORTE_DE_CARGA_GENERAL_NACIONAL.xlsx") %>% 
+vehicle_fleet_for_national_cargo <- read_excel("data/raw/mtc_peru_traffic_data/PARQUE_VEHICULAR_AUTORIZADO_DEL_TRANSPORTE_DE_CARGA_GENERAL_NACIONAL.xlsx") %>% 
   filter(`PARQUE VEHICULAR AUTORIZADO DEL TRANSPORTE DE CARGA GENERAL NACIONAL, SEGÚN DEPARTAMENTO: 2007-2018` %in% c("Madre de Dios", "Loreto"))
 colnames(vehicle_fleet_for_national_cargo) <- c("Department", as.character(2007:2018))
 vehicle_fleet_national_cargo_long <- reshape_traffic_data(vehicle_fleet_for_national_cargo, "National Cargo Vehicle Fleet")
 
 # Toll Unit Flow
-vehicular_flow_at_toll_units <- read_excel("~/Desktop/doctorate/ch2 mdd highway/data/MTC_traffic_data/FLUJO_VEHICULAR_EN_LAS_UNIDADES_DE_PEAJE.xlsx") %>% 
+vehicular_flow_at_toll_units <- read_excel("data/raw/mtc_peru_traffic_data/FLUJO_VEHICULAR_EN_LAS_UNIDADES_DE_PEAJE.xlsx") %>% 
   filter(`FLUJO VEHICULAR EN LAS UNIDADES DE PEAJE, SEGÚN DEPARTAMENTO: 2009-2018` %in% c("Madre de Dios", "Loreto"))
 colnames(vehicular_flow_at_toll_units) <- c("Department", as.character(2009:2018))
 vehicular_flow_toll_units_long <- reshape_traffic_data(vehicular_flow_at_toll_units, "Toll Unit Flow")
@@ -112,4 +112,4 @@ sfig8 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) 
         legend.position = "bottom")
 sfig8
 
-ggsave("sfig8.pdf", plot=sfig8, path="figures", width = 9, height = 7, units="in", device = "pdf")
+ggsave("sfig8.pdf", plot=sfig8, path="figures/", width = 9, height = 7, units="in", device = "pdf")
