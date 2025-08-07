@@ -31,7 +31,8 @@ leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
 #########################
 
 dengue_yearly_model_main <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
 
@@ -40,7 +41,8 @@ dengue_df_agg <- dengue_yearly$connected_buffered %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_ld_model_main <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg)
 
@@ -49,7 +51,8 @@ dengue_ld_model_main <- feols(
 #########################
 
 dengue_yearly_model_no_PM <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered_no_pm)
 
@@ -58,7 +61,8 @@ dengue_df_agg_no_pm <- dengue_yearly$connected_buffered_no_pm %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_ld_model_no_PM <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg_no_pm)
 
@@ -67,7 +71,8 @@ dengue_ld_model_no_PM <- feols(
 #########################
 
 dengue_yearly_model_pop_weight <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   weights = ~population,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
@@ -77,7 +82,8 @@ dengue_df_agg_pop_weight <- dengue_yearly$connected_buffered %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_ld_model_pop_weight <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   weights = ~population,
   vcov = ~clust,
   data = dengue_df_agg_pop_weight)
@@ -91,22 +97,26 @@ dengue_df_agg_connected <- dengue_yearly$connected %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_yearly_model_onekm <- feols(
-  incidence ~ i(year, onekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, onekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected)
 
 dengue_ld_model_onekm <- feols(
-  incidence ~ year_binary * onekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * onekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg_connected)
 
 dengue_yearly_model_tenkm <- feols(
-  incidence ~ i(year, tenkm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, tenkm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected)
 
 dengue_ld_model_tenkm <- feols(
-  incidence ~ year_binary * tenkm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * tenkm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg_connected)
 
@@ -115,7 +125,8 @@ dengue_ld_model_tenkm <- feols(
 #########################
 
 dengue_yearly_model_no_buffer <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected)
 
@@ -124,13 +135,15 @@ dengue_df_agg_no_buffer <- dengue_yearly$connected %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_ld_model_no_buffer <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg_no_buffer)
 
 dengue_df_yearly_buffer_bigger <- dengue_yearly$connected_buffered[which(dengue_yearly$connected_buffered$all_cutoffs %in% c(1,2,5,6,7,0)),]
 dengue_yearly_model_buffer_bigger <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_yearly_buffer_bigger)
 
@@ -139,7 +152,8 @@ dengue_df_agg_bigger_buffer <- dengue_df_yearly_buffer_bigger %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_ld_model_buffer_bigger <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg_bigger_buffer)
 
@@ -148,7 +162,8 @@ dengue_ld_model_buffer_bigger <- feols(
 #########################
 
 dengue_yearly_model_cp <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly_cp$connected_buffered)
 
@@ -157,7 +172,8 @@ dengue_df_agg_cp <- dengue_yearly_cp$connected_buffered %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_ld_model_cp <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg_cp)
 
@@ -166,7 +182,8 @@ dengue_ld_model_cp <- feols(
 #########################
 
 dengue_yearly_model_w_dengue <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data =  dengue_yearly$buffered_no_zero_case_keys)
 
@@ -175,7 +192,8 @@ dengue_df_agg_w_dengue <- dengue_yearly$buffered_no_zero_case_keys %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_ld_model_w_dengue <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg_w_dengue)
 
@@ -184,12 +202,13 @@ dengue_ld_model_w_dengue <- feols(
 #########################
 
 dengue_yearly_model_no_land_use <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
 
 dengue_ld_model_no_land_use <- feols(
-  incidence ~ year_binary * fivekm + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + sum_precip_centered + mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg)
 
@@ -266,39 +285,49 @@ leish_df_rainy <- filter(leish_df_agg_biannual, month == "10")
 
 #run models
 dengue_yearly_ld_model_quad <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip^2 + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + sum_precip_centered_sq + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg)
 
 dengue_biannual_ld_model_dry_quad <- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip^2 + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + sum_precip_centered_sq + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = dengue_df_dry)
 
 dengue_biannual_ld_model_rainy_quad<- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip^2 + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + sum_precip_centered_sq + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = dengue_df_rainy)
 
 leish_yearly_ld_model_quad <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip^2 + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + sum_precip_centered_sq + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = leish_df_agg)
 
 leish_biannual_ld_model_dry_quad <- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip^2 + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + sum_precip_centered_sq + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = leish_df_dry)
 
 leish_biannual_ld_model_rainy_quad <- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip^2 + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + sum_precip_centered_sq + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = leish_df_rainy)
 
-stable3_precip_quad_df <- etable(dengue_yearly_ld_model_quad,dengue_biannual_ld_model_dry_quad,dengue_biannual_ld_model_rainy_quad, 
-                  leish_yearly_ld_model_quad,leish_biannual_ld_model_dry_quad,leish_biannual_ld_model_rainy_quad, 
-                  digits = 3,
-                  signif.code = c("*" = 0.05))
+stable3_precip_quad_df <- etable(dengue_yearly_ld_model_quad,
+                                 dengue_biannual_ld_model_dry_quad,
+                                 dengue_biannual_ld_model_rainy_quad, 
+                                 leish_yearly_ld_model_quad,
+                                 leish_biannual_ld_model_dry_quad,
+                                 leish_biannual_ld_model_rainy_quad, 
+                                 digits = 3,
+                                 signif.code = c("*" = 0.05))
 
 saveRDS(stable3_precip_quad_df, "results/supplementary_text_results/stable3_precip_quad_df.rds")
 
@@ -311,14 +340,15 @@ saveRDS(stable3_precip_quad_df, "results/supplementary_text_results/stable3_prec
 #########################
 
 dengue_yearly_model_2007 <- feols(
-  incidence ~ i(year, fivekm, ref = '2006-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2006-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
 
 dengue_yearly_2007_df <- as.data.frame(dengue_yearly_model_2007$coeftable)[1:22, ]
 colnames(dengue_yearly_2007_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 dengue_yearly_2007_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2005-01-01"), by = "year"),
-                           seq(as.Date("2007-01-01"), as.Date("2022-01-01"), by = "year"))
+                                seq(as.Date("2007-01-01"), as.Date("2022-01-01"), by = "year"))
 dengue_yearly_2007_df <- dengue_yearly_2007_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
@@ -329,7 +359,8 @@ dengue_yearly_2007_df <- dengue_yearly_2007_df %>%
 #########################
 
 dengue_yearly_model_2008 <- feols(
-  incidence ~ i(year, fivekm, ref = '2007-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2007-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
 

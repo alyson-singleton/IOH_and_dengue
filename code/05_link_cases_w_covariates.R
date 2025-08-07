@@ -156,7 +156,11 @@ dengue_data_w_covariates_yearly <- dengue_data_w_covariates_monthly %>%
     mean_temp = mean(mean_temp),
     sum_precip = sum(sum_precip),
     .groups = "drop"
-  )
+  ) %>%
+  mutate(mean_temp_centered = mean_temp - mean(mean_temp),
+         mean_temp_centered_sq = mean_temp_centered^2,
+         sum_precip_centered = sum_precip - mean(sum_precip),
+         sum_precip_centered_sq = sum_precip_centered^2)
 
 write.csv(dengue_data_w_covariates_yearly, "data/intermediate/dengue_yearly_covariate_df.csv", row.names=F)
 
@@ -177,7 +181,11 @@ dengue_data_w_covariates_biannual <- dengue_data_w_covariates_biannual %>%
     mean_temp = mean(mean_temp),
     sum_precip = sum(sum_precip),
     .groups = "drop"
-  )
+  ) %>%
+  mutate(mean_temp_centered = mean_temp - mean(mean_temp),
+         mean_temp_centered_sq = mean_temp_centered^2,
+         sum_precip_centered = sum_precip - mean(sum_precip),
+         sum_precip_centered_sq = sum_precip_centered^2)
 
 write.csv(dengue_data_w_covariates_biannual, "data/intermediate/dengue_biannual_covariate_df.csv", row.names=F)
 
@@ -205,7 +213,11 @@ leish_data_w_covariates_yearly <- leish_data_w_covariates_monthly %>%
     mean_temp = mean(mean_temp),
     sum_precip = sum(sum_precip),
     .groups = "drop"
-  )
+  ) %>%
+  mutate(mean_temp_centered = mean_temp - mean(mean_temp),
+         mean_temp_centered_sq = mean_temp_centered^2,
+         sum_precip_centered = sum_precip - mean(sum_precip),
+         sum_precip_centered_sq = sum_precip_centered^2)
 
 write.csv(leish_data_w_covariates_yearly, "data/intermediate/leish_yearly_covariate_df.csv", row.names=F)
 
@@ -227,6 +239,10 @@ leish_data_w_covariates_biannual <- leish_data_w_covariates_biannual %>%
     mean_temp = mean(mean_temp),
     sum_precip = sum(sum_precip),
     .groups = "drop"
-  )
+  ) %>%
+  mutate(mean_temp_centered = mean_temp - mean(mean_temp),
+         mean_temp_centered_sq = mean_temp_centered^2,
+         sum_precip_centered = sum_precip - mean(sum_precip),
+         sum_precip_centered_sq = sum_precip_centered^2)
 
 write.csv(leish_data_w_covariates_biannual, "data/intermediate/leish_biannual_covariate_df.csv", row.names=F)

@@ -19,7 +19,7 @@ dengue_df_agg <- dengue_df_agg[which(as.Date(dengue_df_agg$year) > '2007-01-01')
 dengue_df_agg$year_binary <- ifelse(as.Date(dengue_df_agg$year) > '2008-01-01', 1, 0)
 
 ## bootstrap to get more conservative standard errors
-treatment_col_names <- c('onekm','fivekm','tenkm','fifteenkm','twentykm','thirtykm')
+treatment_col_names <- c('onekm','fivekm','tenkm','fifteenkm','twentykm')
 std_error_stor <- c()
 for(j in 1:5){
   #build control and treatment groups for each distance subgroup
@@ -46,12 +46,12 @@ for(j in 1:5){
     col_name <- treatment_col_names[j]
     dengue_yearly_model_boot <- feols(as.formula(paste0("incidence ~ year_binary*", 
                                                         col_name, 
-                                                        "+ urban + ag + sum_precip + mean_temp | key + year")), 
+                                                        "+ urban + ag + sum_precip_centered + mean_temp_centered + mean_temp_centered_sq | key + year")), 
                                       vcov = ~clust, 
                                       data = dengue_df_yearly_boot)
     
     #store standard error
-    std_error <- coeftable(dengue_yearly_model_boot)[5,2]
+    std_error <- coeftable(dengue_yearly_model_boot)[paste0("year_binary:",col_name),"Std. Error"]
     std_error_stor <- c(std_error_stor,std_error)
   }
 }
@@ -65,32 +65,41 @@ dengue_df_yearly_20km <- dengue_df_agg[which(dengue_df_agg$all_cutoffs %in% c(5,
 
 # run models
 dengue_yearly_model_1km <- feols(
-  incidence ~ year_binary*onekm + urban + ag + sum_precip + mean_temp | key + year, 
+  incidence ~ year_binary*onekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year, 
   vcov = ~clust, 
   data = dengue_df_yearly_1km)
+
 dengue_yearly_model_5km <- feols(
-  incidence ~ year_binary*fivekm + urban + ag + sum_precip + mean_temp | key + year, 
+  incidence ~ year_binary*fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year, 
   vcov = ~clust, 
   data = dengue_df_yearly_5km)
+
 dengue_yearly_model_10km <- feols(
-  incidence ~ year_binary*tenkm + urban + ag + sum_precip + mean_temp | key + year, 
+  incidence ~ year_binary*tenkm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year, 
   vcov = ~clust, 
   data = dengue_df_yearly_10km)
+
 dengue_yearly_model_15km <- feols(
-  incidence ~ year_binary*fifteenkm + urban + ag + sum_precip + mean_temp | key + year, 
+  incidence ~ year_binary*fifteenkm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year, 
   vcov = ~clust, 
   data = dengue_df_yearly_15km)
+
 dengue_yearly_model_20km <- feols(
-  incidence ~ year_binary*twentykm + urban + ag + sum_precip + mean_temp | key + year, 
+  incidence ~ year_binary*twentykm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year, 
   vcov = ~clust, 
   data = dengue_df_yearly_20km)
 
 # link output together
-dengue_distance_het_results_df <- as.data.frame(rbind(dengue_yearly_model_1km$coeftable[5,],
-                                                      dengue_yearly_model_5km$coeftable[5,],
-                                                      dengue_yearly_model_10km$coeftable[5,],
-                                                      dengue_yearly_model_15km$coeftable[5,],
-                                                      dengue_yearly_model_20km$coeftable[5,]))
+dengue_distance_het_results_df <- as.data.frame(rbind(dengue_yearly_model_1km$coeftable[6,],
+                                                      dengue_yearly_model_5km$coeftable[6,],
+                                                      dengue_yearly_model_10km$coeftable[6,],
+                                                      dengue_yearly_model_15km$coeftable[6,],
+                                                      dengue_yearly_model_20km$coeftable[6,]))
 
 dengue_distance_het_results_df <- dengue_distance_het_results_df %>%
   mutate(Cutoff = factor(c("1km", "5km", "10km", "15km", "20km"), 

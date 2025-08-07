@@ -21,7 +21,8 @@ dengue_df_agg <- dengue_yearly$connected_buffered %>%
   mutate(year_binary = if_else(as.Date(year) == as.Date("2012-01-01"), 0, 1))
 
 dengue_yearly_agg_model <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg)
 dengue_yearly_model_agg_effect_est <- coeftable(dengue_yearly_agg_model)[5,1]
@@ -36,10 +37,12 @@ for(i in 1:1000){
   print(i)
   
   dengue_df_yearly_permuted_full  <- transform(dengue_df_agg, fivekm = sample(fivekm))
-  dengue_yearly_model_permuted_full <- feols(incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
+  dengue_yearly_model_permuted_full <- feols(incidence ~ year_binary * fivekm + urban + ag + 
+                                               sum_precip_centered + mean_temp_centered + 
+                                               mean_temp_centered_sq | key + year,
                                              vcov = ~clust,
                                              data = dengue_df_yearly_permuted_full)
-  permuted_effect_est_full <- coeftable(dengue_yearly_model_permuted_full)[6,1]
+  permuted_effect_est_full <- coeftable(dengue_yearly_model_permuted_full)["year_binary:fivekm", "Estimate"]
   permuted_effects_stor_full <- c(permuted_effects_stor_full, permuted_effect_est_full)
 }
 
@@ -60,10 +63,12 @@ for(i in 1:1000){
     random_treatment <- rbinom(1, 1, prob_1)
     dengue_df_yearly_permuted_block$fivekm[which(dengue_df_yearly_permuted_block$key==k)] <- if (random_treatment==1) {rep(1,15)} else {rep(0,15)}
   }
-  dengue_yearly_model_permuted_block <- feols(incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp | key + year,
+  dengue_yearly_model_permuted_block <- feols(incidence ~ year_binary * fivekm + urban + ag + 
+                                                sum_precip_centered + mean_temp_centered + 
+                                                mean_temp_centered_sq | key + year,
                                               vcov = ~clust,
                                               data = dengue_df_yearly_permuted_block)
-  permuted_effect_est_block <- coeftable(dengue_yearly_model_permuted_block)[5,1]
+  permuted_effect_est_block <- coeftable(dengue_yearly_model_permuted_block)["year_binary:fivekm", "Estimate"]
   permuted_effects_stor_block <- c(permuted_effects_stor_block, permuted_effect_est_block)
 }
 
@@ -110,7 +115,8 @@ for (i in 1:1000) {
     filter(as.Date(year) > as.Date("2007-01-01"))
   
   model <- feols(
-    incidence ~ year_binary:fivekm + urban + ag + sum_precip + mean_temp | key + year,
+    incidence ~ year_binary:fivekm + urban + ag + sum_precip_centered + 
+      mean_temp_centered + mean_temp_centered_sq | key + year,
     vcov = ~clust,
     data = permuted_df)
   permuted_effect_est_within <- coeftable(model)["year_binary:fivekm", "Estimate"]

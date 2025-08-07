@@ -106,7 +106,7 @@ fig2ab <- grid.arrange(fig2a, fig2b,
 
 fig2ab <- as_ggplot(fig2ab) +                                
   draw_plot_label(label = c("A", "B"), size = 17,
-                  x = c(0.128, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.122, 0.846), y = c(0.99, 0.99)) 
 
 fig2ab
 
@@ -163,7 +163,7 @@ fig2cd <- grid.arrange(fig2c, fig2d,
 
 fig2cd <- as_ggplot(fig2cd) +                                
   draw_plot_label(label = c("C", "D"), size = 17,
-                  x = c(0.128, 0.846), y = c(0.99, 0.99)) 
+                  x = c(0.122, 0.846), y = c(0.99, 0.99)) 
 
 fig2cd
 

@@ -25,7 +25,8 @@ leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
 #########################
 
 dengue_yearly_model <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
 
@@ -48,7 +49,8 @@ dengue_df_agg <- dengue_yearly$connected_buffered %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 dengue_yearly_agg_model <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = dengue_df_agg)
 
@@ -64,7 +66,8 @@ dengue_yearly_agg_results_df <- dengue_yearly_agg_results_df %>%
 #########################
 
 dengue_biannual_model <- feols(
-  incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
+  incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = dengue_biannual$connected_buffered)
 
@@ -96,12 +99,13 @@ dengue_df_rainy <- filter(dengue_df_agg_biannual, month == "10")
 
 # run models
 dengue_biannual_agg_model_dry <- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = dengue_df_dry)
 
 dengue_biannual_agg_model_rainy <- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = dengue_df_rainy)
 
@@ -120,7 +124,8 @@ dengue_biannual_agg_results_df <- dengue_biannual_agg_results_df %>%
 #########################
 
 leish_yearly_model <- feols(
-  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = leish_yearly$connected_buffered)
 
@@ -143,11 +148,11 @@ leish_df_agg <- leish_yearly$connected_buffered %>%
   mutate(year_binary = if_else(as.Date(year) > as.Date("2008-01-01"), 1, 0))
 
 leish_yearly_agg_model <- feols(
-  incidence ~ year_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + year,
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
   data = leish_df_agg)
 
-leish_yearly_agg_results_df <- as.data.frame(leish_yearly_agg_model$coeftable)[5, ]
+leish_yearly_agg_results_df <- as.data.frame(leish_yearly_agg_model$coeftable)["year_binary:fivekm", ]
 colnames(leish_yearly_agg_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 
 leish_yearly_agg_results_df <- leish_yearly_agg_results_df %>%
@@ -160,7 +165,7 @@ leish_yearly_agg_results_df <- leish_yearly_agg_results_df %>%
 #########################
 
 leish_biannual_model <- feols(
-  incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
+  incidence ~ i(biannual_date, fivekm, ref = '2008-04-01') + urban + ag + sum_precip_centered + mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = leish_biannual$connected_buffered)
 
@@ -190,17 +195,19 @@ leish_df_dry <- filter(leish_df_agg_biannual, month == "04")
 leish_df_rainy <- filter(leish_df_agg_biannual, month == "10")
 
 leish_biannual_agg_model_dry <- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = leish_df_dry)
 
 leish_biannual_agg_model_rainy <- feols(
-  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip + mean_temp^2 | key + biannual_date,
+  incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + biannual_date,
   vcov = ~clust,
   data = leish_df_rainy)
 
-leish_biannual_agg_results_df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable[5, ],
-                                         leish_biannual_agg_model_rainy$coeftable[5, ]))
+leish_biannual_agg_results_df <- as.data.frame(rbind(leish_biannual_agg_model_dry$coeftable["biannual_binary:fivekm", ],
+                                         leish_biannual_agg_model_rainy$coeftable["biannual_binary:fivekm", ]))
 
 colnames(leish_biannual_agg_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 leish_biannual_agg_results_df <- leish_biannual_agg_results_df %>%
