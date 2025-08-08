@@ -44,12 +44,28 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
 11) Conduct permutation inference analysis.
    - 12_permutation_inference_analysis.R
 
-## Make main text figures and tables
-   - 13_fig1.R
-   - 14_fig2.R
-   - 15_fig3.R
-   - 16_table1.R
+## Make figures and tables
+12) Main text
+   - 13_fig1_map_incidence.R
+   - 14_fig2_main.R
+   - 15_fig3_distance_het.R
+   - 16_table1_main.R
 
-## Make supplementary figures and tables
-   - 17_stable1.R
-   - 18_sfig1.R
+13) Supplementary information
+   - 17_stable1_yearly_estimates.R
+   - 18_stable2_general_robustness.R
+   - 19_stable3_precip_quad.R
+   - 20_stable4_cost_mapping.R
+   - 21_stable5_FE_vals.R
+   - 22_stable6_main_glmmTMB.R
+   _ 23_stable7_dengue_yearly_glmmTMB.R
+   - 24_sfig1_unit_coverage.R
+   - 25_sfig2_region_map.R
+   - 26_sfig3_general_robustness.R
+   - 27_sfig4_tx_year.R
+   - 28_sfig5_permutation.R
+   - 29_sfig6_time_trends.R
+   - 30_sfig7_cluster_map.R
+   - 31_sfig8_traffic_vols.R
+   _ 32_sfig9_season_def.R
+   - 33_sfig10_biannual.R
