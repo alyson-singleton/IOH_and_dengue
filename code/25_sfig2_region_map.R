@@ -3,8 +3,9 @@
 #
 # Script description: 
 # Build Supplementary Figure S2.
-# NOTE: Some of these case datasets are not posted publicly in this github.
-# Contact above email to request access.
+# NOTE: Many of these datasets are not posted publicly in this github as they
+#       are publicly available from other online sources and not part of the analysis. 
+#       Contact above email to request access.
 #
 # Date created: 8/4/2025
 
@@ -24,41 +25,30 @@ library(mapview)
 ## load pop and dengue case data ########
 #########################################
 
-## load mdd case data
-dengue_yearly <- read_rds("data/clean/dengue_yearly_panels.rds")
-
-dengue_df_yearly_summary <- dengue_yearly$full %>%
+#############################
+### Madre de Dios, Peru
+#############################
+mdd_dengue_yearly <- read_rds("data/clean/dengue_yearly_panels.rds") #main analysis data
+mdd_dengue_df_yearly_summary <- mdd_dengue_yearly$full %>%
   group_by(year) %>%
   summarize(dengue_cases = sum(yearly_cases_C),
             population = sum(population))
-dengue_df_yearly_summary$incidence <- (dengue_df_yearly_summary$dengue_cases)/dengue_df_yearly_summary$population*1000
-dengue_df_yearly_summary$region <- 'A. Madre de Dios, Peru'
-dengue_df_yearly_summary$year <- format(as.Date(dengue_df_yearly_summary$year, format="%Y-%m-%d"),"%Y")
-dengue_df_yearly_summary$year <- as.numeric(dengue_df_yearly_summary$year)
-  
-## load global dataset
-dengue_global_dataset <- read_rds("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/dengue_temp_full.rds")
+mdd_dengue_df_yearly_summary$incidence <- (mdd_dengue_df_yearly_summary$dengue_cases)/mdd_dengue_df_yearly_summary$population*1000
+mdd_dengue_df_yearly_summary$region <- 'A. Madre de Dios, Peru'
+mdd_dengue_df_yearly_summary$year <- format(as.Date(mdd_dengue_df_yearly_summary$year, format="%Y-%m-%d"),"%Y")
+mdd_dengue_df_yearly_summary$year <- as.numeric(mdd_dengue_df_yearly_summary$year)
 
-## peru population data (worldpop)
-peru_population <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/peru_population_yearly.csv")
+#############################
+### Peru (national)
+#############################
+# population data
+peru_population <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/peru_population_yearly.csv") #worldpop
 peru_population <- peru_population[,c(37:59)]
 colnames(peru_population) <- c("department", "id", 2000:2020)
 peru_population <- peru_population %>%
   pivot_longer(cols = c(3:23), 
                names_to = "year", 
                values_to = "population")
-
-## bolivia population data (worldpop)
-bolivia_population <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/bolivia_population_yearly.csv")
-bolivia_population <- bolivia_population[,c(6,9:29)]
-colnames(bolivia_population) <- c("department", 2000:2020)
-bolivia_population <- bolivia_population %>%
-  pivot_longer(cols = c(2:22), 
-               names_to = "year", 
-               values_to = "population")
-  
-## peru national
-#population
 peru_population_national <- peru_population %>%
   group_by(year) %>%
   summarize(population = sum(population))
@@ -68,7 +58,7 @@ peru_population_national[nrow(peru_population_national) + 1,] <- c(2021,peru_pop
 peru_population_national[nrow(peru_population_national) + 1,] <- c(2022,peru_population_national[22,2]*peru_population_national[22,2]/peru_population_national[21,2])
 peru_population_national[nrow(peru_population_national) + 1,] <- c(2023,peru_population_national[23,2]*peru_population_national[23,2]/peru_population_national[22,2])
 
-#dengue cases
+# dengue case data
 peru_case_data <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/PER1_weekly2010-2023.csv")
 peru_case_data$dengue_cases <- ifelse(is.na(peru_case_data$Casos), 0, peru_case_data$Casos)
 peru_case_data$year <- peru_case_data$Ano
@@ -83,8 +73,10 @@ peru_case_data_summary <- left_join(peru_case_data_summary, peru_population_nati
 peru_case_data_summary$incidence <- peru_case_data_summary$dengue_cases/peru_case_data_summary$population*1000
 peru_case_data_summary$region <- 'D. Peru (national)'
 
-## cusco peru 
-#population
+#############################
+### Cusco, Peru
+#############################
+# population data
 peru_population_cusco <- peru_population[which(peru_population$department=="CUSCO"),]
 peru_population_cusco$year <- as.numeric(peru_population_cusco$year)
 peru_population_cusco <- peru_population_cusco[,c(3:4)]
@@ -92,7 +84,7 @@ peru_population_cusco[nrow(peru_population_cusco) + 1,] <- c(2021,peru_populatio
 peru_population_cusco[nrow(peru_population_cusco) + 1,] <- c(2022,peru_population_cusco[22,2]*peru_population_cusco[22,2]/peru_population_cusco[21,2])
 peru_population_cusco[nrow(peru_population_cusco) + 1,] <- c(2023,peru_population_cusco[23,2]*peru_population_cusco[23,2]/peru_population_cusco[22,2])
 
-#dengue cases
+# dengue case data
 cusco_peru_case_data <- peru_case_data[which(peru_case_data$Departamento=="CUSCO"),]
 cusco_peru_case_data_summary <- cusco_peru_case_data %>%
   group_by(year) %>%
@@ -105,8 +97,10 @@ cusco_peru_case_data_summary <- left_join(cusco_peru_case_data_summary, peru_pop
 cusco_peru_case_data_summary$incidence <- (cusco_peru_case_data_summary$dengue_cases)/cusco_peru_case_data_summary$population*1000
 cusco_peru_case_data_summary$region <- 'G. Cusco, Peru'
 
-## loreto peru
-#population
+#############################
+### Loreto, Peru
+#############################
+# population data
 peru_population_loreto <- peru_population[which(peru_population$department=="LORETO"),]
 peru_population_loreto$year <- as.numeric(peru_population_loreto$year)
 peru_population_loreto <- peru_population_loreto[,c(3:4)]
@@ -114,7 +108,7 @@ peru_population_loreto[nrow(peru_population_loreto) + 1,] <- c(2021,peru_populat
 peru_population_loreto[nrow(peru_population_loreto) + 1,] <- c(2022,peru_population_loreto[22,2]*peru_population_loreto[22,2]/peru_population_loreto[21,2])
 peru_population_loreto[nrow(peru_population_loreto) + 1,] <- c(2023,peru_population_loreto[23,2]*peru_population_loreto[23,2]/peru_population_loreto[22,2])
 
-#dengue cases
+# dengue case data
 loreto_peru_case_data <- peru_case_data[which(peru_case_data$Departamento=="LORETO"),]
 loreto_peru_case_data_summary <- loreto_peru_case_data %>%
   group_by(year) %>%
@@ -127,7 +121,10 @@ loreto_peru_case_data_summary <- left_join(loreto_peru_case_data_summary, peru_p
 loreto_peru_case_data_summary$incidence <- (loreto_peru_case_data_summary$dengue_cases)/loreto_peru_case_data_summary$population*1000
 loreto_peru_case_data_summary$region <- 'H. Loreto, Peru'
 
-## brazil national
+#############################
+### Brazil (national)
+#############################
+# incidence data
 brazil_case_data <- read.csv("~/Desktop/doctorate/hfi_threshold/annual_dengue_case_inci.csv")
 brazil_case_data_summary <- brazil_case_data %>%
   group_by(year) %>%
@@ -136,7 +133,10 @@ brazil_case_data_summary <- brazil_case_data %>%
             incidence = mean(incidence/100000)*1000)  
 brazil_case_data_summary$region <- 'E. Brazil (national)'
 
-## acre brazil
+#############################
+### Acre, Brazil
+#############################
+# incidence data
 brazil_case_data$state <- substr(brazil_case_data$CD_MUN, 1, 2)
 acre_brazil_case_data <- brazil_case_data[which(brazil_case_data$state == 12),]
 acre_brazil_case_data_summary <- acre_brazil_case_data %>%
@@ -146,8 +146,17 @@ acre_brazil_case_data_summary <- acre_brazil_case_data %>%
             incidence = mean(incidence/100000)*1000)  
 acre_brazil_case_data_summary$region <- 'B. Acre, Brazil'
 
-## bolivia national
-#population
+#############################
+### Bolivia (national)
+#############################
+# population data
+bolivia_population <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/bolivia_population_yearly.csv")
+bolivia_population <- bolivia_population[,c(6,9:29)]
+colnames(bolivia_population) <- c("department", 2000:2020)
+bolivia_population <- bolivia_population %>%
+  pivot_longer(cols = c(2:22), 
+               names_to = "year", 
+               values_to = "population")
 bolivia_population_national <- bolivia_population %>%
   group_by(year) %>%
   summarize(population = sum(population))
@@ -157,7 +166,8 @@ bolivia_population_national[nrow(bolivia_population_national) + 1,] <- c(2021,bo
 bolivia_population_national[nrow(bolivia_population_national) + 1,] <- c(2022,bolivia_population_national[22,2]*bolivia_population_national[22,2]/bolivia_population_national[21,2])
 bolivia_population_national[nrow(bolivia_population_national) + 1,] <- c(2023,bolivia_population_national[23,2]*bolivia_population_national[23,2]/bolivia_population_national[22,2])
 
-#dengue cases
+# dengue case data
+dengue_global_dataset <- read_rds("~/Desktop/doctorate/ch2 mdd highway/data/sfig_s2_data/dengue_temp_full.rds")
 bol_case_data <- dengue_global_dataset[which(dengue_global_dataset$country=="BOL"),]
 bol_case_data$dengue_cases <- ifelse(is.na(bol_case_data$dengue_cases), 0, bol_case_data$dengue_cases)
 bol_case_data_summary <- bol_case_data %>%
@@ -174,8 +184,10 @@ bol_case_data_summary <- left_join(bol_case_data_summary, bolivia_population_nat
 bol_case_data_summary$incidence <- bol_case_data_summary$dengue_cases/bol_case_data_summary$population*1000
 bol_case_data_summary$region <- 'F. Bolivia (national)'
 
-## pando, bolivia
-#population
+#############################
+## Pando, Bolivia
+#############################
+# population data
 bolivia_population_pando <- bolivia_population[which(bolivia_population$department=="Pando"),]
 bolivia_population_pando$year <- as.numeric(bolivia_population_pando$year)
 bolivia_population_pando <- bolivia_population_pando[,c(2:3)]
@@ -183,51 +195,28 @@ bolivia_population_pando[nrow(bolivia_population_pando) + 1,] <- c(2021,bolivia_
 bolivia_population_pando[nrow(bolivia_population_pando) + 1,] <- c(2022,bolivia_population_pando[22,2]*bolivia_population_pando[22,2]/bolivia_population_pando[21,2])
 bolivia_population_pando[nrow(bolivia_population_pando) + 1,] <- c(2023,bolivia_population_pando[23,2]*bolivia_population_pando[23,2]/bolivia_population_pando[22,2])
 
-#dengue cases
+# dengue case data
 to_link <- data.frame(c(2014:2023),
-                       c(91, 496, 1831, 335, 265, 3099, 2333, 2413, 1633, 3362))
+                      c(91, 496, 1831, 335, 265, 3099, 2333, 2413, 1633, 3362))
 colnames(to_link) <- c("year", "dengue_cases")
 pando_case_data_summary <- to_link
 pando_case_data_summary <- left_join(pando_case_data_summary, bolivia_population_pando, by="year")
 pando_case_data_summary$incidence <- pando_case_data_summary$dengue_cases/pando_case_data_summary$population*1000
 pando_case_data_summary$region <- 'C. Pando, Bolivia'
 
+#############################
 ## link all together in long format to build facet plot
+#############################
 regional_groupings_case_data <- rbind(peru_case_data_summary, dengue_df_yearly_summary,
                                       cusco_peru_case_data_summary, loreto_peru_case_data_summary, 
                                       brazil_case_data_summary, acre_brazil_case_data_summary,
                                       bol_case_data_summary, pando_case_data_summary)
 
-################################
-## comparing region plot #######
-################################
-
-region_comp_fig <- ggplot(regional_groupings_case_data) +
-  geom_line(aes(x=year, y=incidence)) +
-  facet_wrap(~region, scales = "free_y") +
-  geom_vline(xintercept=2008,linetype='dashed', color="red") +
-  ggtitle("Dengue incidence\nper 1,000") +
-  xlab("Year") + ylab("") + 
-  theme_bw()+
-  theme(plot.title = element_text(size=14, face="bold"),
-        plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=14),
-        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=10),
-        axis.title.x=element_text(size=12),
-        axis.text.x=element_text(size=10),
-        axis.text = element_text(size=10),
-        legend.text=element_text(size=10),
-        legend.title=element_text(size=10),
-        legend.position = "none",
-        strip.text.x = element_text(size = 10))
-region_comp_fig
-
 ###################################
 #### load region shapefiles #######
 ###################################
 
-# peru department shapefiles
+# peru shapefiles
 peru <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/per_admbnda_adm1_ign_20200714.shp")
 peru <- st_as_sf(peru) 
 peru$geometry <- st_transform(peru$geometry, 4326)
@@ -238,15 +227,7 @@ peru_extra_depts <- peru_extra_depts[,c(3,14)]
 mdd_peru <- peru[which(peru$ADM1_ES %in% c("Madre de Dios")),]
 peru_outline <- st_union(peru$geometry)
 
-# bolivia pando shapefile
-bolivia <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bol_adm_gb2014_shp/bol_admbnda_adm1_gov_2020514.shp")
-bolivia <- st_as_sf(bolivia) 
-bolivia$geometry <- st_transform(bolivia$geometry, 4326)
-bolivia_union <- st_union(bolivia)
-bolivia_pando <- bolivia[which(bolivia$ADM1_ES %in% c("Pando")),]
-bolivia_pando <- bolivia_pando[,c(1,11)]
-
-# brazil acre shapefile
+# brazil shapefiles
 brazil <- st_read("~/Desktop/doctorate/hfi_threshold/brazil_municipality_yearly_hfi_max.csv", geometry_column = ".geo")
 brazil <- st_as_sf(data.frame(brazil, geometry=geojson_sf(brazil$.geo)))
 brazil$geometry <- st_transform(brazil$geometry, 4326)
@@ -255,12 +236,20 @@ brazil_acre <- st_union(brazil_acre$geometry)
 brazil_amazon <- st_read("~/Desktop/doctorate/ch3 amazon network/data/Limites_Amazonia_Legal_2022_shp/Limites_Amazonia_Legal_2022.shp")
 brazil_amazon$geometry <- st_transform(brazil_amazon$geometry, 4326)
 brazil_country <- read_country(year=2020)
-  
+
+# bolivia shapefiles
+bolivia <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bol_adm_gb2014_shp/bol_admbnda_adm1_gov_2020514.shp")
+bolivia <- st_as_sf(bolivia) 
+bolivia$geometry <- st_transform(bolivia$geometry, 4326)
+bolivia_union <- st_union(bolivia)
+bolivia_pando <- bolivia[which(bolivia$ADM1_ES %in% c("Pando")),]
+bolivia_pando <- bolivia_pando[,c(1,11)]
+
 ###################################
 #### load road shapefiles #########
 ###################################
 
-# peru road shapefile
+# peru roads shapefile
 highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
 mapview(highway)
 highway1 <- highway[which(highway$ref %in% c("PE-30C","PE-30A","PE-30","PE-34B","PE-34A","PE-36B")),] #
@@ -307,16 +296,11 @@ mapview(highway_final)
 highway_final <- st_as_sf(highway_final) 
 highway_final$geometry <- st_transform(highway_final$geometry, 4326)
 
-# brazil roads
-#peru_roads <- st_covers(peru,americas_roads$geometry, sparse = FALSE)
+# brazil roads shapefile
 brazil_norte_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/norte-latest-free.shp/gis_osm_roads_free_1.shp")
-#brazil_norte_roads_primary <- brazil_norte_roads[which(brazil_norte_roads$fclass == 'primary'),]
 brazil_norte_roads_primary_estrada <- brazil_norte_roads[which(brazil_norte_roads$name == 'Estrada do Pacífico'),]
 brazil_norte_roads_primary_bool <- st_covers(brazil_acre,brazil_norte_roads_primary_estrada$geometry, sparse = FALSE)
 brazil_norte_roads_primary_estrada <- brazil_norte_roads_primary_estrada[brazil_norte_roads_primary_bool[1,],]
-
-# bolivia roads
-bolivia_roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/bolivia-latest-free.shp/gis_osm_roads_free_1.shp")
 
 ###################################
 #### plot full map w insets #######
@@ -450,4 +434,4 @@ sfig2 <- sfig2 +
                   x = c(0.577), y = c(0.5)) 
 sfig2
 
-ggsave("SFig2.pdf", plot=sfig2, path="~/Desktop/doctorate/ch2 mdd highway/supplementary_figures/", width = 11.29, height = 7.29, units="in", device = "pdf")
+ggsave("sfig2.pdf", plot=sfig2, path="figures/", width = 11.29, height = 7.29, units="in", device = "pdf")
