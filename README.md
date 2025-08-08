@@ -3,7 +3,17 @@
 > Please feel free to email me with any specific, code-related questions at asinglet@stanford.edu.
 
 # Requirements and timing
-All analyses were run in the R (version 4.4.2) programming language or in Python via Google Colab (which provides a ready-to-use Python environment). Installing R usually takes less than 30 minutes, but may vary. Installing the necessary R packages takes usually 1-2 minutes per package, unless packages are installed from source which takes longer.
+All analyses were run in the R (version 4.4.2) programming language or in Python via Google Colab (which provides a ready-to-use Python 3 environment). Installing R usually takes ~30 minutes. Installing the necessary R packages takes usually 1-2 minutes per package, unless packages are installed from source which takes longer. GEE/Colab setup should take ~15 minutes (authentication + package install in notebook). Operating system macOS 14.5 (Sonoma) on a standard laptop is sufficient (no special hardware required). Also expected to work on Windows 11.
+
+# Installation Guide
+1) Install R (https://cran.r-project.org/).
+2) Make a Google Earth Engine account (https://earthengine.google.com/signup/).
+3) Open Colab notebooks (.ipynb) in this repository.
+   - The first time you run it, you’ll be prompted to:
+      - Authenticate your Google account
+      - Grant Google Earth Engine access
+   - All required Python packages will be installed automatically by the first notebook cell.
+   - You can save outputs directly to your Google Drive and then add to the data/environmental_data folder.
 
 # Data processing and analysis pipeline
 
@@ -38,20 +48,20 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
    - 09_percent_change_attributable_cases.R
    - 10_distance_het_models_and_bootstrapping.R
 
-10) Fit supplementary models for sensitivity analyses.
+9) Fit supplementary models for sensitivity analyses.
    - 11_robustness_checks_models.R
 
-11) Conduct permutation inference analysis.
+10) Conduct permutation inference analysis.
    - 12_permutation_inference_analysis.R
 
 ## Make figures and tables
-12) Main text
+11) Main text
    - 13_fig1_map_incidence.R
    - 14_fig2_main.R
    - 15_fig3_distance_het.R
    - 16_table1_main.R
 
-13) Supplementary information
+12) Supplementary information
    - 17_stable1_yearly_estimates.R
    - 18_stable2_general_robustness.R
    - 19_stable3_precip_quad.R
