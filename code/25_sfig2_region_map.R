@@ -21,6 +21,11 @@ library(sf)
 library(geobr)
 library(mapview)
 
+no_axis <- theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank(),
+                 panel.grid.major = element_blank())
+
 #########################################
 ## load pop and dengue case data ########
 #########################################
@@ -207,7 +212,7 @@ pando_case_data_summary$region <- 'C. Pando, Bolivia'
 #############################
 ## link all together in long format to build facet plot
 #############################
-regional_groupings_case_data <- rbind(peru_case_data_summary, dengue_df_yearly_summary,
+regional_groupings_case_data <- rbind(peru_case_data_summary, mdd_dengue_df_yearly_summary,
                                       cusco_peru_case_data_summary, loreto_peru_case_data_summary, 
                                       brazil_case_data_summary, acre_brazil_case_data_summary,
                                       bol_case_data_summary, pando_case_data_summary)
