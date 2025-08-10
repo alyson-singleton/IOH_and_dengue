@@ -129,7 +129,7 @@ mdd_map <- ggplot() +
   annotate("text", 
            x = label_x, y = label_y, 
            label = "PM", 
-           size = 4.5, fontface = "bold", hjust = 0, color = "black") + 
+           size = 4, hjust = 0, color = "black") + #fontface = "bold", 
   geom_point(data = data.frame(lon = -69.19, lat = -12.5933), 
              aes(x = lon, y = lat), 
              color = "black", 
@@ -212,7 +212,7 @@ fig1c <- ggplot(leish_raw_plotting) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
   ggtitle("Incidencia de leishmaniasis por cada 1,000 personas") +
-  xlab("Year") + ylab("") + 
+  xlab("Año") + ylab("") + 
   scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Expuesto (<5km)','No expuesto (>10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),

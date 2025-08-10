@@ -2,9 +2,9 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Figure 2.
+# Build Figure 2 w Spanish labels.
 #
-# Date created: 8/4/2025
+# Date created: 8/10/2025
 
 library(sf)
 library(dplyr)
@@ -67,7 +67,7 @@ fig2a <- ggplot(dengue_yearly_df) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
+  xlab("Año") + ylab("cambio en\nincidencia\nde dengue\npor 1,000\nrelativo\na 2008") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims,
@@ -80,12 +80,16 @@ fig2a
 ## Fig 2b
 #####################
 
+dengue_biannual_agg_df$rainy_spanish <- c("Seca", "Lluvias")
+dengue_biannual_agg_df$rainy_spanish <- factor(dengue_biannual_agg_df$rainy_spanish,
+                                               levels=c("Seca", "Lluvias"))
+
 fig2b <- ggplot(dengue_biannual_agg_df) +
-  geom_hline(aes(yintercept=0), colour='black', size=.4) +
-  geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
-  geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
-  scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
-  scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  geom_hline(aes(yintercept=0), colour='black', linewidth=.4) +
+  geom_errorbar(aes(x=rainy_spanish, ymax=upper, ymin=lower, colour=rainy_spanish), width=0, linewidth=0.5) +
+  geom_point(aes(rainy_spanish, estimate, fill=rainy_spanish), size=3, shape=21) +
+  scale_fill_manual(values=c('#DC267F', '#648FFF'), labels=c('Seca', 'Lluvias')) + 
+  scale_colour_manual(values=c('#DC267F', '#648FFF'), labels=c('Seca', 'Lluvias')) + 
   xlab("") + ylab("") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
@@ -127,7 +131,7 @@ fig2c <- ggplot(leish_yearly_df) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("change in\nleish\nincidence\nper 1,000\nrelative\nto 2008") + 
+  xlab("Año") + ylab("cambio en\nincidencia\nde leish\npor 1,000\nrelativo\na 2008") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims,
@@ -138,13 +142,15 @@ fig2c
 #####################
 ## Fig 2d
 #####################
-
+leish_biannual_agg_df$rainy_spanish <- c("Seca", "Lluvias")
+leish_biannual_agg_df$rainy_spanish <- factor(leish_biannual_agg_df$rainy_spanish,
+                                               levels=c("Seca", "Lluvias"))
 fig2d <- ggplot(leish_biannual_agg_df) +
-  geom_hline(aes(yintercept=0), colour='black', size=.4) +
-  geom_errorbar(aes(x=rainy, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
-  geom_point(aes(rainy, estimate, fill=rainy), size=3, shape=21) +
-  scale_fill_manual(values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
-  scale_colour_manual(values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
+  geom_hline(aes(yintercept=0), colour='black', linewidth=.4) +
+  geom_errorbar(aes(x=rainy_spanish, ymax=upper, ymin=lower, colour=rainy_spanish), width=0, linewidth=0.5) +
+  geom_point(aes(rainy_spanish, estimate, fill=rainy_spanish), size=3, shape=21) +
+  scale_fill_manual(values=c('#DC267F', '#648FFF'), labels=c('Seca', 'Lluvias')) + 
+  scale_colour_manual(values=c('#DC267F', '#648FFF'), labels=c('Seca', 'Lluvias')) + 
   xlab("") + ylab("") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
@@ -176,4 +182,4 @@ fig2combined <- grid.arrange(fig2ab, fig2cd,
                              heights=c(1,1))
 
 fig2combined
-ggsave("fig2.pdf", plot=fig2combined, path="figures/", width = 9, height = 8, units="in", device = "pdf")
+ggsave("fig2_spanish.pdf", plot=fig2combined, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 9, height = 8, units="in", device = "pdf")
