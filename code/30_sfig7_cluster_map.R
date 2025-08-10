@@ -13,6 +13,7 @@ library(readr)
 library(ggplot2)
 library(sf)
 library(patchwork)
+library(ggspatial)
 
 # Load spatial data
 linked_ids_codes <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")

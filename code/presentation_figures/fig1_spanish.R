@@ -1,31 +1,64 @@
-linked_ids_codes <- read.csv("~/Desktop/doctorate/ch2 mdd highway/data/key_esalud_clusterid_7.5km.csv")
+# Script written by:
+# Alyson Singleton, asinglet@stanford.edu
+#
+# Script description: 
+# Build Figure 1 w Spanish labels.
+#
+# Date created: 8/10/2025
 
-center_lat_long <- left_join(unique(dengue_yearly$full[,c(2,18,23,24)]), linked_ids_codes, by='key')
+library(sf)
+library(dplyr)
+library(gridExtra)
+library(ggpubr)
+library(readr)
+library(ggplot2)
+library(ggspatial)
 
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+# Load dengue panel datasets
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
+dengue_biannual <- readRDS("data/clean/dengue_biannual_panels.rds")
+
+# Load leishmaniasis panel datasets
+leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
+leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
+
+# Load spatial data
+linked_ids_codes <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
+center_lat_long <- dengue_yearly$full %>%
+  dplyr::select(key, clust, all_cutoffs, key_connected, key_w_dengue) %>%
+  distinct() %>%
+  left_join(linked_ids_codes, by = "key")
 center_lat_long <- center_lat_long %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
-peru_depts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/per_admbnda_adm1_ign_20200714.shp")
+peru_depts <- read_sf("data/raw/spatial_data/peru_department_shapefiles.shp")
 peru_depts <- st_as_sf(peru_depts) 
 peru_depts$geometry <- st_transform(peru_depts$geometry, 4326)
 peru_outline <- st_union(peru_depts$geometry)
 
-districts <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/Madre_de_Dios.shp")
+districts <- read_sf("data/raw/spatial_data/mdd_districts.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
 mdd_region <- st_union(districts$geometry)
 
-rivers <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/mdd_rivers2.shp")
+rivers <- read_sf("data/raw/spatial_data/mdd_rivers.shp")
 rivers <- st_as_sf(rivers, crs=4326) 
 rivers$geometry <- st_transform(rivers$geometry, "EPSG:4326")
 
-roads <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/mdd_roads.shp")
+roads <- read_sf("data/raw/spatial_data/mdd_roads.shp")
 roads <- st_as_sf(roads) 
 roads$geometry <- st_transform(roads$geometry, 4326)
 roads_mdd <- st_covers(mdd_region,roads$geometry, sparse = FALSE)
 roads_mdd <- roads[roads_mdd[1,],]
 
-highway <- read_sf("~/Desktop/doctorate/ch2 mdd highway/data/shapefiles/peru_roads_important.shp")
+highway <- read_sf("data/raw/spatial_data/peru_roads_important.shp")
 highway <- highway[which(highway$ref=="PE-30C"),]
 highway <- st_as_sf(highway) 
 highway$geometry <- st_transform(highway$geometry, 4326)
@@ -37,6 +70,10 @@ no_axis <- theme(axis.title=element_blank(),
                  axis.text=element_blank(),
                  axis.ticks=element_blank(),
                  panel.grid.major = element_blank())
+
+#####################
+## Fig 1a
+#####################
 
 # Build columns for plotting
 center_lat_long_fig1 <- center_lat_long %>%
@@ -97,9 +134,6 @@ mdd_map <- ggplot() +
              aes(x = lon, y = lat), 
              color = "black", 
              size = 8, shape = 1, stroke = 1)
-mdd_map
-ggsave("OnePager.pdf", plot=mdd_map, path="~/Desktop/", width = 6, height = 6, units="in", device = "pdf")
-
 fig1_legend <- get_legend(mdd_map)
 mdd_map <- mdd_map + theme(legend.position = "none")
 
@@ -120,8 +154,7 @@ fig1a <- ggdraw() +
   draw_plot(mdd_map,
             0, 0, 1, 1)
 fig1a
-
-ggsave("OnePagerCutout.pdf", plot=fig1a, path="~/Desktop/", width = 6, height = 6, units="in", device = "pdf")
+ggsave("fig1a_spanish.pdf", plot=fig1a, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 6, height = 6, units="in", device = "pdf")
 
 #####################
 ## Fig 1b
@@ -140,25 +173,26 @@ dengue_raw_plotting$fivekm <- factor(dengue_raw_plotting$fivekm,
                                      labels = c("Expuesto (<5km)", "No expuesto (>10km)"))
 
 fig1b <- ggplot(dengue_raw_plotting) +
-  geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth = 0.8) +
-  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth = 0.7) +
+  geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
+  ggtitle("Incidencia de dengue por cada 1,000 personas") +
   xlab("Año") + ylab("") + 
   scale_color_manual(values=c("#E04490","#648FFF"), labels=c('Expuesto (<5km)','No expuesto (>10km)')) +
   theme_bw()+
-  theme(plot.title = element_text(size=18, face="bold"),
+  theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
-        axis.title=element_text(size=18),
-        axis.title.y=element_text(size=18,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=18),
-        axis.title.x=element_text(size=18),
-        axis.text.x=element_text(size=18),
-        axis.text = element_text(size=18),
-        legend.text=element_text(size=18),
-        legend.title=element_blank(),
+        axis.title=element_text(size=14),
+        axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
+        axis.text.y=element_text(size=8),
+        axis.title.x=element_text(size=12),
+        axis.text.x=element_text(size=10),
+        axis.text = element_text(size=10),
+        legend.text=element_text(size=10),
+        legend.title=element_text(size=10),
         legend.position = "none",
-        strip.text.x = element_text(size = 18))
+        strip.text.x = element_text(size = 10))
 fig1b
-ggsave("OnePager2_legend.pdf", plot=fig1b, path="~/Desktop/", width = 12, height = 4, units="in", device = "pdf")
+ggsave("fig1b_spanish.pdf", plot=fig1b, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 12, height = 4, units="in", device = "pdf")
 
 #####################
 ## Fig 1c
@@ -169,14 +203,17 @@ leish_raw_plotting <- leish_yearly$connected_buffered %>%
   summarize(new_incidence = sum(yearly_cases_C)/sum(population)*1000)
 
 leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
-leish_raw_plotting$fivekm <- as.character(leish_raw_plotting$fivekm)
+leish_raw_plotting$fivekm <- factor(leish_raw_plotting$fivekm, 
+                                     levels = c("1", "0"), 
+                                     labels = c("Expuesto (<5km)", "No expuesto (>10km)"))
+
 fig1c <- ggplot(leish_raw_plotting) +
-  geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
-  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth=0.7) +
+  geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
-  ggtitle("Leishmaniasis incidence per 1,000") +
+  ggtitle("Incidencia de leishmaniasis por cada 1,000 personas") +
   xlab("Year") + ylab("") + 
-  scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
+  scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Expuesto (<5km)','No expuesto (>10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -191,7 +228,7 @@ fig1c <- ggplot(leish_raw_plotting) +
         legend.position = "none",
         strip.text.x = element_text(size = 10))
 fig1c
-ggsave("OnePager3.pdf", plot=fig1c, path="~/Desktop/", width = 7, height = 3, units="in", device = "pdf")
+ggsave("fig1c_spanish.pdf", plot=fig1c, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 7, height = 3, units="in", device = "pdf")
 
 #####################
 ## Fig 1all
@@ -205,6 +242,5 @@ fig1all <- grid.arrange(fig1a, fig1b, fig1c, fig1_legend,
 fig1all <- as_ggplot(fig1all) +                                
   draw_plot_label(label = c("A", "B", "C"), size = 14,
                   x = c(0.01, 0.48, 0.48), y = c(1, 1, 0.57)) 
-#fig1all
 
-ggsave("Fig1.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/manuscript_figures/", width = 10, height = 6, units="in", device = "pdf")
+ggsave("fig1_spanish.pdf", plot=fig1all, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 10, height = 6, units="in", device = "pdf")

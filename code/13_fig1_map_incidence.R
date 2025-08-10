@@ -12,6 +12,7 @@ library(gridExtra)
 library(ggpubr)
 library(readr)
 library(ggplot2)
+library(ggspatial)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -168,7 +169,7 @@ dengue_raw_plotting$fivekm <- as.character(dengue_raw_plotting$fivekm)
 
 fig1b <- ggplot(dengue_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
-  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   ggtitle("Dengue incidence per 1,000") +
   xlab("Year") + ylab("") + 
   scale_color_manual(name = "", values=c("#648FFF","#E04490"), labels=c('Unexposed (>10km)', 'Exposed (<5km)'),) +
@@ -199,7 +200,7 @@ leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
 leish_raw_plotting$fivekm <- as.character(leish_raw_plotting$fivekm)
 fig1c <- ggplot(leish_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
-  geom_vline(xintercept=vert_line_date,linetype='dashed') +
+  geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
   ggtitle("Leishmaniasis incidence per 1,000") +
   xlab("Year") + ylab("") + 
