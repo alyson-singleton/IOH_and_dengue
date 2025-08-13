@@ -39,7 +39,7 @@ sfig1a <- ggplot(dengue_coverage_yearly) +
   geom_col(aes(x= year, y=coverage, fill=fivekm), width=0.5, color="white", position = position_dodge(width = 0.5)) +
   scale_fill_manual(name = "", values=c('#648FFF', '#E04490'), labels=c('>5km', '<5km'),) +
   geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
-  xlab("") + ylab("# units w/\ndengue\ncase") + 
+  xlab("") + ylab("# establecimientos\ncon caso de\ndengue") + 
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -69,9 +69,9 @@ leish_coverage_yearly$year <- format(as.Date(leish_coverage_yearly$year, format=
 
 sfig1b <- ggplot(leish_coverage_yearly) +
   geom_col(aes(x= year, y=coverage, fill=fivekm), color="white", width=0.5, position = position_dodge(width = 0.5)) +
-  scale_fill_manual(name = "Treatment", values=c('#648FFF', '#E04490'), labels=c('>5km', '<5km'),) +
+  scale_fill_manual(name = "Tratamiento", values=c('#648FFF', '#E04490'), labels=c('>5km', '<5km'),) +
   geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
-  xlab("Year") + ylab("# units w/\nleish\ncase") + 
+  xlab("Año") + ylab("# establecimientos\ncon caso de\nleish") + 
   theme_bw() +
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -100,4 +100,4 @@ sfig1all <- as_ggplot(sfig1all) +
                   x = c(0.133, 0.133), y = c(0.99, 0.56)) 
 sfig1all
 
-ggsave("sfig1.pdf", plot=sfig1all, path="figures/", width = 8, height = 7, units="in", device = "pdf")
+ggsave("sfig1_spanish.pdf", plot=sfig1all, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 8, height = 7, units="in", device = "pdf")

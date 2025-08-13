@@ -92,10 +92,10 @@ desired_order <- c(
 )
 
 labeled_titles <- c(
-  "Passenger Traffic" = "A. Passenger Traffic",
-  "Estimated Vehicle Fleet" = "B. Estimated Vehicle Fleet (% change)",
-  "National Cargo Vehicle Fleet" = "C. National Cargo Vehicle Fleet",
-  "Toll Unit Flow" = "D. Toll Unit Flow"
+  "Passenger Traffic" = "A. Tráfico de pasajeros",
+  "Estimated Vehicle Fleet" = "B. Parque vehicular estimado (%)",
+  "National Cargo Vehicle Fleet" = "C. Parque vehicular de carga nacional",
+  "Toll Unit Flow" = "D. Flujo vehicular en las unidades de peaje"
 )
 
 percent_change_df <- all_traffic_data %>%
@@ -121,9 +121,9 @@ sfig8 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) 
   geom_vline(xintercept = 2008, linetype = "dashed", color = "black", linewidth = 0.7) +
   facet_wrap(~Metric, scales = "free_y", ncol = 2,
              labeller = as_labeller(labeled_titles)) +
-  labs(x = "Year",
+  labs(x = "Año",
        y = "",
-       color = "Department") +
+       color = "Departamento") +
   scale_color_manual(values = c("Madre de Dios" = "#E04490",
                                 "Loreto" = "#648FFF")) +
   theme_minimal(base_size = 14) +
@@ -132,4 +132,4 @@ sfig8 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) 
         legend.position = "bottom")
 sfig8
 
-ggsave("sfig8.pdf", plot=sfig8, path="figures/", width = 9, height = 7, units="in", device = "pdf")
+ggsave("sfig8_spanish.pdf", plot=sfig8, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 9, height = 7, units="in", device = "pdf")

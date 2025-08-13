@@ -72,7 +72,13 @@ fig2a <- ggplot(dengue_yearly_df) +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims,
                      breaks = c(-5, 0, 10, 20, 40)) +
-  theme_stor
+  scale_x_date(
+    date_breaks = "2 year",
+    date_labels = "%Y",
+    breaks = seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by = "2 years")
+  ) +
+  theme_stor +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 fig2a
 
@@ -136,6 +142,13 @@ fig2c <- ggplot(leish_yearly_df) +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims,
                      breaks = c(-5, 0, 10, 20, 40)) +
+  scale_x_date(
+    date_breaks = "2 year",
+    date_labels = "%Y",
+    breaks = seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by = "2 years")
+  ) +
+  theme_stor +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme_stor
 fig2c
 
