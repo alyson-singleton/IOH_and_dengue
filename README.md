@@ -68,7 +68,7 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
    - 20_stable4_cost_mapping.R
    - 21_stable5_FE_vals.R
    - 22_stable6_main_glmmTMB.R
-   _ 23_stable7_dengue_yearly_glmmTMB.R
+   - 23_stable7_dengue_yearly_glmmTMB.R
    - 24_sfig1_unit_coverage.R
    - 25_sfig2_region_map.R
    - 26_sfig3_general_robustness.R
