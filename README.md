@@ -77,5 +77,5 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
    - 29_sfig6_time_trends.R
    - 30_sfig7_cluster_map.R
    - 31_sfig8_traffic_vols.R
-   _ 32_sfig9_season_def.R
+   - 32_sfig9_season_def.R
    - 33_sfig10_biannual.R
