@@ -13,6 +13,7 @@ library(ggpubr)
 library(readr)
 library(ggplot2)
 library(ggspatial)
+library(cowplot)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))

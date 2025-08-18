@@ -172,4 +172,4 @@ fig3all <- as_ggplot(fig3all) +
 
 fig3all
 
-ggsave("fig3_spanish.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 10, height = 6, units="in", device = "pdf")
+ggsave("fig3_spanish.pdf", plot=fig3all, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 10, height = 5, units="in", device = "pdf")

@@ -13,6 +13,7 @@ library(ggpubr)
 library(readr)
 library(ggplot2)
 library(ggspatial)
+library(cowplot)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -178,6 +179,9 @@ fig1b <- ggplot(dengue_raw_plotting) +
   ggtitle("Incidencia de dengue por cada 1,000 personas") +
   xlab("Año") + ylab("") + 
   scale_color_manual(values=c("#E04490","#648FFF"), labels=c('Expuesto (<5km)','No expuesto (>10km)')) +
+  scale_x_date(
+    date_breaks = "4 years",   # or "3 years" for every three years
+    date_labels = "%Y") +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -211,6 +215,9 @@ fig1c <- ggplot(leish_raw_plotting) +
   geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth=0.7) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
+  scale_x_date(
+    date_breaks = "4 years",   # or "3 years" for every three years
+    date_labels = "%Y") +
   ggtitle("Incidencia de leishmaniasis por cada 1,000 personas") +
   xlab("Año") + ylab("") + 
   scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Expuesto (<5km)','No expuesto (>10km)'),) +
