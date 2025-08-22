@@ -1,0 +1,108 @@
+---
+title: "Difference-in-differences (DiD)"
+author: "Alyson (Aly) Singleton"
+date: "Agosto 2025"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+## notes
+1. make seperate repo for this tutorial
+2. create simplified data (colnames in spanish, reduce columns)
+3. write a note about incidence plotting
+
+## Libraries
+```{r}
+library(ggplot2)
+library(dplyr)
+library(fixest)
+```
+
+## Load data
+
+First, load in the two necessary datasets (one for dengue and one for leish). These are the cleaned datasets with all pre-processing done. You can reference the full repository for data processing steps.
+
+```{r}
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
+dengue_yearly <- dengue_yearly$connected_buffered
+leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
+leish_yearly <- leish_yearly$connected_buffered
+```
+
+## Explore data
+
+Take a second to explore the dengue data. You can also substitute for the leish data, but the two are essentially the same.
+
+```{r}
+colnames(dengue_yearly)
+head(dengue_yearly)
+
+# plot incidence for each health facility across study period, color by treatment (<5km) and control (>10km)
+
+dengue_yearly_plotting <- dengue_yearly
+dengue_yearly_plotting$year <- as.Date(dengue_yearly_plotting$year)
+dengue_yearly_plotting$fivekm <- as.character(dengue_yearly_plotting$fivekm)
+
+ggplot(dengue_yearly_plotting) +
+  geom_line(aes(year, incidence, group=key, color=fivekm), alpha=0.5) +
+  geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed')
+
+# aggregate by treatment and control group and plot yearly incidence rates across the study period
+
+dengue_yearly_plotting_agg <- dengue_yearly %>%
+  group_by(fivekm, year) %>%
+  summarize(mean_incidence = mean(incidence),
+            new_incidence = sum(yearly_cases_C)/sum(population)*1000)
+
+dengue_yearly_plotting_agg$year <- as.Date(dengue_yearly_plotting_agg$year)
+dengue_yearly_plotting_agg$fivekm <- as.character(dengue_yearly_plotting_agg$fivekm)
+
+ggplot(dengue_yearly_plotting_agg) +
+  geom_line(aes(year, mean_incidence, color=fivekm)) +
+  geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed')
+```
+
+## Build simple model
+
+No fixed effects, no controls.
+
+```{r}
+dengue_yearly_model_simple <- feols(
+  incidence ~ i(year, fivekm, ref = '2008-01-01'),
+  data = dengue_yearly)
+summary(dengue_yearly_model_simple)
+etable(dengue_yearly_model_simple)
+```
+
+## Add fixed effects
+
+```{r}
+dengue_yearly_model_FEs <- feols(
+  incidence ~ i(year, fivekm, ref = '2008-01-01') | key + year,
+  data = dengue_yearly)
+summary(dengue_yearly_model_FEs)
+etable(dengue_yearly_model_FEs)
+```
+
+## Full model (FEs + controls)
+
+```{r}
+dengue_yearly_model_full <- feols(
+  incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + 
+    sum_precip_centered + mean_temp_centered + 
+    mean_temp_centered_sq | key + year,
+  data = dengue_yearly)
+summary(dengue_yearly_model_full)
+etable(dengue_yearly_model_full)
+```
+
+## Plot full model results.
+
+
+## Long difference model.
+
+
