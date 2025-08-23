@@ -163,13 +163,13 @@ fig1a
 
 dengue_raw_plotting <- dengue_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases_C)/sum(population)*1000)
+  summarize(mean_incidence = mean(incidence))
 
 dengue_raw_plotting$year <- as.Date(dengue_raw_plotting$year)
 dengue_raw_plotting$fivekm <- as.character(dengue_raw_plotting$fivekm)
 
 fig1b <- ggplot(dengue_raw_plotting) +
-  geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
+  geom_line(aes(x=year, y=mean_incidence, colour=fivekm)) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   ggtitle("Dengue incidence per 1,000") +
   xlab("Year") + ylab("") + 
@@ -195,12 +195,12 @@ fig1b
 
 leish_raw_plotting <- leish_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases_C)/sum(population)*1000)
+  summarize(mean_incidence = mean(incidence))
 
 leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
 leish_raw_plotting$fivekm <- as.character(leish_raw_plotting$fivekm)
 fig1c <- ggplot(leish_raw_plotting) +
-  geom_line(aes(x=year, y=new_incidence, colour=fivekm)) +
+  geom_line(aes(x=year, y=mean_incidence, colour=fivekm)) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
   ggtitle("Leishmaniasis incidence per 1,000") +
