@@ -57,34 +57,33 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
 9)  Fit supplementary models for sensitivity analyses.
     -   11_robustness_checks_models.R
 10) Conduct permutation inference analysis.
-
--   12_permutation_inference_analysis.R
+    -   12_permutation_inference_analysis.R
 
 ## Make figures and tables
 
 11) Main text
+    -   13_fig1_map_incidence.R
+    -   14_fig2_main.R
+    -   15_fig3_distance_het.R
+    -   16_table1_main.R
 
--   13_fig1_map_incidence.R
--   14_fig2_main.R
--   15_fig3_distance_het.R
--   16_table1_main.R
+<!-- -->
 
 12) Supplementary information
-
--   17_stable1_yearly_estimates.R
--   18_stable2_general_robustness.R
--   19_stable3_precip_quad.R
--   20_stable4_cost_mapping.R
--   21_stable5_FE_vals.R
--   22_stable6_main_glmmTMB.R
--   23_stable7_dengue_yearly_glmmTMB.R
--   24_sfig1_unit_coverage.R
--   25_sfig2_region_map.R
--   26_sfig3_general_robustness.R
--   27_sfig4_tx_year.R
--   28_sfig5_permutation.R
--   29_sfig6_time_trends.R
--   30_sfig7_cluster_map.R
--   31_sfig8_traffic_vols.R
--   32_sfig9_season_def.R
--   33_sfig10_biannual.R
+    -   17_stable1_yearly_estimates.R
+    -   18_stable2_general_robustness.R
+    -   19_stable3_precip_quad.R
+    -   20_stable4_cost_mapping.R
+    -   21_stable5_FE_vals.R
+    -   22_stable6_main_glmmTMB.R
+    -   23_stable7_dengue_yearly_glmmTMB.R
+    -   24_sfig1_unit_coverage.R
+    -   25_sfig2_region_map.R
+    -   26_sfig3_general_robustness.R
+    -   27_sfig4_tx_year.R
+    -   28_sfig5_permutation.R
+    -   29_sfig6_time_trends.R
+    -   30_sfig7_cluster_map.R
+    -   31_sfig8_traffic_vols.R
+    -   32_sfig9_season_def.R
+    -   33_sfig10_biannual.R
