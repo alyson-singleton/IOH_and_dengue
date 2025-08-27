@@ -174,6 +174,11 @@ fig1b <- ggplot(dengue_raw_plotting) +
   ggtitle("Dengue incidence per 1,000") +
   xlab("Year") + ylab("") + 
   scale_color_manual(name = "", values=c("#648FFF","#E04490"), labels=c('Unexposed (>10km)', 'Exposed (<5km)'),) +
+  scale_x_date(
+    date_breaks = "4 years",
+    date_labels = "%Y") +
+  scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
+                     breaks = c(0, 10, 20, 30)) +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -206,6 +211,9 @@ fig1c <- ggplot(leish_raw_plotting) +
   ggtitle("Leishmaniasis incidence per 1,000") +
   xlab("Year") + ylab("") + 
   scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
+  scale_x_date(
+    date_breaks = "4 years",
+    date_labels = "%Y") +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),

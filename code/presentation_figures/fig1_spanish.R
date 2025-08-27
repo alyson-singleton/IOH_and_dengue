@@ -163,7 +163,7 @@ ggsave("fig1a_spanish.pdf", plot=fig1a, path="~/Desktop/doctorate/ch2 mdd highwa
 
 dengue_raw_plotting <- dengue_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases_C)/sum(population)*1000)
+  summarize(mean_incidence = mean(incidence))
 
 dengue_raw_plotting$year <- as.Date(dengue_raw_plotting$year)
 dengue_raw_plotting$fivekm <- as.character(dengue_raw_plotting$fivekm)
@@ -174,37 +174,40 @@ dengue_raw_plotting$fivekm <- factor(dengue_raw_plotting$fivekm,
                                      labels = c("Expuesto (<5km)", "No expuesto (>10km)"))
 
 fig1b <- ggplot(dengue_raw_plotting) +
-  geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth = 0.7) +
+  geom_line(aes(x=year, y=mean_incidence, colour=fivekm), linewidth = 0.7) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   ggtitle("Incidencia de dengue por cada 1,000 personas") +
   xlab("Año") + ylab("") + 
   scale_color_manual(values=c("#E04490","#648FFF"), labels=c('Expuesto (<5km)','No expuesto (>10km)')) +
   scale_x_date(
-    date_breaks = "4 years",   # or "3 years" for every three years
+    date_breaks = "4 years",
     date_labels = "%Y") +
+  scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
+                     breaks = c(0, 10, 20, 30)) +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title=element_text(size=14),
         axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=8),
+        axis.text.y=element_text(size=10),
         axis.title.x=element_text(size=12),
         axis.text.x=element_text(size=10),
         axis.text = element_text(size=10),
         legend.text=element_text(size=10),
         legend.title=element_text(size=10),
         legend.position = "none",
-        strip.text.x = element_text(size = 10))
+        strip.text.x = element_text(size = 10),
+        plot.background = element_blank())
 fig1b
-ggsave("fig1b_spanish.pdf", plot=fig1b, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 12, height = 4, units="in", device = "pdf")
-
+ggsave("fig1b_spanish.pdf", plot=fig1b, path="~/Desktop/doctorate/ch2 mdd highway/presentation_figures/spanish/", width = 6, height = 4, units="in", device = "pdf")
+#12x4
 #####################
 ## Fig 1c
 #####################
 
 leish_raw_plotting <- leish_yearly$connected_buffered %>%
   group_by(fivekm, year) %>%
-  summarize(new_incidence = sum(yearly_cases_C)/sum(population)*1000)
+  summarize(mean_incidence = mean(incidence))
 
 leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
 leish_raw_plotting$fivekm <- factor(leish_raw_plotting$fivekm, 
@@ -212,11 +215,11 @@ leish_raw_plotting$fivekm <- factor(leish_raw_plotting$fivekm,
                                      labels = c("Expuesto (<5km)", "No expuesto (>10km)"))
 
 fig1c <- ggplot(leish_raw_plotting) +
-  geom_line(aes(x=year, y=new_incidence, colour=fivekm), linewidth=0.7) +
+  geom_line(aes(x=year, y=mean_incidence, colour=fivekm), linewidth=0.7) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
   scale_x_date(
-    date_breaks = "4 years",   # or "3 years" for every three years
+    date_breaks = "4 years",
     date_labels = "%Y") +
   ggtitle("Incidencia de leishmaniasis por cada 1,000 personas") +
   xlab("Año") + ylab("") + 
@@ -226,7 +229,7 @@ fig1c <- ggplot(leish_raw_plotting) +
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title=element_text(size=14),
         axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
-        axis.text.y=element_text(size=8),
+        axis.text.y=element_text(size=10),
         axis.title.x=element_text(size=12),
         axis.text.x=element_text(size=10),
         axis.text = element_text(size=10),

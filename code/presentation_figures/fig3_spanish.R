@@ -49,14 +49,15 @@ theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
 fig3a <- ggplot(dengue_distance_het_df) +
   geom_hline(aes(yintercept=0), colour='red', linewidth=.4) +
   geom_errorbar(aes(x=Cutoff, ymax=upper, ymin=lower, color=Cutoff), width=0, linewidth=0.7) +
-  geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3, shape=21) +
+  geom_point(aes(Cutoff, estimate, fill=Cutoff), color='black', size=3.5, shape=21) +
   scale_color_manual(name="Tratamiento", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
                                                    '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
   scale_fill_manual(name="Tratamiento", values=list('1km'="#DC267F",'5km'='#FF7900','10km'='#FFB000',
                                                   '15km'='#648FFF','20km'='#785EF0','30km'='#004600'))+ 
   xlab("") + ylab("cambio en\nincidencia\nde dengue\npor 1,000\nrelativo\na 2008") + 
   theme_minimal() +
-  theme_stor
+  theme_stor +
+  theme(axis.title.y=element_text(size=13,angle=0, vjust=.5, hjust=0.5))
 
 fig3a
 
@@ -125,7 +126,7 @@ fig3b <- ggplot() +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#8c8c8c'), linewidth=0.5, show.legend = FALSE) +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = FALSE) +
   geom_sf(data = center_lat_long_fig4, 
-          aes(geometry = geometry, fill=all_cutoffs), shape=21, color='black', size=2.7) +
+          aes(geometry = geometry, fill=all_cutoffs), shape=21, color='black', size=3) +
   scale_fill_manual(name= "", values=list('1'="#DC267F",'2'='#FF7900','3'='#FFB000',
                                           '4'='#648FFF','5'='#785EF0','0'='lightgrey','-1'="#ffffff"), 
                     labels=c("1km", "5km", "10km", "15km", "20km", "Control", "Eliminado")) +
@@ -134,7 +135,7 @@ fig3b <- ggplot() +
   theme_minimal() +
   no_axis +
   guides(fill=guide_legend(nrow=2)) +
-  theme(legend.text=element_text(size=12),
+  theme(legend.text=element_text(size=14),
         legend.title=element_text(size=14),
         legend.position='bottom',
         legend.spacing.x = unit(0.05, 'cm'),
