@@ -47,7 +47,7 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
     -   05_link_cases_w_covariates.R
     -   06_construct_final_panel_data.R
 
-## Fit regressions and run senstivity analyses
+## Fit regressions and run sensitivity analyses
 
 8)  Run main models with fixest and glmmTMB packages.
     -   07_main_models_fixest.R
