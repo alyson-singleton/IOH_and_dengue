@@ -339,6 +339,7 @@ saveRDS(stable3_precip_quad_df, "results/supplementary_text_results/stable3_prec
 ## tx year = 2007
 #########################
 
+#yearly model
 dengue_yearly_model_2007 <- feols(
   incidence ~ i(year, fivekm, ref = '2006-01-01') + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq | key + year,
@@ -354,10 +355,29 @@ dengue_yearly_2007_df <- dengue_yearly_2007_df %>%
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
 
+#long difference
+dengue_df_agg_2007 <- dengue_yearly$connected_buffered %>%
+  filter(as.Date(year) > as.Date("2005-01-01")) %>%
+  mutate(year_binary = if_else(as.Date(year) > as.Date("2006-01-01"), 1, 0))
+
+dengue_yearly_agg_model_2007 <- feols(
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
+  vcov = ~clust,
+  data = dengue_df_agg_2007)
+
+dengue_yearly_agg_results_2007_df <- as.data.frame(dengue_yearly_agg_model_2007$coeftable)["year_binary:fivekm", ]
+colnames(dengue_yearly_agg_results_2007_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_agg_results_2007_df <- dengue_yearly_agg_results_2007_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+
 #########################
 ## tx year = 2008
 #########################
 
+#yearly model
 dengue_yearly_model_2008 <- feols(
   incidence ~ i(year, fivekm, ref = '2007-01-01') + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq | key + year,
@@ -373,5 +393,69 @@ dengue_yearly_2008_df <- dengue_yearly_2008_df %>%
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
 
+#long difference
+dengue_df_agg_2008 <- dengue_yearly$connected_buffered %>%
+  filter(as.Date(year) > as.Date("2006-01-01")) %>%
+  mutate(year_binary = if_else(as.Date(year) > as.Date("2007-01-01"), 1, 0))
+
+dengue_yearly_agg_model_2008 <- feols(
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
+  vcov = ~clust,
+  data = dengue_df_agg_2008)
+
+dengue_yearly_agg_results_2008_df <- as.data.frame(dengue_yearly_agg_model_2008$coeftable)["year_binary:fivekm", ]
+colnames(dengue_yearly_agg_results_2008_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_agg_results_2008_df <- dengue_yearly_agg_results_2008_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+
+#########################
+## tx year = 2010
+#########################
+
+#yearly model
+dengue_yearly_model_2010 <- feols(
+  incidence ~ i(year, fivekm, ref = '2009-01-01') + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
+  vcov = ~clust,
+  data = dengue_yearly$connected_buffered)
+
+dengue_yearly_2010_df <- as.data.frame(dengue_yearly_model_2010$coeftable)[1:22, ]
+colnames(dengue_yearly_2010_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_2010_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2008-01-01"), by = "year"),
+                                seq(as.Date("2010-01-01"), as.Date("2022-01-01"), by = "year"))
+dengue_yearly_2010_df <- dengue_yearly_2010_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+
+#long difference
+dengue_df_agg_2010 <- dengue_yearly$connected_buffered %>%
+  filter(as.Date(year) > as.Date("2008-01-01")) %>%
+  mutate(year_binary = if_else(as.Date(year) > as.Date("2009-01-01"), 1, 0))
+
+dengue_yearly_agg_model_2010 <- feols(
+  incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
+    mean_temp_centered + mean_temp_centered_sq | key + year,
+  vcov = ~clust,
+  data = dengue_df_agg_2010)
+
+dengue_yearly_agg_results_2010_df <- as.data.frame(dengue_yearly_agg_model_2010$coeftable)["year_binary:fivekm", ]
+colnames(dengue_yearly_agg_results_2010_df) <- c('estimate', 'std_error', 't_value', 'p_value')
+dengue_yearly_agg_results_2010_df <- dengue_yearly_agg_results_2010_df %>%
+  mutate(estimate = estimate,
+         upper = estimate + 1.96 * std_error,
+         lower = estimate - 1.96 * std_error)
+
+#########################
+## store results
+#########################
+
 saveRDS(dengue_yearly_2007_df, "results/supplementary_text_results/sfig4_dengue_yearly_2007_df.rds")
+saveRDS(dengue_yearly_agg_results_2007_df, "results/supplementary_text_results/sfig4_dengue_ld_2007_df.rds")
 saveRDS(dengue_yearly_2008_df, "results/supplementary_text_results/sfig4_dengue_yearly_2008_df.rds")
+saveRDS(dengue_yearly_agg_results_2008_df, "results/supplementary_text_results/sfig4_dengue_ld_2008_df.rds")
+saveRDS(dengue_yearly_2010_df, "results/supplementary_text_results/sfig4_dengue_yearly_2010_df.rds")
+saveRDS(dengue_yearly_agg_results_2010_df, "results/supplementary_text_results/sfig4_dengue_ld_2010_df.rds")
