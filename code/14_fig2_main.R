@@ -67,7 +67,7 @@ fig2a <- ggplot(dengue_yearly_df) +
   geom_vline(aes(xintercept=as.Date("2008-01-01")), linetype='dashed', linewidth=0.4) +
   geom_point(aes(x=as.Date("2008-01-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(year, estimate), size=3, shape=21, fill='white') +
-  xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
+  xlab("") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims,
@@ -77,8 +77,7 @@ fig2a <- ggplot(dengue_yearly_df) +
     date_labels = "%Y",
     breaks = seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by = "2 years")
   ) +
-  theme_stor +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_stor
 
 fig2a
 
@@ -143,8 +142,7 @@ fig2c <- ggplot(leish_yearly_df) +
     date_labels = "%Y",
     breaks = seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by = "2 years")
   ) +
-  theme_stor +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_stor
 fig2c
 
 #####################
