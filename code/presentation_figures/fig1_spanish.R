@@ -223,7 +223,7 @@ fig1c <- ggplot(leish_raw_plotting) +
     date_labels = "%Y") +
   ggtitle("Incidencia de leishmaniasis por cada 1,000 personas") +
   xlab("Año") + ylab("") + 
-  scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Expuesto (<5km)','No expuesto (>10km)'),) +
+  scale_color_manual(name = "Exposure", values=c("#E04490", "#648FFF"), labels=c('Expuesto (<5km)','No expuesto (>10km)'),) +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),

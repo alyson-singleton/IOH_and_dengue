@@ -103,7 +103,7 @@ sfig4 <- ggplot(sfig4_df, aes(x = year, y = estimate)) +
   theme_minimal() +
   theme_stor +
   theme(strip.text = element_text(size = 12, face = "bold", hjust = 0),
-        axis.title.y = element_text(size = 12),
+        axis.title.y = element_text(size = 10),
         panel.grid.minor = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1, size = 11))
 sfig4

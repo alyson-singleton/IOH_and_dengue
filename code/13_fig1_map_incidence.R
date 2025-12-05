@@ -169,7 +169,7 @@ dengue_raw_plotting$year <- as.Date(dengue_raw_plotting$year)
 dengue_raw_plotting$fivekm <- as.character(dengue_raw_plotting$fivekm)
 
 fig1b <- ggplot(dengue_raw_plotting) +
-  geom_line(aes(x=year, y=mean_incidence, colour=fivekm)) +
+  geom_line(aes(x=year, y=mean_incidence, colour=fivekm), linewidth=0.7) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   ggtitle("Dengue incidence per 1,000") +
   xlab("Year") + ylab("") + 
@@ -204,8 +204,9 @@ leish_raw_plotting <- leish_yearly$connected_buffered %>%
 
 leish_raw_plotting$year <- as.Date(leish_raw_plotting$year)
 leish_raw_plotting$fivekm <- as.character(leish_raw_plotting$fivekm)
+
 fig1c <- ggplot(leish_raw_plotting) +
-  geom_line(aes(x=year, y=mean_incidence, colour=fivekm)) +
+  geom_line(aes(x=year, y=mean_incidence, colour=fivekm), linewidth=0.7) +
   geom_vline(xintercept=as.Date('2008-01-01'),linetype='dashed') +
   scale_y_continuous(labels = function(x) round(x, 3)) +
   ggtitle("Leishmaniasis incidence per 1,000") +
@@ -242,4 +243,4 @@ fig1all <- as_ggplot(fig1all) +
   draw_plot_label(label = c("A", "B", "C"), size = 14,
                   x = c(0.01, 0.48, 0.48), y = c(1, 1, 0.57)) 
 
-ggsave("fig1.pdf", plot=fig1all, path="figures/", width = 10, height = 6, units="in", device = "pdf")
+ggsave("fig1.pdf", plot=fig1all, path="figures/", width = 10, height = 7, units="in", device = "pdf")
