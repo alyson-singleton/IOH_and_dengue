@@ -14,6 +14,7 @@ library(readr)
 library(ggplot2)
 library(ggspatial)
 library(cowplot)
+library(ggrepel)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -117,18 +118,26 @@ year_colors <- c(
 # Plot MdD
 mdd_map <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#3b3b3b', size=.15, show.legend = FALSE) +
-  geom_sf(data = rivers, aes(geometry = geometry, color='Rivers'), linewidth=0.2, show.legend = "line") +
-  geom_sf(data = roads_mdd, aes(geometry = geometry, color='Unpaved Roads'), linewidth=0.5, show.legend = "line") +
-  geom_sf(data = highway_mdd, aes(geometry = geometry, color='Highway'), linewidth=0.7, show.legend = "line") +
+  geom_sf(data = rivers, aes(geometry = geometry, color='Rivers'), linewidth=0.2, show.legend = F) +
+  geom_sf(data = roads_mdd, aes(geometry = geometry, color='Unpaved Roads'), linewidth=0.5, show.legend = F) +
+  geom_sf(data = highway_mdd, aes(geometry = geometry, color='Highway'), linewidth=0.7, show.legend = F) +
   geom_sf(data = hfs_lat_long_aedes, aes(geometry = geometry, fill=year), color='black', shape = 21, size = 3) +
-  geom_sf_text(
+  geom_label_repel(
     data = hfs_lat_long_aedes,
+    stat = "sf_coordinates",            # convert sf → xy for repelling
     aes(geometry = geometry, label = year),
-    nudge_y = -0.08,   # adjust vertically
-    nudge_x = 0.15   # adjust horizontally
-    #size = 3
+    size = 3,
+    fill = "white",                     # white box behind text
+    label.size = 0.2,                   # border thickness
+    label.padding = unit(0.15, "lines"),
+    box.padding = 0.5,                  # pushes labels farther away
+    point.padding = 0.25,               # padding around each dot
+    label.r = unit(0.05, "lines"),      # small corner rounding
+    segment.color = "black",            # line connecting label and point
+    segment.size = 0.3,
+    max.overlaps = Inf
   ) +
-  scale_fill_manual(values = year_colors, na.value = "white") +
+  scale_fill_manual(name = "", values = year_colors, na.value = "white") +
   # scale_fill_manual(name= "", values=c("1" = "#E04490", "0" = "#648FFF", "3" = "grey80", "2" = "#ffffff"),
   #                   labels=c("Exposed (<5km)", "Unexposed (>10km)", "Buffer (removed)", "Disconnected (removed)")) +
   scale_color_manual(name = "", values = c("Unpaved Roads" = '#8c8c8c', "Highway" = 'black',"Rivers" = 'lightblue')) +
