@@ -98,7 +98,7 @@ center_lat_long_fig1 <- center_lat_long %>%
 # Coordinates for labeling
 cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(clust == 1))
 arrow_x <- cluster1_coords[1, "X"] + 0.15
-arrow_y <- cluster1_coords[1, "Y"] - 0.05
+arrow_y <- cluster1_coords[1, "Y"] + 0.025
 label_x <- arrow_x + 0.1
 label_y <- arrow_y - 0.05
 
@@ -106,13 +106,13 @@ hfs_lat_long_aedes <- hfs_lat_long_aedes %>%
   mutate(year = factor(year))
 
 year_colors <- c(
-  "1999" = "#4D4D4D",   # dark gray for the unique year
-  "2004" = "#bdd7e7",
-  "2005" = "#6baed6",
-  "2006" = "#3182bd",
-  "2007" = "#08519c",
-  "2008" = "#08306b",
-  "2009" = "#041F3D"
+  "1999" = "#FDD0C2",
+  "2004" = "#FCAE91",
+  "2005" = "#FB8C6D",
+  "2006" = "#F7684A",
+  "2007" = "#E1412F",
+  "2008" = "#C61B1D",
+  "2009" = "#8A0812"
 )
 
 # Plot MdD
@@ -131,10 +131,11 @@ mdd_map <- ggplot() +
     label.size = 0.2,                   # border thickness
     label.padding = unit(0.15, "lines"),
     box.padding = 0.5,                  # pushes labels farther away
-    point.padding = 0.25,               # padding around each dot
+    point.padding = 0.5,               # padding around each dot
     label.r = unit(0.05, "lines"),      # small corner rounding
     segment.color = "black",            # line connecting label and point
-    segment.size = 0.3,
+    segment.size = 0.5,
+    min.segment.length = 0,
     max.overlaps = Inf
   ) +
   scale_fill_manual(name = "", values = year_colors, na.value = "white") +
@@ -148,7 +149,7 @@ mdd_map <- ggplot() +
         legend.key.height = unit(0.3, "cm"),
         legend.spacing.x = unit(0.02, "cm"),
         legend.box.spacing = unit(0.01, "cm"),
-        legend.text = element_text(size = 12),
+        legend.text = element_text(size = 10),
         legend.title = element_text(size = 10),
         legend.direction = "horizontal") +
   guides(color = guide_legend(nrow = 2),
