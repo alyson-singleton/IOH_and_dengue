@@ -15,6 +15,7 @@ library(ggplot2)
 library(ggspatial)
 library(cowplot)
 library(ggrepel)
+library(stringr)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -116,7 +117,7 @@ year_colors <- c(
 )
 
 # Plot MdD
-mdd_map <- ggplot() +
+mdd_vector_dispersal <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#3b3b3b', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='Rivers'), linewidth=0.2, show.legend = F) +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='Unpaved Roads'), linewidth=0.5, show.legend = F) +
@@ -170,6 +171,6 @@ mdd_map <- ggplot() +
              aes(x = lon, y = lat), 
              color = "black", 
              size = 8, shape = 1, stroke = 1)
-mdd_map
-fig1_legend <- get_legend(mdd_map)
-mdd_map <- mdd_map + theme(legend.position = "none")
+mdd_vector_dispersal
+
+ggsave("sfig11.pdf", plot=mdd_vector_dispersal, path="figures/", width = 10, height = 10, units="in", device = "pdf")
