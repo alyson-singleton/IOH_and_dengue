@@ -79,6 +79,34 @@ no_axis <- theme(axis.title=element_blank(),
                  panel.grid.major = element_blank())
 
 #####################
+# Add year paved to highway data
+#####################
+
+highway_mdd$year_paved <- NA_real_
+section_2007_north <- c(94, 33, 96, 17, 32, 25, 43, 44, 26, 7, 45, 46, 13, 99, 100, 9, 42, 103, 104, 11)
+section_2008_north <- c(41, 106, 107, 108, 40, 109, 110, 89, 90, 87, 39, 88, 38, 86)
+section_2009_2010_north_pm <- c(37, 111, 113, 21, 36, 12, 23)
+
+section_2007_middle <- c(34, 24, 30, 28, 19, 35, 19, 6, 5, 80, 81, 49, 4, 48, 58, 57, 76, 3)
+unclear_middle_in_order <- c(91, 22, 118, 64, 65, 119, 120, 121, 122, 123, 124, 56, 125, 126, 127, 128, 130, 83, 131, 84, 134, 135, 55)
+
+section_2008_south <- c(54, 53, 52, 137, 138, 143, 144, 51, 139)
+section_2007_south <- c(140, 141, 142, 97, 98, 50, 68, 2, 77, 73, 74, 72, 69, 70, 71)
+
+highway_mdd <- highway_mdd %>%
+  mutate(mvFeatureId = row_number(),
+         year_paved = case_when(
+           mvFeatureId %in% section_2007_north            ~ 2007,
+           mvFeatureId %in% section_2008_north            ~ 2008,
+           mvFeatureId %in% section_2009_2010_north_pm    ~ NA_real_,  # or 2010 if you prefer
+           mvFeatureId %in% section_2007_middle           ~ 2007,
+           mvFeatureId %in% unclear_middle_in_order       ~ NA_real_,
+           mvFeatureId %in% section_2008_south            ~ 2008,
+           mvFeatureId %in% section_2007_south            ~ 2007,
+           TRUE                                          ~ NA_real_)) %>%
+  mutate(year_paved = factor(year_paved))
+
+#####################
 ## SFig 11
 #####################
 
@@ -99,12 +127,13 @@ center_lat_long_fig1 <- center_lat_long %>%
 # Coordinates for labeling
 cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(clust == 1))
 arrow_x <- cluster1_coords[1, "X"] + 0.15
-arrow_y <- cluster1_coords[1, "Y"] + 0.025
+arrow_y <- cluster1_coords[1, "Y"] + 0
 label_x <- arrow_x + 0.1
 label_y <- arrow_y - 0.05
 
 hfs_lat_long_aedes <- hfs_lat_long_aedes %>%
-  mutate(year = factor(year))
+  mutate(year = factor(year)) %>%
+  filter(!is.na(year))
 
 year_colors <- c(
   "1999" = "#FDD0C2",
@@ -119,10 +148,10 @@ year_colors <- c(
 # Plot MdD
 mdd_vector_dispersal <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#3b3b3b', size=.15, show.legend = FALSE) +
-  geom_sf(data = rivers, aes(geometry = geometry, color='Rivers'), linewidth=0.2, show.legend = F) +
-  geom_sf(data = roads_mdd, aes(geometry = geometry, color='Unpaved Roads'), linewidth=0.5, show.legend = F) +
-  geom_sf(data = highway_mdd, aes(geometry = geometry, color='Highway'), linewidth=0.7, show.legend = F) +
-  geom_sf(data = hfs_lat_long_aedes, aes(geometry = geometry, fill=year), color='black', shape = 21, size = 3) +
+  #geom_sf(data = rivers, aes(geometry = geometry, color='Rivers'), linewidth=0.2, show.legend = F) +
+  #geom_sf(data = roads_mdd, aes(geometry = geometry, color='Unpaved Roads'), linewidth=0.5, show.legend = F) +
+  geom_sf(data = highway_mdd, aes(geometry = geometry, color=year_paved), linewidth=2, show.legend = T) +
+  geom_sf(data = hfs_lat_long_aedes, aes(geometry = geometry, fill=year), color='black', shape = 21, size = 5) +
   geom_label_repel(
     data = hfs_lat_long_aedes,
     stat = "sf_coordinates",            # convert sf → xy for repelling
@@ -137,12 +166,11 @@ mdd_vector_dispersal <- ggplot() +
     segment.color = "black",            # line connecting label and point
     segment.size = 0.5,
     min.segment.length = 0,
-    max.overlaps = Inf
-  ) +
+    max.overlaps = Inf) +
   scale_fill_manual(name = "", values = year_colors, na.value = "white") +
   # scale_fill_manual(name= "", values=c("1" = "#E04490", "0" = "#648FFF", "3" = "grey80", "2" = "#ffffff"),
   #                   labels=c("Exposed (<5km)", "Unexposed (>10km)", "Buffer (removed)", "Disconnected (removed)")) +
-  scale_color_manual(name = "", values = c("Unpaved Roads" = '#8c8c8c', "Highway" = 'black',"Rivers" = 'lightblue')) +
+  #scale_color_manual(name = "", values = c("Unpaved Roads" = '#8c8c8c', "Highway" = 'black',"Rivers" = 'lightblue')) +
   theme_minimal() +
   no_axis +
   theme(legend.position = "bottom",
@@ -173,4 +201,4 @@ mdd_vector_dispersal <- ggplot() +
              size = 8, shape = 1, stroke = 1)
 mdd_vector_dispersal
 
-ggsave("sfig11.pdf", plot=mdd_vector_dispersal, path="figures/", width = 10, height = 10, units="in", device = "pdf")
+ggsave("sfig11.pdf", plot=mdd_vector_dispersal, path="figures/", width = 8, height = 6, units="in", device = "pdf")
