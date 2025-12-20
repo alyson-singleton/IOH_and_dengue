@@ -84,6 +84,8 @@ all_traffic_data <- bind_rows(
   vehicular_flow_toll_units_long
 )
 
+#write_csv(all_traffic_data, "./data/raw/mtc_peru_traffic_data/traffic_data_cleaned.csv")
+
 desired_order <- c(
   "Passenger Traffic",
   "Estimated Vehicle Fleet",
@@ -126,6 +128,7 @@ sfig8 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) 
        color = "Department") +
   scale_color_manual(values = c("Madre de Dios" = "#E04490",
                                 "Loreto" = "#648FFF")) +
+  scale_x_continuous(breaks= seq(2007, 2017, by=2)) +
   theme_minimal(base_size = 14) +
   theme_stor +
   theme(strip.text = element_text(face = "bold", hjust = 0),

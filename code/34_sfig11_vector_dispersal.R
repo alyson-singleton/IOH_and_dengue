@@ -242,15 +242,92 @@ sfig11b
 ## SFig 11c
 #####################
 
+#cumulative vector df
+vector_first_year <- hfs_lat_long_aedes %>%
+  group_by(key) %>%
+  summarise(first_year = min(year, na.rm = TRUE),.groups = "drop")
 
+vector_yearly <- vector_first_year %>%
+  count(first_year, name = "new_sites") %>%
+  rename(year = first_year) %>%
+  arrange(year) %>%
+  mutate(cum_sites_vector = cumsum(new_sites)) %>%
+  select(year, cum_sites_vector)
+
+vector_yearly <- vector_yearly %>%
+  tidyr::complete(
+    year = seq(min(year), 2012, by = 1),
+    fill = list(cum_sites_vector = 0)) %>%
+  arrange(year) %>%
+  mutate(cum_sites_vector = cummax(cum_sites_vector))
+
+#passenger traffic only
+all_traffic_data <- read_csv("./data/raw/mtc_peru_traffic_data/traffic_data_cleaned.csv")
+mobility_yearly <- all_traffic_data %>%
+  filter(Metric == "Passenger Traffic" & Department == "Madre de Dios") %>%
+  rename(year = Year)
+
+#build joint df
+df_plot <- vector_yearly %>%
+  full_join(mobility_yearly, by = "year") %>%
+  arrange(year)
+
+aedes_range <- range(df_plot$cum_sites_vector, na.rm = TRUE)
+mob_range   <- range(df_plot$Value, na.rm = TRUE)
+
+df_plot <- df_plot %>%
+  mutate(mobility_scaled =
+      (Value - mob_range[1]) / diff(mob_range) * diff(aedes_range) + aedes_range[1])
+
+#build periods df
+periods_df <- data.frame(phase = c("Pre-paving", "During construction", "Highway complete"),
+                         xmin  = c(1999, 2006, 2010),
+                         xmax  = c(2006, 2010, 2018))
+#prep second axis break labels
+left_breaks <- seq(0, 15, by = 4)  # 5 breaks -> right axis will also have 5
+to_right <- function(y_left) {
+  (y_left - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1]
+}
+right_breaks <- to_right(left_breaks)
+
+#plot
+sfig11c <- ggplot(df_plot, aes(x = year)) +
+  geom_rect(data = periods_df,
+    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+    inherit.aes = FALSE, fill = c("#f0f0f0", "#d9d9d9", "#bdbdbd"), alpha = 0.35) +
+  annotate("text", x = c(2002.5, 2008, 2014), y = 16.3,
+    label = c("Before", "During", "After"),
+    vjust = 1.5, size = 4, color = "grey20", fontface = "italic") +
+  geom_vline(xintercept = c(2006, 2010),
+             linetype = "dotted",
+             linewidth = 0.6,
+             color = "grey40") +
+  geom_step(aes(y = cum_sites_vector), linewidth = 1, color = "#1f78b4") + 
+  geom_line(aes(y = mobility_scaled), linewidth = 1, linetype = "dashed", color = "#9B2F64") +
+  scale_y_continuous(
+    name = "Total # sites vector detected",
+    limits = c(0, 16.5),
+    sec.axis = sec_axis(
+      ~ (. - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1],
+      name = "Pass traffic",
+      breaks = right_breaks,
+      labels = function(x) paste0(formatC(x, format = "f", digits = 0), "k"))) +
+  scale_x_continuous(breaks = seq(2000, 2018, by = 2)) +
+  labs(x = "Year") +
+  theme_minimal(base_size = 13) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title.y.left  = element_text(size = 10, vjust = 0.5, color = "#1f78b4"),
+    axis.title.y.right = element_text(size = 10, vjust = 0.5, color = "#9B2F64"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+sfig11c
 
 #####################
 ## SFig 11all
 #####################
 
-fig11all <- grid.arrange(sfig11a, sfig11b,
-                         ncol = 3, nrow = 2, layout_matrix = rbind(c(1,1,1,2,2),c(1,1,1,NA,NA)))
-
+fig11all <- grid.arrange(sfig11a, sfig11b, sfig11c,
+                         ncol = 3, nrow = 2, layout_matrix = rbind(c(1,1,1,2,2),c(1,1,1,3,3)))
 
 # fig11all <- as_ggplot(fig11all) +                                
 #   draw_plot_label(label = c("A", "B", "C"), size = 14,

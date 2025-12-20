@@ -1,0 +1,83 @@
+Department,Year,Value,Metric
+Loreto,2007,71.51,Passenger Traffic
+Loreto,2008,79.605,Passenger Traffic
+Loreto,2009,98.601,Passenger Traffic
+Loreto,2010,71.252,Passenger Traffic
+Loreto,2011,71.363,Passenger Traffic
+Loreto,2012,78.031,Passenger Traffic
+Loreto,2013,72.216,Passenger Traffic
+Loreto,2014,72.443,Passenger Traffic
+Loreto,2015,83.2,Passenger Traffic
+Loreto,2016,66.741,Passenger Traffic
+Loreto,2017,78.075,Passenger Traffic
+Loreto,2018,92.734,Passenger Traffic
+Madre de Dios,2007,207.239,Passenger Traffic
+Madre de Dios,2008,240.585,Passenger Traffic
+Madre de Dios,2009,277.609,Passenger Traffic
+Madre de Dios,2010,270.094,Passenger Traffic
+Madre de Dios,2011,270.049,Passenger Traffic
+Madre de Dios,2012,359.069,Passenger Traffic
+Madre de Dios,2013,513.402,Passenger Traffic
+Madre de Dios,2014,514.394,Passenger Traffic
+Madre de Dios,2015,572.2,Passenger Traffic
+Madre de Dios,2016,620.025,Passenger Traffic
+Madre de Dios,2017,741.029,Passenger Traffic
+Madre de Dios,2018,787.529,Passenger Traffic
+Loreto,2007,0,National Cargo Vehicle Fleet
+Loreto,2008,0,National Cargo Vehicle Fleet
+Loreto,2009,0,National Cargo Vehicle Fleet
+Loreto,2010,0,National Cargo Vehicle Fleet
+Loreto,2011,0,National Cargo Vehicle Fleet
+Loreto,2012,76,National Cargo Vehicle Fleet
+Loreto,2013,9,National Cargo Vehicle Fleet
+Loreto,2014,9,National Cargo Vehicle Fleet
+Loreto,2015,8,National Cargo Vehicle Fleet
+Loreto,2016,8,National Cargo Vehicle Fleet
+Loreto,2017,8,National Cargo Vehicle Fleet
+Loreto,2018,8,National Cargo Vehicle Fleet
+Madre de Dios,2007,397,National Cargo Vehicle Fleet
+Madre de Dios,2008,662,National Cargo Vehicle Fleet
+Madre de Dios,2009,908,National Cargo Vehicle Fleet
+Madre de Dios,2010,949,National Cargo Vehicle Fleet
+Madre de Dios,2011,1021,National Cargo Vehicle Fleet
+Madre de Dios,2012,1122,National Cargo Vehicle Fleet
+Madre de Dios,2013,1241,National Cargo Vehicle Fleet
+Madre de Dios,2014,1338,National Cargo Vehicle Fleet
+Madre de Dios,2015,1357,National Cargo Vehicle Fleet
+Madre de Dios,2016,1384,National Cargo Vehicle Fleet
+Madre de Dios,2017,1397,National Cargo Vehicle Fleet
+Madre de Dios,2018,1469,National Cargo Vehicle Fleet
+Madre de Dios,2009,0,Toll Unit Flow
+Madre de Dios,2010,0,Toll Unit Flow
+Madre de Dios,2011,0,Toll Unit Flow
+Madre de Dios,2012,0,Toll Unit Flow
+Madre de Dios,2013,692825,Toll Unit Flow
+Madre de Dios,2014,663740,Toll Unit Flow
+Madre de Dios,2015,711367,Toll Unit Flow
+Madre de Dios,2016,846921,Toll Unit Flow
+Madre de Dios,2017,846649,Toll Unit Flow
+Madre de Dios,2018,937794,Toll Unit Flow
+Loreto,2007,0,Estimated Vehicle Fleet
+Madre de Dios,2007,0,Estimated Vehicle Fleet
+Loreto,2008,-0.42685292976328837,Estimated Vehicle Fleet
+Madre de Dios,2008,4.94252873563219,Estimated Vehicle Fleet
+Loreto,2009,-1.2611563833915374,Estimated Vehicle Fleet
+Madre de Dios,2009,8.103972413793104,Estimated Vehicle Fleet
+Loreto,2010,-1.2611563833915374,Estimated Vehicle Fleet
+Madre de Dios,2010,13.33333333333333,Estimated Vehicle Fleet
+Loreto,2011,1.105937136204882,Estimated Vehicle Fleet
+Madre de Dios,2011,18.045977011494262,Estimated Vehicle Fleet
+Loreto,2012,3.0849825378346907,Estimated Vehicle Fleet
+Madre de Dios,2012,22.06896551724138,Estimated Vehicle Fleet
+Loreto,2013,5.607295304617765,Estimated Vehicle Fleet
+Madre de Dios,2013,29.080459770114953,Estimated Vehicle Fleet
+Loreto,2014,7.353511835467597,Estimated Vehicle Fleet
+Madre de Dios,2014,30.57471264367817,Estimated Vehicle Fleet
+Loreto,2015,6.732634846720997,Estimated Vehicle Fleet
+Madre de Dios,2015,33.448275862068954,Estimated Vehicle Fleet
+Loreto,2016,6.732634846720997,Estimated Vehicle Fleet
+Madre de Dios,2016,40.574712643678154,Estimated Vehicle Fleet
+Loreto,2017,6.49980597594102,Estimated Vehicle Fleet
+Madre de Dios,2017,50.34482758620689,Estimated Vehicle Fleet
+Loreto,2018,6.266977105161042,Estimated Vehicle Fleet
+Madre de Dios,2018,58.9655172413793,Estimated Vehicle Fleet
