@@ -309,17 +309,16 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
     limits = c(0, 16.5),
     sec.axis = sec_axis(
       ~ (. - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1],
-      name = "Pass traffic",
+      name = "Passenger traffic",
       breaks = right_breaks,
       labels = function(x) paste0(formatC(x, format = "f", digits = 0), "k"))) +
   scale_x_continuous(breaks = seq(2000, 2018, by = 2)) +
   labs(x = "Year") +
   theme_minimal(base_size = 13) +
-  theme(
-    panel.grid.minor = element_blank(),
-    axis.title.y.left  = element_text(size = 10, vjust = 0.5, color = "#1f78b4"),
-    axis.title.y.right = element_text(size = 10, vjust = 0.5, color = "#9B2F64"),
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+  theme(panel.grid.minor = element_blank(),
+        axis.title.y.left  = element_text(size = 10, vjust = 0.5, color = "#1f78b4"),
+        axis.title.y.right = element_text(size = 10, vjust = 0.5, color = "#9B2F64"),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 sfig11c
 
 #####################
