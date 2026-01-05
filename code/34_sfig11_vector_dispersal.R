@@ -17,6 +17,7 @@ library(cowplot)
 library(ggrepel)
 library(stringr)
 library(RColorBrewer)
+library(ubigeo)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))

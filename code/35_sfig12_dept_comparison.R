@@ -6,6 +6,18 @@
 #
 # Date created: 12/25/2025
 
+library(sf)
+library(dplyr)
+library(gridExtra)
+library(ggpubr)
+library(readr)
+library(ggplot2)
+library(ggspatial)
+library(cowplot)
+library(ggrepel)
+library(stringr)
+library(RColorBrewer)
+
 ###################
 # Load spatial data
 ###################
@@ -23,6 +35,8 @@ loreto_peru <- peru_depts[which(peru_depts$NOMBDEP %in% c("LORETO")),]
 ###################
 # Districts
 ###################
+
+peru_districts <- read_sf("data/raw/spatial_data/")
 
 ###################
 # Highways
