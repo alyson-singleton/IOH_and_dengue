@@ -17,6 +17,8 @@ library(cowplot)
 library(ggrepel)
 library(stringr)
 library(RColorBrewer)
+library(mapview)
+library(tidyverse)
 
 ###################
 # Load spatial data
@@ -31,12 +33,42 @@ peru_outline <- st_union(peru_depts$geometry)
 mdd_peru <- peru_depts[which(peru_depts$NOMBDEP %in% c("MADRE DE DIOS")),]
 cusco_peru <- peru_depts[which(peru_depts$NOMBDEP %in% c("CUSCO")),]
 loreto_peru <- peru_depts[which(peru_depts$NOMBDEP %in% c("LORETO")),]
+mapview(loreto_peru)
 
 ###################
 # Districts
 ###################
 
-peru_districts <- read_sf("data/raw/spatial_data/")
+peru_districts <- read_sf("data/raw/spatial_data/PER_adm/PER_adm3.shp") %>%
+  st_as_sf() %>% 
+  st_transform(4326)
+mapview(peru_districts)
+
+districts_mdd <- peru_districts %>% filter(NAME_1 == "Madre de Dios")
+districts_cusco <- peru_districts %>% filter(NAME_1 == "Cusco")
+districts_loreto <- peru_districts %>% filter(NAME_1 == "Loreto")
+mapview(districts_loreto)
+
+###################
+# Roads
+###################
+
+roads <- read_sf("data/raw/spatial_data/peru_osm_jan_2026/gis_osm_roads_free_1.shp") %>%
+  st_as_sf() %>% 
+  st_transform(4326)
+
+roads_mdd <- st_covers(mdd_peru,roads$geometry, sparse = FALSE)
+roads_mdd <- roads[roads_mdd[1,],]
+
+roads_cusco <- st_covers(cusco_peru,roads$geometry, sparse = FALSE)
+roads_cusco <- roads[roads_cusco[1,],]
+
+roads_loreto <- st_covers(loreto_peru,roads$geometry, sparse = FALSE)
+roads_loreto <- roads[roads_loreto[1,],]
+
+mapview(roads_loreto %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary"))) +
+  mapview(districts_loreto)
+View(roads_loreto)
 
 ###################
 # Highways
@@ -74,22 +106,37 @@ mdd_roads <- all_mdd_roads[mdd_roads[1,],]
 
 dengue_district_data <- read_rds("./data/raw/cdc_district_dengue_data/solicitud_aly.rds")
 
+# Madre de Dios
 mdd_dengue_district_df <- dengue_district_data %>%
   filter(departamento == "MADRE DE DIOS") %>%
   filter(tipo_dx %in% c("C")) %>% #add prob?
   group_by(ano) %>%
   summarize(dengue_cases = n())
 
+# Loreto
 loreto_dengue_district_df <- dengue_district_data %>%
   filter(departamento == "LORETO") %>% 
   filter(tipo_dx %in% c("C")) %>% #add prob?
   group_by(ano, distrito) %>%
-  summarize(dengue_cases = n())
+  summarize(dengue_cases = n(), .groups = "drop") %>% 
+  complete(
+    distrito,
+    ano,
+    fill = list(dengue_cases = 0)) %>%
+  mutate(
+    road_status = if_else(
+      distrito %in% c("IQUITOS", "PUNCHANA", "NAUTA", "YURIMAGUAS", "MANSERICHE", "PASTAZA"),
+      "1", "0"))
 
-ggplot(loreto_dengue_district_df) +
-  geom_line(aes(ano, dengue_cases, group = distrito))
+loreto_dengue_road_groups_df <- loreto_dengue_district_df %>%
+  group_by(road_status, ano) %>%
+  summarize(dengue_cases = sum(dengue_cases))
 
+ggplot(loreto_dengue_road_groups_df) +
+  geom_line(aes(ano, dengue_cases, color = road_status)) +
+  xlim(2000, 2022)
 
+# Cusco
 cusco_dengue_district_df <- dengue_district_data %>% #fill this out for all dist/year combo
   filter(departamento == "CUSCO") %>%
   filter(tipo_dx %in% c("C", "P")) %>% #add prob?
