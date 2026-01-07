@@ -78,11 +78,11 @@ districts_cusco <- peru_districts %>% filter(DEPARTAMEN == "CUSCO")
 # Roads
 ###################
 
-roads <- read_sf("data/raw/spatial_data/peru_osm_jan_2026/gis_osm_roads_free_1.shp") %>%
+roads <- read_sf("data/raw/spatial_data/peru_osm_jan_2026/gis_osm_roads_free_1.shp") %>% #make this more usable and able to be put online
   st_as_sf() %>% 
   st_transform(4326)
 
-roads_mdd <- st_covers(mdd_peru,roads$geometry, sparse = FALSE)
+roads_mdd <- st_covers(mdd_peru,roads$geometry, sparse = FALSE) #these take forever to run
 roads_mdd <- roads[roads_mdd[1,],]
 mapview(roads_mdd %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary")), color = "red") +
   mapview(districts_mdd)
@@ -103,14 +103,16 @@ mapview(roads_cusco %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary"
 
 dengue_district_data <- read_rds("./data/raw/cdc_district_dengue_data/solicitud_aly.rds") #**add this into data folder
 population_district_data <- read_csv("./data/raw/environmental_data/peru_population_districts_yearly.csv")
-population_district_data <- population_district_data[,c(7,10:30)] %>%
+population_district_data <- population_district_data[,c(6,7,10:30)] %>%
   pivot_longer(
     cols = matches("^PER_\\d{4}_population$"),
     names_to = "year",
     values_to = "population") %>%
   mutate(year = as.integer(str_extract(year, "\\d{4}"))) %>%
-  rename(district = "DISTRITO") %>%
-  mutate(district = str_to_upper(district))
+  rename(district = "DISTRITO",
+         department = "DEPARTAMEN") %>%
+  mutate(district = str_to_upper(district),
+         department = str_to_upper(department))
 
 ###################
 # Madre de Dios
@@ -119,15 +121,15 @@ population_district_data <- population_district_data[,c(7,10:30)] %>%
 mdd_dengue_district_df <- dengue_district_data %>%
   filter(departamento == "MADRE DE DIOS",
          tipo_dx %in% c("C", "P")) %>%
-  group_by(ano, distrito) %>%
+  group_by(ano, distrito, departamento) %>%
   summarize(dengue_cases = n(), .groups = "drop") %>%
-  complete(distrito, ano, fill = list(dengue_cases = 0)) %>%
+  complete(distrito, ano, departamento, fill = list(dengue_cases = 0)) %>%
   mutate(
     road_status = if_else(
       distrito %in% c("INAMBARI", "TAMBOPATA", "LABERINTO", "LAS PIEDRAS",
                       "TAHUAMANU", "IBERIA", "IÑAPARI"), 1L, 0L)) %>% #districts with major paved roads
-  rename(district = distrito, year = ano) %>%
-  left_join(population_district_data, by = c("district", "year")) %>%
+  rename(district = distrito, year = ano, department = departamento) %>%
+  left_join(population_district_data, by = c("district", "year", "department")) %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
@@ -216,15 +218,15 @@ sfig12ab
 loreto_dengue_district_df <- dengue_district_data %>%
   filter(departamento == "LORETO",
          tipo_dx %in% c("C", "P")) %>%
-  group_by(ano, distrito) %>%
+  group_by(ano, distrito, departamento) %>%
   summarize(dengue_cases = n(), .groups = "drop") %>%
-  complete(distrito, ano, fill = list(dengue_cases = 0)) %>%
+  complete(distrito, ano, departamento, fill = list(dengue_cases = 0)) %>%
   mutate(
     road_status = if_else(
       distrito %in% c("IQUITOS", "PUNCHANA", "NAUTA", "SAN JUAN BAUTISTA",
                       "YURIMAGUAS", "MANSERICHE"), 1L, 0L)) %>% #districts with major paved roads
-  rename(district = distrito, year = ano) %>%
-  left_join(population_district_data, by = c("district", "year")) %>%
+  rename(district = distrito, year = ano, department = departamento) %>%
+  left_join(population_district_data, by = c("district", "year", "department")) %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
@@ -321,11 +323,36 @@ ggsave("sfig12.pdf", plot=sfig12combined, path="figures/", width = 9.5, height =
 # Cusco?
 ###################
 
-cusco_dengue_district_df <- dengue_district_data %>% #fill this out for all dist/year combo
-  filter(departamento == "CUSCO") %>%
-  filter(tipo_dx %in% c("C", "P")) %>% #add prob?
-  group_by(ano,distrito) %>%
-  summarize(dengue_cases = n())
+cusco_dengue_district_df <- dengue_district_data %>%
+  filter(departamento == "CUSCO",
+         tipo_dx %in% c("C", "P")) %>%
+  group_by(ano, distrito, departamento) %>%
+  summarize(dengue_cases = n(), .groups = "drop") %>%
+  complete(distrito, ano = 2000:2020, departamento, fill = list(dengue_cases = 0)) %>%
+  # mutate(
+  #   road_status = if_else(
+  #     distrito %in% c("IQUITOS", "PUNCHANA", "NAUTA", "SAN JUAN BAUTISTA",
+  #                     "YURIMAGUAS", "MANSERICHE"), 1L, 0L)) %>% #districts with major paved roads
+  rename(district = distrito, year = ano, department = departamento) %>%
+  left_join(population_district_data, by = c("district", "year", "department")) %>%
+  filter(year %in% 2000:2020) %>%
+  mutate(incidence = dengue_cases / population * 1000)
 
 ggplot(cusco_dengue_district_df) +
-  geom_line(aes(ano, dengue_cases, group = distrito))
+  geom_line(aes(year, incidence, group = district))
+
+cusco_totals <- cusco_dengue_district_df %>%
+  filter(year %in% 2000:2020) %>%
+  group_by(district) %>%
+  summarise(total_cases = sum(dengue_cases, na.rm = TRUE), .groups = "drop") %>%
+  mutate(district = str_to_upper(str_trim(district)))
+
+districts_cusco_sf <- districts_cusco %>%
+  mutate(district = str_to_upper(str_trim(DISTRITO)))  # change NAME_3 if your district-name field differs
+
+cusco_map_df <- districts_cusco_sf %>%
+  left_join(cusco_totals, by = "district") %>%
+  mutate(total_cases = replace_na(total_cases, 0))
+
+mapview(cusco_map_df, zcol = "total_cases", layer.name = "Cusco dengue cases (2000–2020)") + 
+  mapview(roads_cusco %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary")), color = "red")

@@ -17,7 +17,6 @@ library(cowplot)
 library(ggrepel)
 library(stringr)
 library(RColorBrewer)
-library(ubigeo)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -233,10 +232,10 @@ sfig11b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
   scale_y_continuous(breaks = 2005:2011) +
   coord_cartesian(ylim = c(2005, 2011)) +
   theme_minimal() +
-  theme(axis.text.x  = element_text(size = 10),
-        axis.text.y  = element_text(size = 10),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12, angle = 0, vjust = 0.5))
+  theme(axis.text.x  = element_text(size = 8),
+        axis.text.y  = element_text(size = 8),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10, angle = 0, vjust = 0.5))
 sfig11b
 
 #####################
@@ -284,53 +283,71 @@ df_plot <- df_plot %>%
 periods_df <- data.frame(phase = c("Pre-paving", "During construction", "Highway complete"),
                          xmin  = c(1999, 2006, 2010),
                          xmax  = c(2006, 2010, 2018))
-#prep second axis break labels
-left_breaks <- seq(0, 15, by = 4)  # 5 breaks -> right axis will also have 5
-to_right <- function(y_left) {
-  (y_left - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1]
-}
-right_breaks <- to_right(left_breaks)
 
-#plot
+# define transforms once (use the same ones everywhere)
+to_left  <- function(y_right) (y_right - mob_range[1]) / diff(mob_range) * diff(aedes_range) + aedes_range[1]
+to_right <- function(y_left)  (y_left - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1]
+
+# scale mobility using the transform
+df_plot <- df_plot %>%
+  mutate(mobility_scaled = to_left(Value))
+
+# choose left-axis breaks (these will define gridlines)
+left_breaks <- seq(0, 16, by = 4)     # adjust as you like
+right_breaks <- to_right(left_breaks) # must be derived from left_breaks
+
 sfig11c <- ggplot(df_plot, aes(x = year)) +
-  geom_rect(data = periods_df,
+  geom_rect(
+    data = periods_df,
     aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
-    inherit.aes = FALSE, fill = c("#f0f0f0", "#d9d9d9", "#bdbdbd"), alpha = 0.35) +
-  annotate("text", x = c(2002.5, 2008, 2014), y = 16.3,
-    label = c("Before", "During", "After"),
-    vjust = 1.5, size = 4, color = "grey20", fontface = "italic") +
-  geom_vline(xintercept = c(2006, 2010),
-             linetype = "dotted",
-             linewidth = 0.6,
-             color = "grey40") +
-  geom_step(aes(y = cum_sites_vector), linewidth = 1, color = "#1f78b4") + 
+    inherit.aes = FALSE,
+    fill = c("#f0f0f0", "#d9d9d9", "#bdbdbd"),
+    alpha = 0.35
+  ) +
+  annotate("text",
+           x = c(2002.5, 2008, 2014), y = 16.3,
+           label = c("Before", "During", "After"),
+           vjust = 1.5, size = 4, color = "grey20", fontface = "italic"
+  ) +
+  geom_vline(xintercept = c(2006, 2010), linetype = "dotted", linewidth = 0.6, color = "grey40") +
+  geom_step(aes(y = cum_sites_vector), linewidth = 1, color = "#1f78b4") +
   geom_line(aes(y = mobility_scaled), linewidth = 1, linetype = "dashed", color = "#9B2F64") +
   scale_y_continuous(
-    name = "Total # sites vector detected",
+    name = "# sites vector detected",
     limits = c(0, 16.5),
+    breaks = left_breaks,
+    minor_breaks = NULL,
     sec.axis = sec_axis(
-      ~ (. - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1],
+      trans = to_right,
       name = "Passenger traffic",
       breaks = right_breaks,
-      labels = function(x) paste0(formatC(x, format = "f", digits = 0), "k"))) +
+      labels = function(x) paste0(signif(x, digits = 2), "k")
+    )
+  ) +
   scale_x_continuous(breaks = seq(2000, 2018, by = 2)) +
   labs(x = "Year") +
   theme_minimal(base_size = 13) +
-  theme(panel.grid.minor = element_blank(),
-        axis.title.y.left  = element_text(size = 10, vjust = 0.5, color = "#1f78b4"),
-        axis.title.y.right = element_text(size = 10, vjust = 0.5, color = "#9B2F64"),
-        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title.y.left  = element_text(size = 10, vjust = 0.5, color = "#1f78b4"),
+    axis.title.y.right = element_text(size = 10, vjust = 0.5, color = "#9B2F64"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+    axis.title.x = element_text(size = 10)
+  )
+
 sfig11c
 
 #####################
 ## SFig 11all
 #####################
 
-fig11all <- grid.arrange(sfig11a, sfig11b, sfig11c,
-                         ncol = 3, nrow = 2, layout_matrix = rbind(c(1,1,1,2,2),c(1,1,1,3,3)))
+sfig11all <- grid.arrange(sfig11a, sfig11b, sfig11c,
+                         ncol = 3, nrow = 2, 
+                         layout_matrix = rbind(c(1,1,1,1,2,2,2),c(1,1,1,1,3,3,3)))
 
-# fig11all <- as_ggplot(fig11all) +                                
-#   draw_plot_label(label = c("A", "B", "C"), size = 14,
-#                   x = c(0.01, 0.48, 0.48), y = c(1, 1, 0.57)) 
+sfig11all <- as_ggplot(sfig11all) +
+  draw_plot_label(label = c("A)", "B)", "C)"), size = 14,
+                  x = c(0.02, 0.55, 0.55), y = c(0.99, 0.99, 0.5))
+sfig11all
 
-ggsave("sfig11.pdf", plot=fig11all, path="figures/", width = 12, height = 7, units="in", device = "pdf") 
+ggsave("sfig11.pdf", plot=sfig11all, path="figures/", width = 12, height = 7, units="in", device = "pdf") 
