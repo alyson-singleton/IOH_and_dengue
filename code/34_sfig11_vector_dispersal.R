@@ -232,10 +232,10 @@ sfig11b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
   scale_y_continuous(breaks = 2005:2011) +
   coord_cartesian(ylim = c(2005, 2011)) +
   theme_minimal() +
-  theme(axis.text.x  = element_text(size = 8),
-        axis.text.y  = element_text(size = 8),
-        axis.title.x = element_text(size = 10),
-        axis.title.y = element_text(size = 10, angle = 0, vjust = 0.5))
+  theme(axis.text.x  = element_text(size = 9),
+        axis.text.y  = element_text(size = 9),
+        axis.title.x = element_text(size = 11),
+        axis.title.y = element_text(size = 11, angle = 0, vjust = 0.5))
 sfig11b
 
 #####################
@@ -302,13 +302,11 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
     aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
     inherit.aes = FALSE,
     fill = c("#f0f0f0", "#d9d9d9", "#bdbdbd"),
-    alpha = 0.35
-  ) +
+    alpha = 0.35) +
   annotate("text",
            x = c(2002.5, 2008, 2014), y = 16.3,
            label = c("Before", "During", "After"),
-           vjust = 1.5, size = 4, color = "grey20", fontface = "italic"
-  ) +
+           vjust = 1.5, size = 4, color = "grey20", fontface = "italic") +
   geom_vline(xintercept = c(2006, 2010), linetype = "dotted", linewidth = 0.6, color = "grey40") +
   geom_step(aes(y = cum_sites_vector), linewidth = 1, color = "#1f78b4") +
   geom_line(aes(y = mobility_scaled), linewidth = 1, linetype = "dashed", color = "#9B2F64") +
@@ -321,19 +319,15 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
       trans = to_right,
       name = "Passenger traffic",
       breaks = right_breaks,
-      labels = function(x) paste0(signif(x, digits = 2), "k")
-    )
-  ) +
+      labels = function(x) paste0(signif(x, digits = 2), "k"))) +
   scale_x_continuous(breaks = seq(2000, 2018, by = 2)) +
   labs(x = "Year") +
   theme_minimal(base_size = 13) +
-  theme(
-    panel.grid.minor = element_blank(),
-    axis.title.y.left  = element_text(size = 10, vjust = 0.5, color = "#1f78b4"),
-    axis.title.y.right = element_text(size = 10, vjust = 0.5, color = "#9B2F64"),
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
-    axis.title.x = element_text(size = 10)
-  )
+  theme(panel.grid.minor = element_blank(),
+        axis.title.y.left  = element_text(size = 11, vjust = 0.5, color = "#1f78b4"),
+        axis.title.y.right = element_text(size = 11, vjust = 0.5, color = "#9B2F64"),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 10),
+        axis.title.x = element_text(size = 11))
 
 sfig11c
 
