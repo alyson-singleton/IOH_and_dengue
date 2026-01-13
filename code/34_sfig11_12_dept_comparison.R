@@ -121,7 +121,7 @@ population_district_data <- population_district_data[,c(6,7,10:30)] %>%
 
 mdd_dengue_district_df <- dengue_district_data %>%
   filter(departamento == "MADRE DE DIOS",
-         tipo_dx %in% c("C")) %>%
+         tipo_dx %in% c("C", "P")) %>%
   group_by(ano, distrito, departamento) %>%
   summarize(dengue_cases = n(), .groups = "drop") %>%
   complete(distrito, ano = 2000:2020, departamento, fill = list(dengue_cases = 0)) %>%
@@ -133,7 +133,7 @@ mdd_dengue_district_df <- dengue_district_data %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
-# sfig11a: MdD incidence trends
+# sfig12a: MdD incidence trends
 mdd_raw_trends <- mdd_dengue_district_df %>%
   group_by(year, road_status) %>%
   summarize(dengue_cases = sum(dengue_cases, na.rm = TRUE),
@@ -141,7 +141,7 @@ mdd_raw_trends <- mdd_dengue_district_df %>%
             incidence = dengue_cases / population * 1000,
             .groups = "drop")
 
-sfig11a <- ggplot(mdd_raw_trends,
+sfig12a <- ggplot(mdd_raw_trends,
                   aes(x = year, y = incidence,
                       color = factor(road_status), group = road_status)) +
   geom_line(linewidth = 0.7) +
@@ -159,11 +159,11 @@ sfig11a <- ggplot(mdd_raw_trends,
   theme_minimal() +
   theme_stor +
   theme(legend.position = "bottom")
-sfig11_legend <- get_legend(sfig11a)
-sfig11a <- sfig11a + theme(legend.position = "none")
-sfig11a
+sfig12_legend <- get_legend(sfig12a)
+sfig12a <- sfig12a + theme(legend.position = "none")
+sfig12a
 
-# sfig11b: MdD DiD Model
+# sfig12b: MdD DiD Model
 mdd_district_model <- feols(
   incidence ~ i(year, road_status, ref = 2008) | district + year,
   vcov = ~ district,
@@ -192,9 +192,9 @@ mdd_district_results_df <- bind_rows(
   mdd_district_results_df,
   tibble(year = 2008, estimate = 0, lower = 0,upper = 0))
 
-y_lims <- c(-12,100)
+y_lims <- c(-12,120)
 
-sfig11b <- ggplot(mdd_district_results_df) +
+sfig12b <- ggplot(mdd_district_results_df) +
   geom_hline(aes(yintercept=0), colour='grey30', linewidth=.4) +
   geom_ribbon(aes(x=year, ymax=upper, ymin=lower),fill = "grey60", alpha = 0.35) +
   geom_vline(aes(xintercept=2008), linetype='dashed', linewidth=0.4) +
@@ -205,15 +205,15 @@ sfig11b <- ggplot(mdd_district_results_df) +
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 6),
                      limits = y_lims,
-                     breaks = c(-10, 0, 10, 20, 40, 60)) +
+                     breaks = c(-10, 0, 10, 20, 40, 80)) +
   theme_stor
-sfig11b
+sfig12b
 
 # MdD panels
-sfig11ab <- (sfig11a | sfig11b) +
+sfig12ab <- (sfig12a | sfig12b) +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
-sfig11ab
+sfig12ab
 
 ###################
 # Loreto
@@ -233,7 +233,7 @@ loreto_dengue_district_df <- dengue_district_data %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
-# sfig11c: Loreto incidence trends
+# sfig12c: Loreto incidence trends
 loreto_raw_trends <- loreto_dengue_district_df %>%
   group_by(year, road_status) %>%
   summarize(dengue_cases = sum(dengue_cases, na.rm = TRUE),
@@ -241,7 +241,7 @@ loreto_raw_trends <- loreto_dengue_district_df %>%
             incidence = dengue_cases / population * 1000,
             .groups = "drop")
 
-sfig11c <- ggplot(loreto_raw_trends,
+sfig12c <- ggplot(loreto_raw_trends,
                   aes(x = year, y = incidence,
                       color = factor(road_status), group = road_status)) +
   geom_line(linewidth = 0.7) +
@@ -258,9 +258,9 @@ sfig11c <- ggplot(loreto_raw_trends,
   theme_minimal() +
   theme_stor
 
-sfig11c
+sfig12c
 
-# sfig11d: Loreto DiD Model
+# sfig12d: Loreto DiD Model
 loreto_district_model <- feols(
   incidence ~ i(year, road_status, ref = 2004) | district + year,
   vcov = ~ district,
@@ -289,9 +289,9 @@ loreto_district_results_df <- bind_rows(
   loreto_district_results_df,
   tibble(year = 2004, estimate = 0, lower = 0,upper = 0))
 
-y_lims <- c(-12,100)
+y_lims <- c(-12,120)
 
-sfig11d <- ggplot(loreto_district_results_df) +
+sfig12d <- ggplot(loreto_district_results_df) +
   geom_hline(aes(yintercept=0), colour='grey30', linewidth=.4) +
   geom_ribbon(aes(x=year, ymax=upper, ymin=lower),fill = "grey60", alpha = 0.35) +
   geom_vline(aes(xintercept=2004), linetype='dashed', linewidth=0.4) +
@@ -302,36 +302,36 @@ sfig11d <- ggplot(loreto_district_results_df) +
   theme_minimal() +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 6),
                      limits = y_lims,
-                     breaks = c(-10, 0, 10, 20, 40, 60)) +
+                     breaks = c(-10, 0, 10, 20, 40, 80)) +
   theme_stor
-sfig11d
+sfig12d
 
 # Loreto panels
-sfig11cd <- (sfig11c | sfig11d) +
+sfig12cd <- (sfig12c | sfig12d) +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
-sfig11cd
+sfig12cd
 
 ###################
-# SFig 11all
+# SFig12all
 ###################
-sfig11combined <- grid.arrange(sfig11a, sfig11c, sfig11b, sfig11d, sfig11_legend,                     
+sfig12combined <- grid.arrange(sfig12a, sfig12c, sfig12b, sfig12d, sfig12_legend,                     
                              ncol = 2, nrow = 3,
                              layout_matrix = rbind(c(1,2),c(3, 4), c(5, 5)), 
                              heights=c(4,4,1))
 
-sfig11combined <- as_ggplot(sfig11combined) +                                
+sfig12combined <- as_ggplot(sfig12combined) +                                
   draw_plot_label(label = c("A", "B", "C", "D"), size = 14,
                   x = c(0.115, 0.54, 0.118, 0.545), y = c(0.95, 0.95, 0.54, 0.54)) 
 
-sfig11combined
-ggsave("sfig11.pdf", plot=sfig11combined, path="figures/", width = 9.5, height = 6.5, units="in", device = "pdf")
+sfig12combined
+ggsave("sfig12.pdf", plot=sfig12combined, path="figures/", width = 9.5, height = 6.5, units="in", device = "pdf")
 
 ###################
-# sfig12
+# sfig11
 ###################
 
-# sfig12a: MdD district map
+# sfig11a: MdD district map
 mdd_exposure_lookup <- mdd_dengue_district_df %>%
   distinct(district, road_status) %>%
   mutate(district = str_to_upper(str_trim(district)),
@@ -349,7 +349,7 @@ roads_mdd_major <- roads_mdd %>%
 
 exposure_pal <- c("Exposed" = "#E04490", "Unexposed" = "#648FFF")
 
-sfig12a_map_mdd <- ggplot() +
+sfig11a_map_mdd <- ggplot() +
   geom_sf(data = districts_mdd_sf, aes(fill = exposure_group), alpha = 0.5, color = "grey30", linewidth = 0.12) +
   geom_sf(data = roads_mdd_major, color = "black", linewidth = 0.8, alpha = 1) +
   scale_fill_manual(
@@ -361,9 +361,9 @@ sfig12a_map_mdd <- ggplot() +
   theme_stor +
   theme(legend.position = "none",
         legend.box = "horizontal")
-sfig12a_map_mdd
+sfig11a_map_mdd
 
-sfig12a_map_mdd_w_inset <- ggdraw() + 
+sfig11a_map_mdd_w_inset <- ggdraw() + 
   draw_plot(ggplot() +
               geom_sf(data = peru_outline, fill=NA, color='#3b3b3b', 
                       linewidth=0.03, show.legend = FALSE) +
@@ -377,11 +377,11 @@ sfig12a_map_mdd_w_inset <- ggdraw() +
                     legend.title=element_text(size=14),
                     legend.position = "none"),
             0.05, 0.7, 0.27, 0.27) + 
-  draw_plot(sfig12a_map_mdd,
+  draw_plot(sfig11a_map_mdd,
             0.05, 0, 0.95, 1)
-sfig12a_map_mdd_w_inset
+sfig11a_map_mdd_w_inset
 
-# sfig12b: Loreto district map
+# sfig11b: Loreto district map
 removed_districts <- c("YURIMAGUAS", "MANSERICHE")
 
 loreto_exposure_lookup <- loreto_dengue_district_df %>%
@@ -409,7 +409,7 @@ roads_loreto_major <- roads_loreto %>%
 
 exposure_pal <- c("Exposed" = "#E04490", "Unexposed" = "#648FFF", "Removed"   = "#FFFFFF")
 
-sfig12b_map_loreto <- ggplot() +
+sfig11b_map_loreto <- ggplot() +
   geom_sf(data = districts_loreto_sf, aes(fill = exposure_group), alpha = 0.5, color = "grey30", linewidth = 0.12) +
   geom_sf(data = roads_loreto_major, color = "black", linewidth = 0.8, alpha = 1) +
   scale_fill_manual(
@@ -421,11 +421,11 @@ sfig12b_map_loreto <- ggplot() +
   theme_stor +
   theme(legend.position = "bottom",
         legend.box = "horizontal")
-sfig12_legend <- get_legend(sfig12b_map_loreto)
-sfig12b_map_loreto <- sfig12b_map_loreto + theme(legend.position = "none")
-sfig12b_map_loreto
+sfig11_legend <- get_legend(sfig11b_map_loreto)
+sfig11b_map_loreto <- sfig11b_map_loreto + theme(legend.position = "none")
+sfig11b_map_loreto
 
-sfig12b_map_loreto_w_inset <- ggdraw() + 
+sfig11b_map_loreto_w_inset <- ggdraw() + 
   draw_plot(ggplot() +
               geom_sf(data = peru_outline, fill=NA, color='#3b3b3b', 
                       linewidth=0.03, show.legend = FALSE) +
@@ -439,26 +439,26 @@ sfig12b_map_loreto_w_inset <- ggdraw() +
                     legend.title=element_text(size=14),
                     legend.position = "none"),
             0.0, 0.7, 0.27, 0.27) + 
-  draw_plot(sfig12b_map_loreto,
+  draw_plot(sfig11b_map_loreto,
             0.05, 0, 0.95, 1)
-sfig12b_map_loreto_w_inset
+sfig11b_map_loreto_w_inset
 
 ###################
-# SFig 12all
+# SFig11all
 ###################
-sfig12combined <- grid.arrange(sfig12a_map_mdd_w_inset, sfig12b_map_loreto_w_inset, sfig12_legend,                     
+sfig11combined <- grid.arrange(sfig11a_map_mdd_w_inset, sfig11b_map_loreto_w_inset, sfig11_legend,                     
                                ncol = 2, nrow = 2,
                                layout_matrix = rbind(c(1,2), c(3, 3)), 
                                heights=c(7,1))
 
-sfig12combined <- as_ggplot(sfig12combined) +
+sfig11combined <- as_ggplot(sfig11combined) +
   draw_plot_label(label = c("Madre de Dios", "Loreto"), size = 14,
                   x = c(0.12, 0.7), y = c(1, 1)) +
   draw_plot_label(label = c("Interoceanic\n  Highway", "Iquitos-Nauta\n   Corridor"), size = 10,
                   x = c(0.28, 0.77), y = c(0.5, 0.68))
 
-sfig12combined
-ggsave("sfig12.pdf", plot=sfig12combined, path="figures/", width = 9.5, height = 6, units="in", device = "pdf")
+sfig11combined
+ggsave("sfig11.pdf", plot=sfig11combined, path="figures/", width = 9.5, height = 6, units="in", device = "pdf")
 
 ###################
 # Cusco?
