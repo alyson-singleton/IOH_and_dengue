@@ -134,7 +134,7 @@ year_colors <- c(
   "2009" = blues[9])
 
 # Crop boundaries
-xlim_crop <- c(-70.6, -68.55)
+xlim_crop <- c(-70.78, -68.55)
 ylim_crop <- c(-13.40, -10.8)
 
 sfig11a <- ggplot() +
@@ -144,39 +144,30 @@ sfig11a <- ggplot() +
   geom_sf(data = highway_mdd %>% filter(!is.na(year_paved)), aes(geometry = geometry, color=year_paved), linewidth=3, show.legend = T) +
   geom_sf(data = hfs_lat_long_aedes_a, aes(geometry = geometry, fill=year_group), color='black', shape = 21, size = 5) +
   scale_fill_manual(name = "Year vector detected", values = year_colors) +
-  scale_color_manual(name = "Year highway paved", values = c("2008" = '#F4C2D7', "2009" = '#D86A9E', "2010" = '#9B2F64')) +
-  geom_label_repel(
-    data = hfs_lat_long_aedes_a,
-    stat = "sf_coordinates",
-    aes(geometry = geometry, label = year),
-    size = 4,
-    fill = "white",
-    label.size = 0.2,
-    label.padding = unit(0.2, "lines"),
-    box.padding = 0.6,
-    point.padding = 0.6,
-    label.r = unit(0.05, "lines"),
-    segment.color = "black",
-    segment.size = 0.5,
-    min.segment.length = 0,
-    max.overlaps = Inf) +
+  scale_color_manual(name = "Year highway paved", values = c("2008" = '#F4C2D7', "2009" = '#D86A9E', "2010" = '#9B2F64'),
+                     labels = c("2008" = "2006-2008", "2009" = "2009", "2010" = "2010")) +
+  geom_label_repel(data = hfs_lat_long_aedes_a,
+                   stat = "sf_coordinates",
+                   aes(geometry = geometry, label = year),
+                   size = 4,
+                   fill = "white",
+                   label.size = 0.2,
+                   label.padding = unit(0.2, "lines"),
+                   box.padding = 0.6,
+                   point.padding = 0.6,
+                   label.r = unit(0.05, "lines"),
+                   segment.color = "black",
+                   segment.size = 0.5,
+                   min.segment.length = 0,
+                   max.overlaps = Inf,
+                   xlim = c(-Inf, Inf), ylim = c(-Inf, Inf)) +
   theme_minimal() +
   no_axis +
   theme(legend.position = "left",
         legend.text = element_text(size = 10),
         legend.direction = "vertical") +
-  guides(
-    color = guide_legend(
-      override.aes = list(
-        linewidth = 3,
-        alpha = 1,
-        shape = NA)),
-    fill = guide_legend(
-      override.aes = list(
-        shape = 21,
-        size = 5,
-        color = "black",
-        linewidth = 0))) +
+  guides(color = guide_legend(override.aes = list(linewidth = 3, alpha = 1, shape = NA)),
+         fill = guide_legend(override.aes = list(shape = 21, size = 5, color = "black", linewidth = 0))) +
   annotation_scale(location = "bl", height = unit(0.15, "cm")) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 7), 
                          height = unit(0.7, "cm"), width = unit(0.7, "cm")) +
@@ -192,7 +183,7 @@ sfig11a <- ggplot() +
   geom_point(data = data.frame(lon = -69.185, lat = -12.591), 
              aes(x = lon, y = lat), 
              color = "black", 
-             size = 12, shape = 1, stroke = 1) +
+             size = 10, shape = 1, stroke = 1) +
   coord_sf(xlim = xlim_crop, ylim = ylim_crop, expand = FALSE)
 sfig11a
 
@@ -277,7 +268,7 @@ mob_range   <- range(df_plot$Value, na.rm = TRUE)
 
 df_plot <- df_plot %>%
   mutate(mobility_scaled =
-      (Value - mob_range[1]) / diff(mob_range) * diff(aedes_range) + aedes_range[1])
+           (Value - mob_range[1]) / diff(mob_range) * diff(aedes_range) + aedes_range[1])
 
 #build periods df
 periods_df <- data.frame(phase = c("Pre-paving", "During construction", "Highway complete"),
@@ -317,7 +308,7 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
     minor_breaks = NULL,
     sec.axis = sec_axis(
       trans = to_right,
-      name = "Passenger traffic",
+      name = "passenger traffic",
       breaks = right_breaks,
       labels = function(x) paste0(signif(x, digits = 2), "k"))) +
   scale_x_continuous(breaks = seq(2000, 2018, by = 2)) +
@@ -336,8 +327,8 @@ sfig11c
 #####################
 
 sfig11all <- grid.arrange(sfig11a, sfig11b, sfig11c,
-                         ncol = 3, nrow = 2, 
-                         layout_matrix = rbind(c(1,1,1,1,2,2,2),c(1,1,1,1,3,3,3)))
+                          ncol = 3, nrow = 2, 
+                          layout_matrix = rbind(c(1,1,1,1,2,2,2),c(1,1,1,1,3,3,3)))
 
 sfig11all <- as_ggplot(sfig11all) +
   draw_plot_label(label = c("A)", "B)", "C)"), size = 14,
