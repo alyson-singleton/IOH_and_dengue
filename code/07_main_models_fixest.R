@@ -28,9 +28,9 @@ dengue_yearly_model <- feols(
   incidence ~ i(year, fivekm, ref = '2008-01-01') + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq | key + year,
   vcov = ~clust,
-  data = dengue_yearly$connected_buffered)
+  data = dengue_yearly$connected_buffered_no_pm)
 
-dengue_yearly_results_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
+dengue_yearly_results_ddengue_yearly_results_ddengue_yearly_results_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
 colnames(dengue_yearly_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 dengue_yearly_results_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),
                            seq(as.Date("2009-01-01"), as.Date("2022-01-01"), by = "year"))
@@ -39,6 +39,29 @@ dengue_yearly_results_df <- dengue_yearly_results_df %>%
   mutate(estimate = estimate,
          upper = estimate + 1.96 * std_error,
          lower = estimate - 1.96 * std_error)
+
+plot(fixef(dengue_yearly_model))
+df_diag <- dengue_yearly$connected_buffered_no_pm %>%
+  mutate(resid  = resid(dengue_yearly_model),
+         fitted = fitted(dengue_yearly_model))
+ggplot(df_diag, aes(x = fitted, y = resid)) +
+  geom_point(alpha = 0.3, size = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  labs(
+    x = "Fitted values",
+    y = "Residuals",
+    title = "Residuals vs fitted values (within residuals)"
+  ) +
+  theme_minimal()
+
+ggplot(df_diag, aes(x = resid)) +
+  geom_histogram(bins = 50, color = "white") +
+  labs(
+    x = "Residuals",
+    y = "Count",
+    title = "Distribution of model residuals"
+  ) +
+  theme_minimal()
 
 #########################
 ### dengue yearly long difference main specification
