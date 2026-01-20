@@ -104,10 +104,13 @@ highway_mdd <- highway_mdd %>%
 #####################
 
 # Coordinates for PM label
-arrow_x <- -69.19735 + 0.15
-arrow_y <- -12.5852 + 0
-label_x <- arrow_x + 0.1
-label_y <- arrow_y
+pm_x <- -69.185
+pm_y <- -12.591
+pm_dy <- 0.18
+label_x <- pm_x
+label_y <- pm_y - pm_dy
+arrow_x <- pm_x
+arrow_y <- pm_y - 0.1
 
 # Vector detection formatting
 hfs_lat_long_aedes <- hfs_lat_long_aedes %>%
@@ -122,7 +125,8 @@ hfs_lat_long_aedes_a <- hfs_lat_long_aedes %>%
       year_group,
       levels = c(
         "1999–2005 (pre-paving)",
-        "2006", "2007", "2008", "2009")))
+        "2006", "2007", "2008", "2009"))) %>%
+  st_set_crs(4326)
 
 # Vector detection colors
 blues <- brewer.pal(9, "Blues")
@@ -137,49 +141,86 @@ year_colors <- c(
 xlim_crop <- c(-70.78, -68.55)
 ylim_crop <- c(-13.40, -10.8)
 
+# Vector label locations
+dxA <- 0.1; dyA <- 0.06   # Group A: up-right
+dxB <- 0.08; dyB <- -0.1  # Group B: down-right
+
+groupA <- c("iñapari","iberia","alerta","mavila","alegría", "planchon", "el triunfo")
+groupB <- c("puerto maldonado","laberinto","alto libertad","santa rosa","mazuko")
+
+# two bespoke points (relative offsets)
+special <- tibble::tribble(
+  ~city, ~dx, ~dy,
+  "huepetuhe", -0.14, -0.15,
+  "S2", 0.01, -0.06)
+
+labs_sf <- hfs_lat_long_aedes_a %>%
+  st_set_crs(4326) %>%
+  mutate(dx = dplyr::case_when(city %in% groupA ~ dxA,
+                               city %in% groupB ~ dxB,
+                               TRUE ~ 0.03),
+         dy = dplyr::case_when(city %in% groupA ~ dyA,
+                               city %in% groupB ~ dyB,
+                               TRUE ~ 0)) %>%
+  left_join(special, by = "city", suffix = c("", "_sp")) %>%
+  mutate(dx = dplyr::coalesce(dx_sp, dx),
+         dy = dplyr::coalesce(dy_sp, dy))
+
+xy <- sf::st_coordinates(labs_sf)
+
+labs_sf$geom_lab <- sf::st_sfc(
+  lapply(seq_len(nrow(labs_sf)), \(i) sf::st_point(c(xy[i,1] + labs_sf$dx[i], xy[i,2] + labs_sf$dy[i]))),
+  crs = sf::st_crs(labs_sf))
+
+# Build connector segments for labels
+xy_pt  <- sf::st_coordinates(sf::st_geometry(labs_sf))
+xy_lab <- sf::st_coordinates(labs_sf$geom_lab)
+
+seg_df <- data.frame(
+  x = xy_pt[,1], y = xy_pt[,2],
+  xend = xy_lab[,1], yend = xy_lab[,2])
+
+# Plot
 sfig11a <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#3b3b3b', size=.15, show.legend = FALSE) +
   geom_sf(data = roads_mdd %>% filter(fclass %in% c("primary", "secondary", "tertiary", "trunk")), 
           aes(geometry = geometry, color='lightgrey'), linewidth=0.5, alpha=0.4, show.legend = F) +
   geom_sf(data = highway_mdd %>% filter(!is.na(year_paved)), aes(geometry = geometry, color=year_paved), linewidth=3, show.legend = T) +
+  geom_segment(data = seg_df,
+               aes(x = x, y = y, xend = xend, yend = yend),
+               linewidth = 0.4,
+               color = "black") +
+  geom_sf_label(data = labs_sf,
+                aes(geometry = geom_lab, label = year),
+                label.size = 0.2,
+                fill = "white",
+                size = 4,
+                hjust = 0) +
   geom_sf(data = hfs_lat_long_aedes_a, aes(geometry = geometry, fill=year_group), color='black', shape = 21, size = 5) +
   scale_fill_manual(name = "Year vector detected", values = year_colors) +
   scale_color_manual(name = "Year highway paved", values = c("2008" = '#F4C2D7', "2009" = '#D86A9E', "2010" = '#9B2F64'),
                      labels = c("2008" = "2006-2008", "2009" = "2009", "2010" = "2010")) +
-  geom_label_repel(data = hfs_lat_long_aedes_a,
-                   stat = "sf_coordinates",
-                   aes(geometry = geometry, label = year),
-                   size = 4,
-                   fill = "white",
-                   label.size = 0.2,
-                   label.padding = unit(0.2, "lines"),
-                   box.padding = 0.6,
-                   point.padding = 0.6,
-                   label.r = unit(0.05, "lines"),
-                   segment.color = "black",
-                   segment.size = 0.5,
-                   min.segment.length = 0,
-                   max.overlaps = Inf,
-                   xlim = c(-Inf, Inf), ylim = c(-Inf, Inf)) +
   theme_minimal() +
   no_axis +
   theme(legend.position = "left",
         legend.text = element_text(size = 10),
         legend.direction = "vertical") +
   guides(color = guide_legend(override.aes = list(linewidth = 3, alpha = 1, shape = NA)),
-         fill = guide_legend(override.aes = list(shape = 21, size = 5, color = "black", linewidth = 0))) +
+         fill = "none") +#guide_legend(override.aes = list(shape = 21, size = 5, color = "black", linewidth = 0))) +
   annotation_scale(location = "bl", height = unit(0.15, "cm")) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 7), 
                          height = unit(0.7, "cm"), width = unit(0.7, "cm")) +
   annotate("segment", 
-           x = label_x-0.02, y = label_y, 
-           xend = arrow_x, yend = arrow_y,
-           arrow = arrow(length = unit(0.17, "cm")), 
+           x = label_x, y = label_y + 0.01,
+           xend = arrow_x, yend = arrow_y - 0.01,
+           arrow = arrow(length = unit(0.17, "cm")),
            color = "black") +
   annotate("text", 
-           x = label_x, y = label_y, 
-           label = "PM", 
-           size = 3.4, fontface = "bold", hjust = 0, color = "black") + 
+           x = label_x, y = label_y,
+           label = "PM",
+           size = 3.4, fontface = "bold",
+           hjust = 0.5, vjust = 1,
+           color = "black" ) +
   geom_point(data = data.frame(lon = -69.185, lat = -12.591), 
              aes(x = lon, y = lat), 
              color = "black", 
