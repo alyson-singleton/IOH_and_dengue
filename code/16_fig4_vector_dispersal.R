@@ -142,17 +142,17 @@ xlim_crop <- c(-70.78, -68.55)
 ylim_crop <- c(-13.40, -10.8)
 
 # Vector label locations
-dxA <- 0.1; dyA <- 0.06   # Group A: up-right
-dxB <- 0.08; dyB <- -0.1  # Group B: down-right
+dxA <- 0.12; dyA <- 0.06   # Group A: up-right
+dxB <- 0.08; dyB <- -0.12  # Group B: down-right
 
-groupA <- c("iñapari","iberia","alerta","mavila","alegría", "planchon", "el triunfo")
+groupA <- c("iberia","alerta","mavila","alegría", "planchon", "el triunfo")
 groupB <- c("puerto maldonado","laberinto","alto libertad","santa rosa","mazuko")
 
 # two bespoke points (relative offsets)
 special <- tibble::tribble(
   ~city, ~dx, ~dy,
   "huepetuhe", -0.14, -0.15,
-  "S2", 0.01, -0.06)
+  "iñapari", 0.1, -0.1)
 
 labs_sf <- hfs_lat_long_aedes_a %>%
   st_set_crs(4326) %>%
@@ -175,10 +175,8 @@ labs_sf$geom_lab <- sf::st_sfc(
 # Build connector segments for labels
 xy_pt  <- sf::st_coordinates(sf::st_geometry(labs_sf))
 xy_lab <- sf::st_coordinates(labs_sf$geom_lab)
-
-seg_df <- data.frame(
-  x = xy_pt[,1], y = xy_pt[,2],
-  xend = xy_lab[,1], yend = xy_lab[,2])
+seg_df <- data.frame(x = xy_pt[,1], y = xy_pt[,2],
+                     xend = xy_lab[,1], yend = xy_lab[,2])
 
 # Plot
 sfig11a <- ggplot() +
@@ -202,14 +200,28 @@ sfig11a <- ggplot() +
                      labels = c("2008" = "2006-2008", "2009" = "2009", "2010" = "2010")) +
   theme_minimal() +
   no_axis +
-  theme(legend.position = "left",
-        legend.text = element_text(size = 10),
+  theme(legend.position = c(0, 0.38),   # x,y in [0,1] within the panel; tune these
+        legend.justification = c(0, 0),     # anchor legend’s bottom-left at that point
+        legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA),
+        legend.key = element_rect(fill = NA, color = NA),
+        legend.text = element_text(size = 11),
+        legend.title = element_text(size = 12),
         legend.direction = "vertical") +
   guides(color = guide_legend(override.aes = list(linewidth = 3, alpha = 1, shape = NA)),
-         fill = "none") +#guide_legend(override.aes = list(shape = 21, size = 5, color = "black", linewidth = 0))) +
-  annotation_scale(location = "bl", height = unit(0.15, "cm")) +
-  annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 7), 
-                         height = unit(0.7, "cm"), width = unit(0.7, "cm")) +
+         fill = "none") +
+  annotate("label",
+           x = -69.47, y = -10.91,
+           label = "Year vector detected",
+           label.size = 0.2,
+           size = 4,
+           hjust = 0,
+           vjust = 0,
+           color = "black",
+           fill = "white",
+           fontface = "bold") +
+  annotation_scale(location = "bl", height = unit(0.17, "cm"), text_cex = 0.9) +
+  annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 8), 
+                         height = unit(0.8, "cm"), width = unit(0.8, "cm")) +
   annotate("segment", 
            x = label_x, y = label_y + 0.01,
            xend = arrow_x, yend = arrow_y - 0.01,
@@ -225,8 +237,20 @@ sfig11a <- ggplot() +
              aes(x = lon, y = lat), 
              color = "black", 
              size = 10, shape = 1, stroke = 1) +
+  geom_segment(data = arrow_df,
+               aes(x = x, y = y, xend = xend, yend = yend),
+               arrow = arrow(length = unit(0.18, "cm")),
+               linewidth = 1.1,
+               color = "#D86A9E") +
   coord_sf(xlim = xlim_crop, ylim = ylim_crop, expand = FALSE)
 sfig11a
+
+arrow_df <- data.frame(
+  x    = c(-70.47, -69.29, -69.66),
+  y    = c(-12.89, -12.50, -11.00),
+  xend = c(-70.36, -69.41, -69.67),
+  yend = c(-12.80, -12.56, -11.12)
+)
 
 #####################
 ## SFig 11b
@@ -251,8 +275,8 @@ sfig11b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
     "text", x = 2008.2, y = 2009.6,
     hjust = 0,
     label = paste0(
-      "R^2 = ", round(r2_val, 3),
-      "\np-val = ", signif(p_val, 2)),
+      "r^2 = ", round(r2_val, 3),
+      "\np = ", signif(p_val, 2)),
     size = 4) +
   labs(x = "Year proximate\nhighway section paved",
        y = "Year\nvector\ndetected") +
