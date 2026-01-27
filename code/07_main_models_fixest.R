@@ -30,6 +30,18 @@ dengue_yearly_model <- feols(
   vcov = ~clust,
   data = dengue_yearly$connected_buffered)
 
+# NOTE: Year appears to be included twice in the model above. However, the 
+# syntax above is standard for event-study difference-in-difference models coded with fixest.
+# The first inclusion “i(year, fivekm, ref = '2008-01-01')” generates the set 
+# of interaction indicators between fivekm and each year, estimating year-specific 
+# deviations for exposed units relative to the reference year. The the term 
+# “| key + year” creates year fixed effects that absorb common time shocks 
+# affecting all units in a given year. Internally, fixest applies the fixed-effects 
+# transformation first, demeaning both the outcome and covariates by year and unit 
+# before estimating the interaction terms. As a result, there is no duplication 
+# or collinearity in the model. This is also the case for all following fixest model
+# specificatoins.
+
 dengue_yearly_results_df <- as.data.frame(dengue_yearly_model$coeftable)[1:22, ]
 colnames(dengue_yearly_results_df) <- c('estimate', 'std_error', 't_value', 'p_value')
 dengue_yearly_results_df$year <- c(seq(as.Date("2000-01-01"), as.Date("2007-01-01"), by = "year"),

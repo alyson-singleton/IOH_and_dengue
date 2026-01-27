@@ -141,6 +141,13 @@ year_colors <- c(
 xlim_crop <- c(-70.78, -68.55)
 ylim_crop <- c(-13.40, -10.8)
 
+# Paving direction arrow locations
+arrow_df <- data.frame(
+  x = c(-70.47, -69.29, -69.66),
+  y = c(-12.89, -12.50, -11.00),
+  xend = c(-70.36, -69.41, -69.67),
+  yend = c(-12.80, -12.56, -11.12))
+
 # Vector label locations
 dxA <- 0.12; dyA <- 0.06   # Group A: up-right
 dxB <- 0.08; dyB <- -0.12  # Group B: down-right
@@ -148,7 +155,7 @@ dxB <- 0.08; dyB <- -0.12  # Group B: down-right
 groupA <- c("iberia","alerta","mavila","alegría", "planchon", "el triunfo")
 groupB <- c("puerto maldonado","laberinto","alto libertad","santa rosa","mazuko")
 
-# two bespoke points (relative offsets)
+# Two special label locations 
 special <- tibble::tribble(
   ~city, ~dx, ~dy,
   "huepetuhe", -0.14, -0.15,
@@ -192,7 +199,7 @@ sfig11a <- ggplot() +
                 aes(geometry = geom_lab, label = year),
                 label.size = 0.2,
                 fill = "white",
-                size = 4,
+                size = 3.7,
                 hjust = 0) +
   geom_sf(data = hfs_lat_long_aedes_a, aes(geometry = geometry, fill=year_group), color='black', shape = 21, size = 5) +
   scale_fill_manual(name = "Year vector detected", values = year_colors) +
@@ -200,8 +207,8 @@ sfig11a <- ggplot() +
                      labels = c("2008" = "2006-2008", "2009" = "2009", "2010" = "2010")) +
   theme_minimal() +
   no_axis +
-  theme(legend.position = c(0, 0.38),   # x,y in [0,1] within the panel; tune these
-        legend.justification = c(0, 0),     # anchor legend’s bottom-left at that point
+  theme(legend.position = c(0.05, 0.38),
+        legend.justification = c(0, 0),
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA),
         legend.key = element_rect(fill = NA, color = NA),
         legend.text = element_text(size = 11),
@@ -219,6 +226,16 @@ sfig11a <- ggplot() +
            color = "black",
            fill = "white",
            fontface = "bold") +
+  annotate("label",
+           x = -70.15, y = -11.22,
+           label = "Paving\ndirection",
+           color = "#D86A9E",
+           fontface = "bold",
+           label.size = 0.2,
+           size = 4,
+           hjust = 0,
+           vjust = 0,
+           fill = "white") +
   annotation_scale(location = "bl", height = unit(0.17, "cm"), text_cex = 0.9) +
   annotation_north_arrow(location = "br",style = north_arrow_orienteering(text_size = 8), 
                          height = unit(0.8, "cm"), width = unit(0.8, "cm")) +
@@ -245,13 +262,6 @@ sfig11a <- ggplot() +
   coord_sf(xlim = xlim_crop, ylim = ylim_crop, expand = FALSE)
 sfig11a
 
-arrow_df <- data.frame(
-  x    = c(-70.47, -69.29, -69.66),
-  y    = c(-12.89, -12.50, -11.00),
-  xend = c(-70.36, -69.41, -69.67),
-  yend = c(-12.80, -12.56, -11.12)
-)
-
 #####################
 ## SFig 11b
 #####################
@@ -272,26 +282,26 @@ sfig11b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
              position = position_jitter(width  = 0, height = 0.15)) +
   geom_smooth(method = "lm", se = TRUE, linewidth = 1, color="#9B2F64", fill  = "#9B2F64", alpha = 0.1) +
   annotate(
-    "text", x = 2008.2, y = 2009.6,
+    "text", x = 2008.25, y = 2010,
     hjust = 0,
     label = paste0(
       "r^2 = ", round(r2_val, 3),
       "\np = ", signif(p_val, 2)),
     size = 4) +
   labs(x = "Year proximate\nhighway section paved",
-       y = "Year\nvector\ndetected") +
+       y = "Year vector detected") +
   scale_x_continuous(
     breaks = seq(
       floor(min(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
       ceiling(max(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
       by = 1)) +
-  scale_y_continuous(breaks = 2005:2011) +
+  scale_y_continuous(breaks = c(2005,2007,2009,2011)) +
   coord_cartesian(ylim = c(2005, 2011)) +
   theme_minimal() +
-  theme(axis.text.x  = element_text(size = 9),
-        axis.text.y  = element_text(size = 9),
-        axis.title.x = element_text(size = 11),
-        axis.title.y = element_text(size = 11, angle = 0, vjust = 0.5))
+  theme(axis.text.x  = element_text(size = 11),
+        axis.text.y  = element_text(size = 11),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12, vjust = 0.5))
 sfig11b
 
 #####################
@@ -349,7 +359,7 @@ df_plot <- df_plot %>%
   mutate(mobility_scaled = to_left(Value))
 
 # choose left-axis breaks (these will define gridlines)
-left_breaks <- seq(0, 16, by = 4)     # adjust as you like
+left_breaks <- seq(0, 15, by = 5)     # adjust as you like
 right_breaks <- to_right(left_breaks) # must be derived from left_breaks
 
 sfig11c <- ggplot(df_plot, aes(x = year)) +
@@ -362,7 +372,7 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
   annotate("text",
            x = c(2002.5, 2008, 2014), y = 16.3,
            label = c("Before", "During", "After"),
-           vjust = 1.5, size = 4, color = "grey20", fontface = "italic") +
+           vjust = 1.5, size = 3.7, color = "grey20", fontface = "italic") +
   geom_vline(xintercept = c(2006, 2010), linetype = "dotted", linewidth = 0.6, color = "grey40") +
   geom_step(aes(y = cum_sites_vector), linewidth = 1, color = "#1f78b4") +
   geom_line(aes(y = mobility_scaled), linewidth = 1, linetype = "dashed", color = "#9B2F64") +
@@ -376,14 +386,17 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
       name = "passenger traffic",
       breaks = right_breaks,
       labels = function(x) paste0(signif(x, digits = 2), "k"))) +
-  scale_x_continuous(breaks = seq(2000, 2018, by = 2)) +
+  scale_x_continuous(breaks = seq(2000, 2018, by = 4)) +
   labs(x = "Year") +
   theme_minimal(base_size = 13) +
-  theme(panel.grid.minor = element_blank(),
-        axis.title.y.left  = element_text(size = 11, vjust = 0.5, color = "#1f78b4"),
-        axis.title.y.right = element_text(size = 11, vjust = 0.5, color = "#9B2F64"),
-        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 10),
-        axis.title.x = element_text(size = 11))
+  theme(panel.grid.major.x = element_line(),
+        panel.grid.minor.x = element_blank(),
+        axis.title.y.left  = element_text(size = 12, vjust = 0.5, color = "#1f78b4"),
+        axis.text.y.left = element_text(size=9.5),
+        axis.title.y.right = element_text(size = 12, vjust = 0.5, color = "#9B2F64"),
+        axis.text.y.right = element_text(size=9, angle = 45),
+        axis.title.x = element_text(size = 12),
+        axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 11))
 
 sfig11c
 
@@ -393,11 +406,11 @@ sfig11c
 
 sfig11all <- grid.arrange(sfig11a, sfig11b, sfig11c,
                           ncol = 3, nrow = 2, 
-                          layout_matrix = rbind(c(1,1,1,1,2,2,2),c(1,1,1,1,3,3,3)))
+                          layout_matrix = rbind(c(1,1,1,1,1,1,2,2,2,2,2),c(1,1,1,1,1,1,3,3,3,3,3)))
 
 sfig11all <- as_ggplot(sfig11all) +
-  draw_plot_label(label = c("A)", "B)", "C)"), size = 14,
-                  x = c(0.02, 0.55, 0.55), y = c(0.99, 0.99, 0.5))
+  draw_plot_label(label = c("A", "B", "C"), size = 14,
+                  x = c(0.02, 0.515, 0.515), y = c(0.99, 0.99, 0.5))
 sfig11all
 
-ggsave("sfig11.pdf", plot=sfig11all, path="figures/", width = 12, height = 7, units="in", device = "pdf") 
+ggsave("fig4.pdf", plot=sfig11all, path="figures/", width = 9, height = 5.5, units="in", device = "pdf") 

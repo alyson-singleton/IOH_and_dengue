@@ -58,14 +58,12 @@ dengue_df_rainy_glmmTMB <- filter(dengue_df_agg_biannual_glmmTMB, month == "10")
 dengue_biannual_model_dry_glmmTMB <- glmmTMB(
   incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq + factor(key) + factor(biannual_date),
-  data = dengue_df_dry_glmmTMB
-)
+  data = dengue_df_dry_glmmTMB)
 
 dengue_biannual_model_rainy_glmmTMB <- glmmTMB(
   incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq + factor(key) + factor(biannual_date),
-  data = dengue_df_rainy_glmmTMB
-)
+  data = dengue_df_rainy_glmmTMB)
 
 selected_terms_biannual <- c("biannual_binary:fivekm", "urban", "ag", "sum_precip_centered", 
                              "mean_temp_centered", "mean_temp_centered_sq")
@@ -94,8 +92,7 @@ leish_df_agg_glmmTMB <- leish_yearly$connected_buffered %>%
 leish_yearly_model_glmmTMB <- glmmTMB(
   incidence ~ year_binary * fivekm + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq + factor(key) + factor(year),
-  data = leish_df_agg_glmmTMB
-)
+  data = leish_df_agg_glmmTMB)
 
 coefs <- summary(leish_yearly_model_glmmTMB)$coefficients$cond
 leish_yearly_df_glmmTMB <- as.data.frame(coefs[selected_terms_yearly, , drop = FALSE]) %>%
@@ -118,14 +115,12 @@ leish_df_rainy_glmmTMB <- filter(leish_df_agg_biannual_glmmTMB, month == "10")
 leish_biannual_model_dry_glmmTMB <- glmmTMB(
   incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq + factor(key) + factor(biannual_date),
-  data = leish_df_dry_glmmTMB
-)
+  data = leish_df_dry_glmmTMB)
 
 leish_biannual_model_rainy_glmmTMB <- glmmTMB(
   incidence ~ biannual_binary * fivekm + urban + ag + sum_precip_centered + 
     mean_temp_centered + mean_temp_centered_sq + factor(key) + factor(biannual_date),
-  data = leish_df_rainy_glmmTMB
-)
+  data = leish_df_rainy_glmmTMB)
 
 leish_biannual_df_glmmTMB <- bind_rows(
   summary(leish_biannual_model_dry_glmmTMB)$coefficients$cond[selected_terms_biannual, , drop = FALSE] %>%
@@ -136,8 +131,7 @@ leish_biannual_df_glmmTMB <- bind_rows(
   summary(leish_biannual_model_rainy_glmmTMB)$coefficients$cond[selected_terms_biannual, , drop = FALSE] %>%
     as.data.frame() %>%
     rownames_to_column("term") %>%
-    mutate(model = "Leish Biannual Rainy")
-) %>%
+    mutate(model = "Leish Biannual Rainy")) %>%
   rename(estimate = Estimate, std_error = `Std. Error`)
 
 #########################
@@ -149,15 +143,13 @@ all_glmmTMB_models <- bind_rows(
   dengue_yearly_df_glmmTMB %>% mutate(model = "Dengue Yearly"),
   dengue_biannual_df_glmmTMB,
   leish_yearly_df_glmmTMB %>% mutate(model = "Leish Yearly"),
-  leish_biannual_df_glmmTMB
-)
+  leish_biannual_df_glmmTMB)
 
 summary_table_glmmTMB <- all_glmmTMB_models %>%
   mutate(
     p_value = 2 * pnorm(-abs(estimate / std_error)),
     star = if_else(p_value < 0.05, "*", ""),
-    estimate_se = sprintf("%.2f%s (%.2f)", estimate, star, std_error)
-  ) %>%
+    estimate_se = sprintf("%.2f%s (%.2f)", estimate, star, std_error)) %>%
   dplyr::select(term, model, estimate_se) %>%
   tidyr::pivot_wider(names_from = model, values_from = estimate_se)
 
