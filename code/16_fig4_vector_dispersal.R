@@ -386,7 +386,7 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
       name = "passenger traffic",
       breaks = right_breaks,
       labels = function(x) paste0(signif(x, digits = 2), "k"))) +
-  scale_x_continuous(breaks = seq(2000, 2018, by = 4)) +
+  scale_x_continuous(breaks = c(2000,2006,2010,2018)) +
   labs(x = "Year") +
   theme_minimal(base_size = 13) +
   theme(panel.grid.major.x = element_line(),
@@ -394,7 +394,7 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
         axis.title.y.left  = element_text(size = 12, vjust = 0.5, color = "#1f78b4"),
         axis.text.y.left = element_text(size=9.5),
         axis.title.y.right = element_text(size = 12, vjust = 0.5, color = "#9B2F64"),
-        axis.text.y.right = element_text(size=9, angle = 45),
+        axis.text.y.right = element_text(size=9),
         axis.title.x = element_text(size = 12),
         axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 11))
 

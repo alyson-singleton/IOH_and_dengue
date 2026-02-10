@@ -66,7 +66,7 @@ cusco_peru <- peru_depts[which(peru_depts$NOMBDEP %in% c("CUSCO")),]
 # Districts
 ###################
 
-peru_districts <- read_sf("./data/raw/spatial/peru_districts.shp") %>% #read_sf("data/raw/spatial_data/PER_adm/PER_adm3.shp") %>%
+peru_districts <- read_sf("./data/raw/spatial_data/peru_districts.shp") %>% #read_sf("data/raw/spatial_data/PER_adm/PER_adm3.shp") %>%
   st_as_sf() %>% 
   st_transform(4326)
 mapview(peru_districts)
@@ -79,7 +79,7 @@ districts_cusco <- peru_districts %>% filter(DEPARTAMEN == "CUSCO")
 # Roads
 ###################
 
-roads <- read_sf("data/raw/spatial_data/peru_osm_jan_2026/gis_osm_roads_free_1.shp") %>% #make this more usable and able to be put online
+roads <- read_sf("~/Desktop/gis_osm_roads_free_1.shp") %>% #make this more usable and able to be put online
   st_as_sf() %>% 
   st_transform(4326)
 
@@ -93,10 +93,10 @@ roads_loreto <- roads[roads_loreto[1,],]
 mapview(roads_loreto %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary")), color = "red") +
   mapview(districts_loreto)
 
-roads_cusco <- st_covers(cusco_peru,roads$geometry, sparse = FALSE)
-roads_cusco <- roads[roads_cusco[1,],]
-mapview(roads_cusco %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary")), color = "red") +
-  mapview(districts_cusco)
+# roads_cusco <- st_covers(cusco_peru,roads$geometry, sparse = FALSE)
+# roads_cusco <- roads[roads_cusco[1,],]
+# mapview(roads_cusco %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary")), color = "red") +
+#   mapview(districts_cusco)
 
 ###################
 # Dengue & population data (district level)
@@ -349,6 +349,15 @@ roads_mdd_major <- roads_mdd %>%
 
 exposure_pal <- c("Exposed" = "#E04490", "Unexposed" = "#648FFF")
 
+arrows_df <- data.frame(
+  x = c(-69.56, -70.32),
+  y = c(-10.88, -13.23),
+  xend = c(-69.44, -70.50),
+  yend = c(-10.70, -13.38),
+  lab  = c("To Brazil", "To Cusco"),
+  lab_x = c(-70.1, -70.32),  # text position (can differ from arrow start)
+  lab_y = c(-10.8, -13.43))
+
 sfig11a_map_mdd <- ggplot() +
   geom_sf(data = districts_mdd_sf, aes(fill = exposure_group), alpha = 0.5, color = "grey30", linewidth = 0.12) +
   geom_sf(data = roads_mdd_major, color = "black", linewidth = 0.8, alpha = 1) +
@@ -360,7 +369,26 @@ sfig11a_map_mdd <- ggplot() +
   theme_minimal() +
   theme_stor +
   theme(legend.position = "none",
-        legend.box = "horizontal")
+        legend.box = "horizontal") +
+  geom_segment(
+    data = arrows_df,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.18, "cm"), type = "closed"),
+    linewidth = 1.1,
+    color = "black",
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = arrows_df,
+    aes(x = lab_x, y = lab_y, label = lab),
+    size = 3.6,
+    hjust = 0,
+    vjust = 0,
+    color = "black",
+    fontface = "italic",
+    inherit.aes = FALSE
+  )
+
 sfig11a_map_mdd
 
 sfig11a_map_mdd_w_inset <- ggdraw() + 
@@ -454,8 +482,10 @@ sfig11combined <- grid.arrange(sfig11a_map_mdd_w_inset, sfig11b_map_loreto_w_ins
 sfig11combined <- as_ggplot(sfig11combined) +
   draw_plot_label(label = c("Madre de Dios", "Loreto"), size = 14,
                   x = c(0.12, 0.7), y = c(1, 1)) +
-  draw_plot_label(label = c("Interoceanic\n  Highway", "Iquitos-Nauta\n   Corridor"), size = 10,
-                  x = c(0.28, 0.77), y = c(0.5, 0.68))
+  draw_plot_label(label = c("A", "B"), size = 14,
+                  x = c(0, 0.5), y = c(1, 1)) +
+  draw_plot_label(label = c("Interoceanic\n  Highway\n  (external)", "Iquitos-Nauta\n   Highway\n   (internal)"), size = 10,
+                  x = c(0.26, 0.76), y = c(0.57, 0.75))
 
 sfig11combined
 ggsave("sfig11.pdf", plot=sfig11combined, path="figures/", width = 9.5, height = 6, units="in", device = "pdf")
