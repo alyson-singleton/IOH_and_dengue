@@ -79,7 +79,7 @@ districts_cusco <- peru_districts %>% filter(DEPARTAMEN == "CUSCO")
 # Roads
 ###################
 
-roads <- read_sf("~/Desktop/gis_osm_roads_free_1.shp") %>% #make this more usable and able to be put online
+roads <- read_sf("~/Desktop/gis_osm_roads/gis_osm_roads_free_1.shp") %>% #make this more usable and able to be put online
   st_as_sf() %>% 
   st_transform(4326)
 
