@@ -2,8 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Conduct Madre de Dios and Loreto comparison and 
-# build Supplementary Figures 11 and 12.
+# Set up for MdD and Loreto comparison. Build SFig S6 plot.
 #
 # Date created: 12/25/2025
 
