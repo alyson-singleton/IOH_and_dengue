@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Set up for MdD and Loreto comparison. Build SFig S6 plot.
+# Set up for MdD and Loreto comparison. Build SFig 6 plot.
 #
 # Date created: 12/25/2025
 
@@ -137,7 +137,7 @@ loreto_dengue_district_df <- dengue_district_data %>%
   mutate(incidence = dengue_cases / population * 1000)
 
 ###################
-# SFig S6
+# SFig 6
 ###################
 
 # SFig6a: MdD district map

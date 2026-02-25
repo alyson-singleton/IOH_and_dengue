@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S9.
+# Build Supplementary Figure S13.
 #
 # Date created: 8/6/2025
 
@@ -16,8 +16,9 @@ library(patchwork)
 library(ggrepel)
 
 #####################
-## SFig 9a
+## SFig 13a
 #####################
+
 ### precip data
 precip_monthly <- read.csv("data/raw/environmental_data/mdd_precipitation_monthly_sum.csv")
 precip_monthly <- precip_monthly[,c(2:278)]
@@ -36,7 +37,8 @@ precip_monthly_all <- precip_monthly_mdd_long %>%
   group_by(month, year) %>%
   summarize(sum_precip = sum(sum_precip)) 
 precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
-sfig9a <- ggplot(precip_monthly_all) +
+
+sfig13a <- ggplot(precip_monthly_all) +
   geom_line(aes(x=month_wo_year,y=sum_precip,group=year), color="black", alpha=0.7) +
   geom_hline(yintercept=mean(precip_monthly_all$sum_precip), color='red', linetype="dashed") +
   geom_vline(xintercept=04, color='red', linetype="dashed") +
@@ -54,10 +56,10 @@ sfig9a <- ggplot(precip_monthly_all) +
         legend.title=element_text(size=12),
         legend.position = "none",
         strip.text.x = element_text(size = 14))
-sfig9a
+sfig13a
 
 #####################
-## SFig 9b
+## SFig 13b
 #####################
 dengue_monthly <- read.csv("data/intermediate/dengue_monthly_covariate_df.csv")
 dengue_monthly <- dengue_monthly %>%
@@ -67,7 +69,7 @@ dengue_monthly <- dengue_monthly %>%
 dengue_monthly$month_wo_year <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%m")
 dengue_monthly$year_wo_month <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%Y")
 
-sfig9b <- ggplot(dengue_monthly) +
+sfig13b <- ggplot(dengue_monthly) +
   geom_line(aes(x=month_wo_year,y=sum_cases, group=year), color='black', alpha=0.7) +
   geom_vline(xintercept=04, color='red', linetype="dashed") +
   geom_vline(xintercept=10, color='red', linetype="dashed") +
@@ -99,21 +101,20 @@ sfig9b <- ggplot(dengue_monthly) +
     point.padding = 0.1,
     show.legend = FALSE,
     angle = 0,
-    arrow = arrow(length = unit(0.01, "npc"))
-  )
-sfig9b
+    arrow = arrow(length = unit(0.01, "npc")))
+sfig13b
 
 #####################
-## SFig 9all
+## SFig 13all
 #####################
-sfig9all <- grid.arrange(sfig9a, sfig9b,
+sfig13all <- grid.arrange(sfig13a, sfig13b,
                          ncol = 1, nrow = 2,
                          layout_matrix = rbind(c(1),c(2)), 
                          heights=c(1,1))
 
-sfig9all <- as_ggplot(sfig9all) +                                
+sfig13all <- as_ggplot(sfig13all) +                                
   draw_plot_label(label = c("A", "B"), size = 14,
                   x = c(0.11, 0.135), y = c(0.99, 0.49)) 
-sfig9all
+sfig13all
 
-ggsave("sfig9.pdf", plot=sfig9all, path="figures/", width = 8, height = 8, units="in", device = "pdf")
+ggsave("sfig13.pdf", plot=sfig13all, path="figures/", width = 8, height = 8, units="in", device = "pdf")

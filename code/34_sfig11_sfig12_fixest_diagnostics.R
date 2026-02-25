@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Run main models with fixest.
+# Conduct main model diagnostics and create SFigs S11 and S12.
 #
 # Date created: 1/13/2026
 
@@ -22,7 +22,7 @@ leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
 leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
 
 #########################
-### dengue yearly main specification diagnostics
+### SFig 11ab: dengue yearly main specification diagnostics
 #########################
 
 dengue_yearly_model <- feols(
@@ -58,7 +58,7 @@ dengue_yearly_df_diag <- dengue_yearly$connected_buffered %>%
          fitted = fitted(dengue_yearly_model))
 
 # Residual vs fitted
-sfig13a <- ggplot(dengue_yearly_df_diag, aes(x = fitted, y = resid)) +
+sfig11a <- ggplot(dengue_yearly_df_diag, aes(x = fitted, y = resid)) +
   geom_point(alpha = 0.3, size = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   labs(x = "Fitted values",
@@ -66,19 +66,19 @@ sfig13a <- ggplot(dengue_yearly_df_diag, aes(x = fitted, y = resid)) +
        title = "Dengue yearly model (Eq. 1)") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-sfig13a
+sfig11a
 
 # Residual distribution
-sfig13b <- ggplot(df_diag, aes(x = resid)) +
+sfig11b <- ggplot(df_diag, aes(x = resid)) +
   geom_histogram(bins = 75, color = "white") +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
   theme_minimal()
-sfig13b
+sfig11b
 
 #########################
-### dengue agg main specification diagnostics
+### SFig 11cd: dengue agg main specification diagnostics
 #########################
 
 dengue_df_agg <- dengue_yearly$connected_buffered %>%
@@ -118,7 +118,7 @@ dengue_agg_df_diag <- dengue_df_agg %>%
          fitted = fitted(dengue_yearly_agg_model))
 
 # Residual vs fitted
-sfig13c <- ggplot(dengue_agg_df_diag, aes(x = fitted, y = resid)) +
+sfig11c <- ggplot(dengue_agg_df_diag, aes(x = fitted, y = resid)) +
   geom_point(alpha = 0.3, size = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   labs(x = "Fitted values",
@@ -126,19 +126,19 @@ sfig13c <- ggplot(dengue_agg_df_diag, aes(x = fitted, y = resid)) +
        title = "Dengue aggregated model (Eq. 2)") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-sfig13c
+sfig11c
 
 # Residual distribution
-sfig13d <- ggplot(dengue_agg_df_diag, aes(x = resid)) +
+sfig11d <- ggplot(dengue_agg_df_diag, aes(x = resid)) +
   geom_histogram(bins = 75, color = "white") +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
   theme_minimal() 
-sfig13d
+sfig11d
 
 #########################
-### leish yearly main specification diagnostics
+### SFig 12ab: leish yearly main specification diagnostics
 #########################
 
 leish_yearly_model <- feols(
@@ -174,7 +174,7 @@ leish_yearly_df_diag <- leish_yearly$connected_buffered %>%
          fitted = fitted(leish_yearly_model))
 
 # Residual vs fitted
-sfig13e <- ggplot(leish_yearly_df_diag, aes(x = fitted, y = resid)) +
+sfig12a <- ggplot(leish_yearly_df_diag, aes(x = fitted, y = resid)) +
   geom_point(alpha = 0.3, size = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   labs(x = "Fitted values",
@@ -182,19 +182,19 @@ sfig13e <- ggplot(leish_yearly_df_diag, aes(x = fitted, y = resid)) +
        title = "Leish yearly model (Eq. 1)") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-sfig13e
+sfig12a
 
 # Residual distribution
-sfig13f <- ggplot(leish_yearly_df_diag, aes(x = resid)) +
+sfig12b <- ggplot(leish_yearly_df_diag, aes(x = resid)) +
   geom_histogram(bins = 50, color = "white") +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
   theme_minimal()
-sfig13f
+sfig12b
 
 #########################
-### leish agg main specification diagnostics
+### SFig 12cd: leish agg main specification diagnostics
 #########################
 
 leish_df_agg <- leish_yearly$connected_buffered %>%
@@ -234,7 +234,7 @@ leish_agg_df_diag <- leish_df_agg %>%
          fitted = fitted(leish_yearly_agg_model))
 
 # Residual vs fitted
-sfig13g <- ggplot(leish_agg_df_diag, aes(x = fitted, y = resid)) +
+sfig12c <- ggplot(leish_agg_df_diag, aes(x = fitted, y = resid)) +
   geom_point(alpha = 0.3, size = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   labs(x = "Fitted values",
@@ -242,33 +242,33 @@ sfig13g <- ggplot(leish_agg_df_diag, aes(x = fitted, y = resid)) +
        title = "Leish aggregated model (Eq. 2)") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-sfig13g
+sfig12c
 
 # Residual distribution
-sfig13h <- ggplot(leish_agg_df_diag, aes(x = resid)) +
+sfig12d <- ggplot(leish_agg_df_diag, aes(x = resid)) +
   geom_histogram(bins = 50, color = "white") +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
   theme_minimal()
-sfig13h
+sfig12d
 
 #########################
 ### all plots together
 #########################
-dengue_diag_panel <-
-  (sfig13a | sfig13c) /
-  (sfig13b | sfig13d) +
+sfig11all <-
+  (sfig11a | sfig11c) /
+  (sfig11b | sfig11d) +
   plot_layout(guides = "collect") +
   plot_annotation(tag_levels = "A")
-dengue_diag_panel
-ggsave("sfig13.pdf", plot=dengue_diag_panel, path="figures/", width = 8, height = 6, units="in", device = "pdf")
+sfig11all
+ggsave("sfig11.pdf", plot=sfig11all, path="figures/", width = 8, height = 6, units="in", device = "pdf")
 
-leish_diag_panel <-
-  (sfig13e | sfig13g) /
-  (sfig13f | sfig13h) +
+sfig12all <-
+  (sfig12a | sfig12c) /
+  (sfig12b | sfig12d) +
   plot_layout(guides = "collect") +
   plot_annotation(tag_levels = "A")
-leish_diag_panel
-ggsave("sfig14.pdf", plot=leish_diag_panel, path="figures/", width = 8, height = 6, units="in", device = "pdf")
+sfig12all
+ggsave("sfig12.pdf", plot=sfig12all, path="figures/", width = 8, height = 6, units="in", device = "pdf")
 

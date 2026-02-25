@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S8.
+# Build Supplementary Figure S7.
 #
 # Date created: 8/6/2025
 
@@ -115,10 +115,10 @@ all_traffic_data <- all_traffic_data %>%
 
 
 #####################
-## SFig 8
+## SFig 7
 #####################
 
-sfig8 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) +
+sfig7 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) +
   geom_line(size = 1) +
   geom_vline(xintercept = 2008, linetype = "dashed", color = "black", linewidth = 0.7) +
   facet_wrap(~Metric, scales = "free_y", ncol = 2,
@@ -133,6 +133,6 @@ sfig8 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) 
   theme_stor +
   theme(strip.text = element_text(face = "bold", hjust = 0),
         legend.position = "bottom")
-sfig8
+sfig7
 
-ggsave("sfig8.pdf", plot=sfig8, path="figures/", width = 9, height = 7, units="in", device = "pdf")
+ggsave("sfig7.pdf", plot=sfig8, path="figures/", width = 9, height = 7, units="in", device = "pdf")

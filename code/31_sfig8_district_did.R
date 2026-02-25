@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Conduct MdD and Loreto comparison. Build SFig S8 plot.
+# Conduct MdD and Loreto comparison. Build SFig 8 plot.
 #
 # Date created: 2/24/2026
 
@@ -118,7 +118,7 @@ mdd_dengue_district_df <- dengue_district_data %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
-# SFig S8: MdD incidence trends
+# SFig 8: MdD incidence trends
 mdd_raw_trends <- mdd_dengue_district_df %>%
   group_by(year, road_status) %>%
   summarize(dengue_cases = sum(dengue_cases, na.rm = TRUE),
@@ -148,7 +148,7 @@ sfig8_legend <- get_legend(sfig8a)
 sfig8a <- sfig8a + theme(legend.position = "none")
 sfig8a
 
-# SFig S8b: MdD DiD Model
+# SFig 8b: MdD DiD Model
 mdd_district_model <- feols(
   incidence ~ i(year, road_status, ref = 2008) | district + year,
   vcov = ~ district,
@@ -184,7 +184,7 @@ sfig8b <- ggplot(mdd_district_results_df) +
   theme_stor
 sfig8b
 
-# SFig S8ab: MdD panels
+# SFig 8ab: MdD panels
 sfig8ab <- (sfig8a | sfig8b) +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
@@ -208,7 +208,7 @@ loreto_dengue_district_df <- dengue_district_data %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
-# SFig S8c: Loreto incidence trends
+# SFig 8c: Loreto incidence trends
 loreto_raw_trends <- loreto_dengue_district_df %>%
   group_by(year, road_status) %>%
   summarize(dengue_cases = sum(dengue_cases, na.rm = TRUE),
@@ -234,7 +234,7 @@ sfig8c <- ggplot(loreto_raw_trends,
   theme_stor
 sfig8c
 
-# SFig S8d: Loreto DiD Model
+# SFig 8d: Loreto DiD Model
 loreto_district_model <- feols(
   incidence ~ i(year, road_status, ref = 2004) | district + year,
   vcov = ~ district,

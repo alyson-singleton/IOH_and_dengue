@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S10.
+# Build Supplementary Figure S14.
 #
 # Date created: 8/6/2025
 
@@ -42,9 +42,9 @@ theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
 y_lims_biannual <- c(-7,50)
 
 #####################
-## SFig 10a
+## SFig 14a
 #####################
-sfig10a <- ggplot(dengue_biannual_results_df) +
+sfig14a <- ggplot(dengue_biannual_results_df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
@@ -59,14 +59,14 @@ sfig10a <- ggplot(dengue_biannual_results_df) +
                      breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor +
   theme(legend.position = "bottom")
-sfig10a
-sfig10_legend <- get_legend(sfig10a)
-sfig10a <- sfig10a + theme(legend.position = "none")
+sfig14a
+sfig14_legend <- get_legend(sfig14a)
+sfig14a <- sfig14a + theme(legend.position = "none")
 
 #####################
-## SFig 10b
+## SFig 14b
 #####################
-sfig10b <- ggplot(leish_biannual_results_df) +
+sfig14b <- ggplot(leish_biannual_results_df) +
   geom_hline(aes(yintercept=0), colour='red', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
@@ -81,20 +81,20 @@ sfig10b <- ggplot(leish_biannual_results_df) +
                      breaks = c(-5, 0, 10, 20, 40)) +
   theme_stor
 
-sfig10b
+sfig14b
 
 #####################
-## SFig 10all
+## SFig 14all
 #####################
 
-sfig10all <- grid.arrange(sfig10a, sfig10b, sfig10_legend,
+sfig14all <- grid.arrange(sfig14a, sfig14b, sfig14_legend,
                           ncol = 1, nrow = 3,
                           layout_matrix = rbind(c(1),c(2),c(3)), 
                           heights=c(5,5,1))
 
-sfig10all <- as_ggplot(sfig10all) +                                
+sfig14all <- as_ggplot(sfig14all) +                                
   draw_plot_label(label = c("A", "B"), size = 14,
                   x = c(0.14, 0.14), y = c(0.99, 0.535)) 
-sfig10all
+sfig14all
 
-ggsave("sfig10.pdf", plot=sfig10all, path="figures/", width = 8, height = 11, units="in", device = "pdf")
+ggsave("sfig14.pdf", plot=sfig14all, path="figures/", width = 8, height = 11, units="in", device = "pdf")

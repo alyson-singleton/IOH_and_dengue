@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S7.
+# Build Supplementary Figure S10.
 #
 # Date created: 8/6/2025
 
@@ -87,11 +87,11 @@ singletons <- center_lat_long %>% filter(clust_indicator == 0)
 clusters   <- center_lat_long %>% filter(clust_indicator == 1)
 
 #####################
-## SFig 7
+## SFig 10
 #####################
 
 # Panel A: Full region
-sfig7a <- ggplot() +
+sfig10a <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
@@ -120,14 +120,14 @@ sfig7a <- ggplot() +
            x = label_x, y = label_y, 
            label = "PM", 
            size = 3.4, fontface = "bold", hjust = 0, color = "black")
-sfig7a
+sfig10a
 
 # Panel B: PM zoom
 buffer_circles_smaller <- centroid_proj %>%
   st_buffer(dist = 4700) %>%
   st_transform(crs = 4326)
 
-sfig7b <- ggplot() +
+sfig10b <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
@@ -148,24 +148,22 @@ sfig7b <- ggplot() +
 xlim_pm <- c(-69.30, -69.07)
 ylim_pm <- c(-12.83, -12.45)
 
-sfig7b_pm <- sfig7b +
+sfig10b_pm <- sfig10b +
   coord_sf(xlim = xlim_pm, ylim = ylim_pm, expand = FALSE) +
   theme(legend.text = element_text(size=12),
         legend.title = element_text(size=14),
         legend.position = 'none')+
   annotation_scale(location = "br",height = unit(0.1, "cm"))
-sfig7b_pm
+sfig10b_pm
 
-sfig7all <- sfig7a + plot_spacer() + sfig7b_pm +
+sfig10all <- sfig10a + plot_spacer() + sfig10b_pm +
   plot_layout(ncol = 3, widths = c(2.5, 0.05, 0.8)) + 
   plot_annotation(
     tag_levels = 'A',
     tag_prefix = '', tag_suffix = '',
     theme = theme(
-      plot.tag = element_text(size = 18, face = "bold", hjust = -0.1, vjust = 1.2)
-    )
-  )
+      plot.tag = element_text(size = 18, face = "bold", hjust = -0.1, vjust = 1.2)))
 
-sfig7all
+sfig10all
 
-ggsave("sfig7.pdf", plot=sfig7all, "figures/", width = 8, height = 5, units = c("in"), device="pdf")
+ggsave("sfig10.pdf", plot=sfig10all, "figures/", width = 8, height = 5, units = c("in"), device="pdf")
