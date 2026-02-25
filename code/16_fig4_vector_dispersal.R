@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure 11.
+# Build Figure 4.
 #
 # Date created: 12/4/2025
 
@@ -100,7 +100,7 @@ highway_mdd <- highway_mdd %>%
   mutate(year_paved = factor(year_paved))
 
 #####################
-## SFig 11a
+## Fig 4a
 #####################
 
 # Coordinates for PM label
@@ -186,7 +186,7 @@ seg_df <- data.frame(x = xy_pt[,1], y = xy_pt[,2],
                      xend = xy_lab[,1], yend = xy_lab[,2])
 
 # Plot
-sfig11a <- ggplot() +
+fig4a <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#3b3b3b', size=.15, show.legend = FALSE) +
   geom_sf(data = roads_mdd %>% filter(fclass %in% c("primary", "secondary", "tertiary", "trunk")), 
           aes(geometry = geometry, color='lightgrey'), linewidth=0.5, alpha=0.4, show.legend = F) +
@@ -260,10 +260,10 @@ sfig11a <- ggplot() +
                linewidth = 1.1,
                color = "#D86A9E") +
   coord_sf(xlim = xlim_crop, ylim = ylim_crop, expand = FALSE)
-sfig11a
+fig4a
 
 #####################
-## SFig 11b
+## Fig 4b
 #####################
 
 # Add proximate paving year
@@ -277,7 +277,7 @@ r2_val <- lm_sum$r.squared
 p_val  <- lm_sum$coefficients["year_paved", "Pr(>|t|)"]
 
 set.seed(42)
-sfig11b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
+fig4b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
   geom_point(size = 3, color=blues[7], alpha = 0.7,
              position = position_jitter(width  = 0, height = 0.15)) +
   geom_smooth(method = "lm", se = TRUE, linewidth = 1, color="#9B2F64", fill  = "#9B2F64", alpha = 0.1) +
@@ -302,10 +302,10 @@ sfig11b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
         axis.text.y  = element_text(size = 11),
         axis.title.x = element_text(size = 12),
         axis.title.y = element_text(size = 12, vjust = 0.5))
-sfig11b
+fig4b
 
 #####################
-## SFig 11c
+## Fig 4c
 #####################
 
 #cumulative vector df
@@ -362,7 +362,7 @@ df_plot <- df_plot %>%
 left_breaks <- seq(0, 15, by = 5)     # adjust as you like
 right_breaks <- to_right(left_breaks) # must be derived from left_breaks
 
-sfig11c <- ggplot(df_plot, aes(x = year)) +
+fig4c <- ggplot(df_plot, aes(x = year)) +
   geom_rect(
     data = periods_df,
     aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
@@ -398,19 +398,19 @@ sfig11c <- ggplot(df_plot, aes(x = year)) +
         axis.title.x = element_text(size = 12),
         axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 11))
 
-sfig11c
+fig4c
 
 #####################
-## SFig 11all
+## Fig 4all
 #####################
 
-sfig11all <- grid.arrange(sfig11a, sfig11b, sfig11c,
+fig4all <- grid.arrange(fig4a, fig4b, fig4c,
                           ncol = 3, nrow = 2, 
                           layout_matrix = rbind(c(1,1,1,1,1,1,2,2,2,2,2),c(1,1,1,1,1,1,3,3,3,3,3)))
 
-sfig11all <- as_ggplot(sfig11all) +
+fig4all <- as_ggplot(fig4all) +
   draw_plot_label(label = c("A", "B", "C"), size = 14,
                   x = c(0.02, 0.515, 0.515), y = c(0.99, 0.99, 0.5))
-sfig11all
+fig4all
 
-ggsave("fig4.pdf", plot=sfig11all, path="figures/", width = 9, height = 5.5, units="in", device = "pdf") 
+ggsave("fig4.pdf", plot=fig4all, path="figures/", width = 9, height = 5.5, units="in", device = "pdf") 
