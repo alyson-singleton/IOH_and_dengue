@@ -45,10 +45,8 @@ reshape_traffic_data <- function(df, name) {
   
   df %>%
     pivot_longer(-Department, names_to = "Year", values_to = "Value") %>%
-    mutate(
-      Year = as.integer(Year),
-      Metric = name
-    )
+    mutate(Year = as.integer(Year),
+           Metric = name)
 }
 
 # Load and process data
@@ -81,8 +79,7 @@ all_traffic_data <- bind_rows(
   interprovincial_passenger_traffic_long,
   estimated_vehicle_fleet_long,
   vehicle_fleet_national_cargo_long,
-  vehicular_flow_toll_units_long
-)
+  vehicular_flow_toll_units_long)
 
 #write_csv(all_traffic_data, "./data/raw/mtc_peru_traffic_data/traffic_data_cleaned.csv")
 
@@ -90,15 +87,13 @@ desired_order <- c(
   "Passenger Traffic",
   "Estimated Vehicle Fleet",
   "National Cargo Vehicle Fleet",
-  "Toll Unit Flow"
-)
+  "Toll Unit Flow")
 
 labeled_titles <- c(
   "Passenger Traffic" = "A. Passenger Traffic",
   "Estimated Vehicle Fleet" = "B. Estimated Vehicle Fleet (% change)",
   "National Cargo Vehicle Fleet" = "C. National Cargo Vehicle Fleet",
-  "Toll Unit Flow" = "D. Toll Unit Flow"
-)
+  "Toll Unit Flow" = "D. Toll Unit Flow")
 
 percent_change_df <- all_traffic_data %>%
   filter(Metric == "Estimated Vehicle Fleet") %>%
@@ -110,9 +105,7 @@ percent_change_df <- all_traffic_data %>%
 all_traffic_data <- all_traffic_data %>%
   filter(Metric != "Estimated Vehicle Fleet") %>%
   bind_rows(percent_change_df) %>%
-  # mutate(Value = ifelse(Value == 0, NA, Value)) %>%
   mutate(Metric = factor(Metric, levels = desired_order))
-
 
 #####################
 ## SFig 7
@@ -135,4 +128,4 @@ sfig7 <- ggplot(all_traffic_data, aes(x = Year, y = Value, color = Department)) 
         legend.position = "bottom")
 sfig7
 
-ggsave("sfig7.pdf", plot=sfig8, path="figures/", width = 9, height = 7, units="in", device = "pdf")
+ggsave("sfig7.pdf", plot=sfig7, path="figures/", width = 9, height = 7, units="in", device = "pdf")

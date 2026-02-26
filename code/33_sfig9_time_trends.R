@@ -11,9 +11,11 @@ library(gridExtra)
 library(ggpubr)
 library(readr)
 library(ggplot2)
+library(scales)
 
 # Load data
 dengue_yearly <- read_rds("data/clean/dengue_yearly_panels.rds")
+vert_line_date <- as.Date("2008-01-01")
 
 #####################
 ## SFig 9a
@@ -148,10 +150,10 @@ sfig9c <- ggplot(dengue_df_yearly_ag) +
     legend.text = element_text(size = 12),
     legend.title = element_blank(),
     legend.position = "bottom",
-    legend.key.width = unit(0.75, "cm"),       # narrower color boxes
-    legend.margin = margin(t = -5, b = -5),     # tighter top/bottom spacing
-    legend.box.margin = margin(t = -5),         # tighter space between plot and legend
-    legend.spacing.x = unit(0.4, "cm"),          # reduce spacing between items
+    legend.key.width = unit(0.75, "cm"),
+    legend.margin = margin(t = -5, b = -5),
+    legend.box.margin = margin(t = -5),
+    legend.spacing.x = unit(0.4, "cm"),
     strip.text.x = element_text(size = 10))
 sfig9c
 sfig9_legend <- get_legend(sfig9c)

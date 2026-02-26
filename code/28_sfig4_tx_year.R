@@ -44,13 +44,14 @@ dengue_ld_2010_df <- read_rds("results/supplementary_text_results/sfig4_dengue_l
 #####################
 ## SFig 4
 #####################
+
 # Construct the dataframe
 sfig4_df <- rbind(
   as.data.frame(cbind(dengue_yearly_2007, Model = rep("A) Paving in 2007", 22))),
   as.data.frame(cbind(dengue_yearly_2008, Model = rep("B) Paving in 2008", 22))),
   as.data.frame(cbind(dengue_yearly_main, Model = rep("C) Paving in 2009 (main)", 22))),
-  as.data.frame(cbind(dengue_yearly_2010, Model = rep("D) Paving in 2010", 22)))
-)
+  as.data.frame(cbind(dengue_yearly_2010, Model = rep("D) Paving in 2010", 22))))
+
 sfig4_df$Model <- factor(sfig4_df$Model, levels = c("A) Paving in 2007", "B) Paving in 2008", 
                                                     "C) Paving in 2009 (main)", "D) Paving in 2010"))
 # Build reference years for each facet
@@ -58,16 +59,14 @@ facet_refs <- data.frame(
   Model = c("A) Paving in 2007", "B) Paving in 2008", 
             "C) Paving in 2009 (main)", "D) Paving in 2010"),
   ref_date = as.Date(c("2006-01-01", "2007-01-01", "2008-01-01", "2009-01-01")),
-  ref_y = 0  # y-location for optional highlight point
-)
+  ref_y = 0)
 
 # Build ld results for each facet
 ld_df <- rbind(
   data.frame(dengue_ld_2007_df, Model = "A) Paving in 2007"),
   data.frame(dengue_ld_2008_df, Model = "B) Paving in 2008"),
   data.frame(dengue_ld_main_df, Model = "C) Paving in 2009 (main)"),
-  data.frame(dengue_ld_2010_df, Model = "D) Paving in 2010")
-) %>%
+  data.frame(dengue_ld_2010_df, Model = "D) Paving in 2010")) %>%
   left_join(facet_refs, by = "Model")
 
 # Plot
@@ -87,7 +86,7 @@ sfig4 <- ggplot(sfig4_df, aes(x = year, y = estimate)) +
   geom_vline(data = facet_refs, aes(xintercept = ref_date), 
              linetype = 'dashed', linewidth = 0.4, inherit.aes = FALSE) +
   
-  # Optional: highlight a reference point at y = 0
+  # Reference point at y = 0
   geom_point(data = facet_refs, aes(x = ref_date, y = ref_y), 
              shape = 21, fill = "white", size = 3, inherit.aes = FALSE) +
   

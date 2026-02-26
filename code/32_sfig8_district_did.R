@@ -20,6 +20,7 @@ library(RColorBrewer)
 library(mapview)
 library(tidyverse)
 library(patchwork)
+library(fixest)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -101,7 +102,7 @@ population_district_data <- population_district_data[,c(6,7,10:30)] %>%
          department = str_to_upper(department))
 
 ###################
-# Madre de Dios
+# Madre de Dios district data
 ###################
 
 mdd_dengue_district_df <- dengue_district_data %>%
@@ -118,7 +119,10 @@ mdd_dengue_district_df <- dengue_district_data %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
-# SFig 8: MdD incidence trends
+###################
+# SFig 8a: MdD incidence trends
+###################
+
 mdd_raw_trends <- mdd_dengue_district_df %>%
   group_by(year, road_status) %>%
   summarize(dengue_cases = sum(dengue_cases, na.rm = TRUE),
@@ -148,7 +152,10 @@ sfig8_legend <- get_legend(sfig8a)
 sfig8a <- sfig8a + theme(legend.position = "none")
 sfig8a
 
+###################
 # SFig 8b: MdD DiD Model
+###################
+
 mdd_district_model <- feols(
   incidence ~ i(year, road_status, ref = 2008) | district + year,
   vcov = ~ district,
@@ -191,7 +198,7 @@ sfig8ab <- (sfig8a | sfig8b) +
 sfig8ab
 
 ###################
-# Loreto
+# Loreto district data
 ###################
 
 loreto_dengue_district_df <- dengue_district_data %>%
@@ -208,7 +215,10 @@ loreto_dengue_district_df <- dengue_district_data %>%
   filter(year %in% 2000:2020) %>%
   mutate(incidence = dengue_cases / population * 1000)
 
+###################
 # SFig 8c: Loreto incidence trends
+###################
+
 loreto_raw_trends <- loreto_dengue_district_df %>%
   group_by(year, road_status) %>%
   summarize(dengue_cases = sum(dengue_cases, na.rm = TRUE),
@@ -234,7 +244,10 @@ sfig8c <- ggplot(loreto_raw_trends,
   theme_stor
 sfig8c
 
+###################
 # SFig 8d: Loreto DiD Model
+###################
+
 loreto_district_model <- feols(
   incidence ~ i(year, road_status, ref = 2004) | district + year,
   vcov = ~ district,
@@ -279,6 +292,7 @@ sfig8cd
 ###################
 # SFig 8all
 ###################
+
 sfig8combined <- grid.arrange(sfig8a, sfig8c, sfig8b, sfig8d, sfig8_legend,                     
                                ncol = 2, nrow = 3,
                                layout_matrix = rbind(c(1,2),c(3, 4), c(5, 5)), 

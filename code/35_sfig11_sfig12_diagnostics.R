@@ -69,7 +69,7 @@ sfig11a <- ggplot(dengue_yearly_df_diag, aes(x = fitted, y = resid)) +
 sfig11a
 
 # Residual distribution
-sfig11b <- ggplot(df_diag, aes(x = resid)) +
+sfig11b <- ggplot(dengue_yearly_df_diag, aes(x = resid)) +
   geom_histogram(bins = 75, color = "white") +
   labs(x = "Residuals",
        y = "Count",
@@ -164,9 +164,9 @@ leish_yearly_vif_within <- sapply(seq_len(ncol(demeaned_values)), function(j){ #
 })
 
 names(leish_yearly_vif_within) <- colnames(leish_yearly_vif_within)
-vif_within
-summary(vif_within)
-max(vif_within)
+leish_yearly_vif_within
+summary(leish_yearly_vif_within)
+max(leish_yearly_vif_within)
 
 # 3) Residual diagnostics (within residuals)
 leish_yearly_df_diag <- leish_yearly$connected_buffered %>%

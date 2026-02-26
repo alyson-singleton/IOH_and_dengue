@@ -83,8 +83,8 @@ center_lat_long <- center_lat_long %>%
   mutate(clust_indicator = if_else(n() == 1, 0, 1)) %>%
   ungroup()
 
-singletons <- center_lat_long %>% filter(clust_indicator == 0)
-clusters   <- center_lat_long %>% filter(clust_indicator == 1)
+single_points <- center_lat_long %>% filter(clust_indicator == 0)
+clusters <- center_lat_long %>% filter(clust_indicator == 1)
 
 #####################
 ## SFig 10
@@ -96,7 +96,7 @@ sfig10a <- ggplot() +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
-  geom_sf(data = singletons, aes(geometry = geometry), fill = 'white', color='black', pch=21, size = 2, alpha=0.7) +
+  geom_sf(data = single_points, aes(geometry = geometry), fill = 'white', color='black', pch=21, size = 2, alpha=0.7) +
   geom_sf(data = clusters, aes(geometry = geometry), fill = '#648FFF', color='black', pch=21, size = 2, alpha=0.7) +
   geom_sf(data = buffer_circles, aes(geometry = geometry), color='#E04490', fill=NA, linewidth=0.5) +
   scale_fill_viridis_d(name = "Cluster") +
@@ -132,7 +132,7 @@ sfig10b <- ggplot() +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
   geom_sf(data = highway_mdd, aes(geometry = geometry, color='black'), linewidth=0.7, show.legend = "line") +
-  geom_sf(data = singletons, aes(geometry = geometry), fill = 'white', color='black', pch=21, size = 2, alpha=0.7) +
+  geom_sf(data = single_points, aes(geometry = geometry), fill = 'white', color='black', pch=21, size = 2, alpha=0.7) +
   geom_sf(data = clusters, aes(geometry = geometry), fill = '#648FFF', color='black', pch=21, size = 2, alpha=0.7) +
   geom_sf(data = buffer_circles_smaller, aes(geometry = geometry), color='#E04490', fill=NA, linewidth=0.5) +
   scale_fill_viridis_d(name = "Cluster") +
@@ -161,8 +161,7 @@ sfig10all <- sfig10a + plot_spacer() + sfig10b_pm +
   plot_annotation(
     tag_levels = 'A',
     tag_prefix = '', tag_suffix = '',
-    theme = theme(
-      plot.tag = element_text(size = 18, face = "bold", hjust = -0.1, vjust = 1.2)))
+    theme = theme(plot.tag = element_text(size = 18, face = "bold", hjust = -0.1, vjust = 1.2)))
 
 sfig10all
 

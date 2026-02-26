@@ -28,7 +28,6 @@ get_legend<-function(myggplot){
   return(legend)
 }
 
-# Create standard figure theme
 theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
@@ -84,77 +83,46 @@ mapview(roads_loreto %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary
   mapview(districts_loreto)
 
 ###################
-# Dengue & population data (district level)
+# Create exposure labels
 ###################
 
-dengue_district_data <- read_rds("./data/raw/cdc_district_dengue_data/cdc_district_dengue_data.rds")
-population_district_data <- read_csv("./data/raw/environmental_data/peru_population_districts_yearly.csv")
-population_district_data <- population_district_data[,c(6,7,10:30)] %>%
-  pivot_longer(
-    cols = matches("^PER_\\d{4}_population$"),
-    names_to = "year",
-    values_to = "population") %>%
-  mutate(year = as.integer(str_extract(year, "\\d{4}"))) %>%
-  rename(district = "DISTRITO",
-         department = "DEPARTAMEN") %>%
-  mutate(district = str_to_upper(district),
-         department = str_to_upper(department))
+# Madre de Dios: districts with IOH (from above visual)
+mdd_exposed <- c("INAMBARI", "TAMBOPATA", "LABERINTO", "LAS PIEDRAS",
+                 "TAHUAMANU", "IBERIA", "IÑAPARI") %>%
+  str_to_upper() %>% str_trim()
 
-###################
-# Madre de Dios
-###################
+districts_mdd_sf <- districts_mdd %>%
+  mutate(district = str_to_upper(str_trim(DISTRITO)),
+         road_status = if_else(district %in% mdd_exposed, 1L, 0L),
+         exposure_group = if_else(road_status == 1L, "Exposed", "Unexposed"))
 
-mdd_dengue_district_df <- dengue_district_data %>%
-  filter(departamento == "MADRE DE DIOS",
-         tipo_dx %in% c("C", "P")) %>%
-  group_by(ano, distrito, departamento) %>%
-  summarize(dengue_cases = n(), .groups = "drop") %>%
-  complete(distrito, ano = 2000:2020, departamento, fill = list(dengue_cases = 0)) %>%
-  mutate(road_status = if_else(
-    distrito %in% c("INAMBARI", "TAMBOPATA", "LABERINTO", "LAS PIEDRAS",
-                    "TAHUAMANU", "IBERIA", "IÑAPARI"), 1L, 0L)) %>% #districts with major paved roads
-  rename(district = distrito, year = ano, department = departamento) %>%
-  left_join(population_district_data, by = c("district", "year", "department")) %>%
-  filter(year %in% 2000:2020) %>%
-  mutate(incidence = dengue_cases / population * 1000)
+# Loreto: districts with Iquitos-Nauta Highway & those with other major roads (from above visual)
+loreto_exposed <- c("IQUITOS", "PUNCHANA", "NAUTA", "SAN JUAN BAUTISTA") %>%
+  str_to_upper() %>% str_trim()
 
-###################
-# Loreto
-###################
+removed_districts <- c("YURIMAGUAS", "MANSERICHE") %>%
+  str_to_upper() %>% str_trim()
 
-loreto_dengue_district_df <- dengue_district_data %>%
-  filter(departamento == "LORETO",
-         tipo_dx %in% c("C", "P")) %>%
-  group_by(ano, distrito, departamento) %>%
-  summarize(dengue_cases = n(), .groups = "drop") %>%
-  complete(distrito, ano = 2000:2020, departamento, fill = list(dengue_cases = 0)) %>%
-  mutate(road_status = if_else(
-    distrito %in% c("IQUITOS", "PUNCHANA", "NAUTA", "SAN JUAN BAUTISTA"), 1L, 0L)) %>% #districts with major paved roads
-  filter(!distrito %in% c("YURIMAGUAS", "MANSERICHE")) %>%
-  rename(district = distrito, year = ano, department = departamento) %>%
-  left_join(population_district_data, by = c("district", "year", "department")) %>%
-  filter(year %in% 2000:2020) %>%
-  mutate(incidence = dengue_cases / population * 1000)
+districts_loreto_sf <- districts_loreto %>%
+  mutate(district = str_to_upper(str_trim(DISTRITO)),
+         exposure_group = case_when(
+           district %in% removed_districts ~ "Removed",
+           district %in% loreto_exposed ~ "Exposed",
+           TRUE ~ "Unexposed"),
+         road_status = case_when(
+           exposure_group == "Removed" ~ NA_integer_,
+           exposure_group == "Exposed" ~ 1L,
+           TRUE ~ 0L),
+         exposure_group = factor(exposure_group, levels = c("Exposed", "Unexposed", "Removed")))
 
 ###################
 # SFig 6
 ###################
 
 # SFig6a: MdD district map
-mdd_exposure_lookup <- mdd_dengue_district_df %>%
-  distinct(district, road_status) %>%
-  mutate(district = str_to_upper(str_trim(district)),
-         road_status = as.integer(road_status),
-         exposure_group = if_else(road_status == 1L, "Exposed", "Unexposed"))
-
-districts_mdd_sf <- districts_mdd %>%
-  mutate(district = str_to_upper(str_trim(DISTRITO))) %>%
-  left_join(mdd_exposure_lookup, by = "district") %>%
-  mutate(road_status = replace_na(road_status, 0L),
-         exposure_group = replace_na(exposure_group, "Unexposed"))
-
 roads_mdd_major <- roads_mdd %>%
-  filter(fclass %in% c("trunk"))
+  filter(fclass %in% c("trunk")) %>% 
+  st_intersection(mdd_peru)
 
 exposure_pal <- c("Exposed" = "#E04490", "Unexposed" = "#648FFF")
 
@@ -164,15 +132,14 @@ arrows_df <- data.frame(
   xend = c(-69.44, -70.50),
   yend = c(-10.70, -13.38),
   lab  = c("To Brazil", "To Cusco"),
-  lab_x = c(-70.1, -70.32),  # text position (can differ from arrow start)
+  lab_x = c(-70.1, -70.32),
   lab_y = c(-10.8, -13.43))
 
 sfig6a_map_mdd <- ggplot() +
   geom_sf(data = districts_mdd_sf, aes(fill = exposure_group), alpha = 0.5, color = "grey30", linewidth = 0.12) +
   geom_sf(data = roads_mdd_major, color = "black", linewidth = 0.8, alpha = 1) +
-  scale_fill_manual(
-    name = "", values = exposure_pal, breaks = c("Exposed", "Unexposed"),
-    labels = c("Exposed", "Unexposed")) +
+  scale_fill_manual(name = "", values = exposure_pal, breaks = c("Exposed", "Unexposed"),
+                    labels = c("Exposed", "Unexposed")) +
   coord_sf(datum = NA) +
   labs(title = NULL, x = NULL, y = NULL) +
   theme_minimal() +
@@ -211,31 +178,12 @@ sfig6a_map_mdd_w_inset <- ggdraw() +
                     legend.title=element_text(size=14),
                     legend.position = "none"),
             0.05, 0.7, 0.27, 0.27) + 
-  draw_plot(sfig11a_map_mdd,
+  draw_plot(sfig6a_map_mdd,
             0.05, 0, 0.95, 1)
 sfig6a_map_mdd_w_inset
 
 # SFig6b: Loreto district map
 removed_districts <- c("YURIMAGUAS", "MANSERICHE")
-
-loreto_exposure_lookup <- loreto_dengue_district_df %>%
-  distinct(district, road_status) %>%
-  mutate(district = str_to_upper(str_trim(district)),
-         road_status = as.integer(road_status),
-         exposure_group = dplyr::case_when(
-           district %in% removed_districts ~ "Removed",
-           road_status == 1L ~ "Exposed",
-           TRUE ~ "Unexposed"))
-
-districts_loreto_sf <- districts_loreto %>%
-  mutate(district = str_to_upper(str_trim(DISTRITO))) %>%
-  left_join(loreto_exposure_lookup, by = "district") %>%
-  mutate(road_status = if_else(district %in% removed_districts, NA_integer_, replace_na(road_status, 0L)),
-         exposure_group = dplyr::case_when(
-           district %in% removed_districts ~ "Removed",
-           is.na(exposure_group) ~ "Unexposed",
-           TRUE ~ exposure_group),
-         exposure_group = factor(exposure_group, levels = c("Exposed", "Unexposed", "Removed")))
 
 roads_loreto_major <- roads_loreto %>%
   filter(fclass %in% c("trunk", "primary")) %>%
@@ -273,7 +221,7 @@ sfig6b_map_loreto_w_inset <- ggdraw() +
                     legend.title=element_text(size=14),
                     legend.position = "none"),
             0.0, 0.7, 0.27, 0.27) + 
-  draw_plot(sfig11b_map_loreto,
+  draw_plot(sfig6b_map_loreto,
             0.05, 0, 0.95, 1)
 sfig6b_map_loreto_w_inset
 
@@ -281,9 +229,9 @@ sfig6b_map_loreto_w_inset
 # SFig6all
 ###################
 sfig6combined <- grid.arrange(sfig6a_map_mdd_w_inset, sfig6b_map_loreto_w_inset, sfig6_legend,                     
-                               ncol = 2, nrow = 2,
-                               layout_matrix = rbind(c(1,2), c(3, 3)), 
-                               heights=c(7,1))
+                              ncol = 2, nrow = 2,
+                              layout_matrix = rbind(c(1,2), c(3, 3)), 
+                              heights=c(7,1))
 
 sfig6combined <- as_ggplot(sfig6combined) +
   draw_plot_label(label = c("Madre de Dios", "Loreto"), size = 14,

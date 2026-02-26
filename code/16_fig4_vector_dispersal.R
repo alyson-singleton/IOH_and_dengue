@@ -29,13 +29,10 @@ get_legend<-function(myggplot){
 dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
 dengue_biannual <- readRDS("data/clean/dengue_biannual_panels.rds")
 
-# Load leishmaniasis panel datasets
-leish_yearly <- readRDS("data/clean/leish_yearly_panels.rds")
-leish_biannual <- readRDS("data/clean/leish_biannual_panels.rds")
-
-# Load spatial data
+# Load vector dispersal data and link to health facility names
 mdd_aedes_aegypti_chronology <- read.csv("data/raw/diresa_data/mdd_aedes_aegypti_chronology.csv")
 linked_ids_codes <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
+
 linked_clean <- linked_ids_codes %>%
   mutate(name = name |> str_squish() |> str_to_lower()) %>%
   filter(!key %in% c(101, 105, 106))
@@ -46,6 +43,7 @@ hfs_lat_long_aedes <- mdd_aedes_aegypti_chronology %>%
 hfs_lat_long_aedes <- hfs_lat_long_aedes %>%
   sf::st_as_sf(coords = c('longitude','latitude'), crs = st_crs(4326))
 
+# Load spatial data
 districts <- read_sf("data/raw/spatial_data/mdd_districts.shp")
 districts <- st_as_sf(districts) 
 districts$geometry <- st_transform(districts$geometry, 4326)
@@ -71,7 +69,7 @@ no_axis <- theme(axis.title=element_blank(),
                  panel.grid.major = element_blank())
 
 #####################
-# Add year paved to highway data
+# Add year paved to highway geometries
 #####################
 
 highway_mdd$year_paved <- NA_real_
@@ -112,15 +110,12 @@ label_y <- pm_y - pm_dy
 arrow_x <- pm_x
 arrow_y <- pm_y - 0.1
 
-# Vector detection formatting
+# Vector dispersal label formatting
 hfs_lat_long_aedes <- hfs_lat_long_aedes %>%
-  filter(!is.na(year))
-
-hfs_lat_long_aedes_a <- hfs_lat_long_aedes %>%
-  mutate(
-    year_group = case_when(
-      year %in% c(1999, 2004, 2005) ~ "1999–2005 (pre-paving)",
-      TRUE ~ as.character(year)),
+  filter(!is.na(year)) %>%
+  mutate(year_group = case_when(
+    year %in% c(1999, 2004, 2005) ~ "1999–2005 (pre-paving)",
+    TRUE ~ as.character(year)),
     year_group = factor(
       year_group,
       levels = c(
@@ -128,14 +123,13 @@ hfs_lat_long_aedes_a <- hfs_lat_long_aedes %>%
         "2006", "2007", "2008", "2009"))) %>%
   st_set_crs(4326)
 
-# Vector detection colors
+# Vector dispersal colors
 blues <- brewer.pal(9, "Blues")
-year_colors <- c(
-  "1999–2005 (pre-paving)" = blues[2],
-  "2006" = blues[3],
-  "2007" = blues[5],
-  "2008" = blues[7],
-  "2009" = blues[9])
+year_colors <- c("1999–2005 (pre-paving)" = blues[2],
+                 "2006" = blues[3],
+                 "2007" = blues[5],
+                 "2008" = blues[7],
+                 "2009" = blues[9])
 
 # Crop boundaries
 xlim_crop <- c(-70.78, -68.55)
@@ -148,20 +142,20 @@ arrow_df <- data.frame(
   xend = c(-70.36, -69.41, -69.67),
   yend = c(-12.80, -12.56, -11.12))
 
-# Vector label locations
-dxA <- 0.12; dyA <- 0.06   # Group A: up-right
-dxB <- 0.08; dyB <- -0.12  # Group B: down-right
-
+# Vector label locations (groups)
+dxA <- 0.12; dyA <- 0.06 # up/right
+dxB <- 0.08; dyB <- -0.12 # down/right
 groupA <- c("iberia","alerta","mavila","alegría", "planchon", "el triunfo")
 groupB <- c("puerto maldonado","laberinto","alto libertad","santa rosa","mazuko")
 
-# Two special label locations 
+# Two special label locations that don't fit main pattern
 special <- tibble::tribble(
   ~city, ~dx, ~dy,
   "huepetuhe", -0.14, -0.15,
   "iñapari", 0.1, -0.1)
 
-labs_sf <- hfs_lat_long_aedes_a %>%
+# Assign vector label locations
+labs_sf <- hfs_lat_long_aedes %>%
   st_set_crs(4326) %>%
   mutate(dx = dplyr::case_when(city %in% groupA ~ dxA,
                                city %in% groupB ~ dxB,
@@ -185,7 +179,7 @@ xy_lab <- sf::st_coordinates(labs_sf$geom_lab)
 seg_df <- data.frame(x = xy_pt[,1], y = xy_pt[,2],
                      xend = xy_lab[,1], yend = xy_lab[,2])
 
-# Plot
+# Fig 4a
 fig4a <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#3b3b3b', size=.15, show.legend = FALSE) +
   geom_sf(data = roads_mdd %>% filter(fclass %in% c("primary", "secondary", "tertiary", "trunk")), 
@@ -201,7 +195,7 @@ fig4a <- ggplot() +
                 fill = "white",
                 size = 3.7,
                 hjust = 0) +
-  geom_sf(data = hfs_lat_long_aedes_a, aes(geometry = geometry, fill=year_group), color='black', shape = 21, size = 5) +
+  geom_sf(data = hfs_lat_long_aedes, aes(geometry = geometry, fill=year_group), color='black', shape = 21, size = 5) +
   scale_fill_manual(name = "Year vector detected", values = year_colors) +
   scale_color_manual(name = "Year highway paved", values = c("2008" = '#F4C2D7', "2009" = '#D86A9E', "2010" = '#9B2F64'),
                      labels = c("2008" = "2006-2008", "2009" = "2009", "2010" = "2010")) +
@@ -266,7 +260,7 @@ fig4a
 ## Fig 4b
 #####################
 
-# Add proximate paving year
+# Add proximate paving year to locations with vector data
 hfs_lat_long_aedes$year_paved <- c(NA, NA, NA, 2008, 2008, 2008, 2009, 2009, 2008, 2009, 2010, 2010, NA)
 hfs_lat_long_aedes$year <- as.numeric(as.character(hfs_lat_long_aedes$year))
 
@@ -281,20 +275,18 @@ fig4b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
   geom_point(size = 3, color=blues[7], alpha = 0.7,
              position = position_jitter(width  = 0, height = 0.15)) +
   geom_smooth(method = "lm", se = TRUE, linewidth = 1, color="#9B2F64", fill  = "#9B2F64", alpha = 0.1) +
-  annotate(
-    "text", x = 2008.25, y = 2010,
-    hjust = 0,
-    label = paste0(
-      "r^2 = ", round(r2_val, 3),
-      "\np = ", signif(p_val, 2)),
-    size = 4) +
+  annotate("text", x = 2008.25, y = 2010,
+           hjust = 0,
+           label = paste0(
+             "r^2 = ", round(r2_val, 3),
+             "\np = ", signif(p_val, 2)),
+           size = 4) +
   labs(x = "Year proximate\nhighway section paved",
        y = "Year vector detected") +
-  scale_x_continuous(
-    breaks = seq(
-      floor(min(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
-      ceiling(max(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
-      by = 1)) +
+  scale_x_continuous(breaks = seq(
+    floor(min(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
+    ceiling(max(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
+    by = 1)) +
   scale_y_continuous(breaks = c(2005,2007,2009,2011)) +
   coord_cartesian(ylim = c(2005, 2011)) +
   theme_minimal() +
@@ -308,7 +300,7 @@ fig4b
 ## Fig 4c
 #####################
 
-#cumulative vector df
+# Cumulative number of communities with vector detected
 vector_first_year <- hfs_lat_long_aedes %>%
   group_by(key) %>%
   summarise(first_year = min(year, na.rm = TRUE),.groups = "drop")
@@ -327,48 +319,47 @@ vector_yearly <- vector_yearly %>%
   arrange(year) %>%
   mutate(cum_sites_vector = cummax(cum_sites_vector))
 
-#passenger traffic only
+# Load passenger traffic data
 all_traffic_data <- read_csv("./data/raw/mtc_peru_traffic_data/traffic_data_cleaned.csv")
 mobility_yearly <- all_traffic_data %>%
   filter(Metric == "Passenger Traffic" & Department == "Madre de Dios") %>%
   rename(year = Year)
 
-#build joint df
+# Build joint df
 df_plot <- vector_yearly %>%
   full_join(mobility_yearly, by = "year") %>%
   arrange(year)
 
+# Build correct y-axis scales
 aedes_range <- range(df_plot$cum_sites_vector, na.rm = TRUE)
-mob_range   <- range(df_plot$Value, na.rm = TRUE)
+mob_range <- range(df_plot$Value, na.rm = TRUE)
 
 df_plot <- df_plot %>%
   mutate(mobility_scaled =
            (Value - mob_range[1]) / diff(mob_range) * diff(aedes_range) + aedes_range[1])
 
-#build periods df
+to_left  <- function(y_right) (y_right - mob_range[1]) / diff(mob_range) * diff(aedes_range) + aedes_range[1]
+to_right <- function(y_left)  (y_left - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1]
+
+df_plot <- df_plot %>%
+  mutate(mobility_scaled = to_left(Value))
+
+# Build periods df 
 periods_df <- data.frame(phase = c("Pre-paving", "During construction", "Highway complete"),
                          xmin  = c(1999, 2006, 2010),
                          xmax  = c(2006, 2010, 2018))
 
-# define transforms once (use the same ones everywhere)
-to_left  <- function(y_right) (y_right - mob_range[1]) / diff(mob_range) * diff(aedes_range) + aedes_range[1]
-to_right <- function(y_left)  (y_left - aedes_range[1]) / diff(aedes_range) * diff(mob_range) + mob_range[1]
+# Choose left-axis breaks (these define gridlines)
+left_breaks <- seq(0, 15, by = 5)
+right_breaks <- to_right(left_breaks)
 
-# scale mobility using the transform
-df_plot <- df_plot %>%
-  mutate(mobility_scaled = to_left(Value))
-
-# choose left-axis breaks (these will define gridlines)
-left_breaks <- seq(0, 15, by = 5)     # adjust as you like
-right_breaks <- to_right(left_breaks) # must be derived from left_breaks
-
+# Fig 4c
 fig4c <- ggplot(df_plot, aes(x = year)) +
-  geom_rect(
-    data = periods_df,
-    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
-    inherit.aes = FALSE,
-    fill = c("#f0f0f0", "#d9d9d9", "#bdbdbd"),
-    alpha = 0.35) +
+  geom_rect(data = periods_df,
+            aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+            inherit.aes = FALSE,
+            fill = c("#f0f0f0", "#d9d9d9", "#bdbdbd"),
+            alpha = 0.35) +
   annotate("text",
            x = c(2002.5, 2008, 2014), y = 16.3,
            label = c("Before", "During", "After"),
@@ -397,7 +388,6 @@ fig4c <- ggplot(df_plot, aes(x = year)) +
         axis.text.y.right = element_text(size=9),
         axis.title.x = element_text(size = 12),
         axis.text.x = element_text(hjust = 0.5, vjust = 1, size = 11))
-
 fig4c
 
 #####################
@@ -405,8 +395,8 @@ fig4c
 #####################
 
 fig4all <- grid.arrange(fig4a, fig4b, fig4c,
-                          ncol = 3, nrow = 2, 
-                          layout_matrix = rbind(c(1,1,1,1,1,1,2,2,2,2,2),c(1,1,1,1,1,1,3,3,3,3,3)))
+                        ncol = 3, nrow = 2, 
+                        layout_matrix = rbind(c(1,1,1,1,1,1,2,2,2,2,2),c(1,1,1,1,1,1,3,3,3,3,3)))
 
 fig4all <- as_ggplot(fig4all) +
   draw_plot_label(label = c("A", "B", "C"), size = 14,
