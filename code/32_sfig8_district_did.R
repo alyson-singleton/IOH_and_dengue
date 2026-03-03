@@ -106,14 +106,15 @@ population_district_data <- population_district_data[,c(6,7,10:30)] %>%
 ###################
 
 mdd_dengue_district_df <- dengue_district_data %>%
-  filter(departamento == "MADRE DE DIOS",
-         tipo_dx %in% c("C", "P")) %>%
-  group_by(ano, distrito, departamento) %>%
-  summarize(dengue_cases = n(), .groups = "drop") %>%
-  complete(distrito, ano = 2000:2020, departamento, fill = list(dengue_cases = 0)) %>%
+  filter(departamento == "MADRE DE DIOS") %>%
+  mutate(dengue_cases = dengue_total) %>%
+  select(ano, distrito, departamento, dengue_cases) %>%
+  tidyr::complete(
+    distrito, ano = 2000:2020, departamento,
+    fill = list(dengue_cases = 0L)) %>%
   mutate(road_status = if_else(
     distrito %in% c("INAMBARI", "TAMBOPATA", "LABERINTO", "LAS PIEDRAS",
-                    "TAHUAMANU", "IBERIA", "IÑAPARI"), 1L, 0L)) %>% #districts with major paved roads
+                    "TAHUAMANU", "IBERIA", "IÑAPARI"), 1L, 0L)) %>%
   rename(district = distrito, year = ano, department = departamento) %>%
   left_join(population_district_data, by = c("district", "year", "department")) %>%
   filter(year %in% 2000:2020) %>%
@@ -131,8 +132,8 @@ mdd_raw_trends <- mdd_dengue_district_df %>%
             .groups = "drop")
 
 sfig8a <- ggplot(mdd_raw_trends,
-                  aes(x = year, y = incidence,
-                      color = factor(road_status), group = road_status)) +
+                 aes(x = year, y = incidence,
+                     color = factor(road_status), group = road_status)) +
   geom_line(linewidth = 0.7) +
   scale_color_manual(name = "", 
                      breaks = c("1", "0"),
@@ -191,24 +192,20 @@ sfig8b <- ggplot(mdd_district_results_df) +
   theme_stor
 sfig8b
 
-# SFig 8ab: MdD panels
-sfig8ab <- (sfig8a | sfig8b) +
-  plot_layout(guides = "collect") &
-  theme(legend.position = "bottom")
-sfig8ab
-
 ###################
 # Loreto district data
 ###################
 
-loreto_dengue_district_df <- dengue_district_data %>%
-  filter(departamento == "LORETO",
-         tipo_dx %in% c("C", "P")) %>%
-  group_by(ano, distrito, departamento) %>%
-  summarize(dengue_cases = n(), .groups = "drop") %>%
-  complete(distrito, ano = 2000:2020, departamento, fill = list(dengue_cases = 0)) %>%
+loreto_dengue_district_df <- peru_district_year %>%
+  filter(departamento == "LORETO") %>%
+  mutate(dengue_cases = dengue_total) %>%
+  select(ano, distrito, departamento, dengue_cases) %>%
+  tidyr::complete(
+    distrito, ano = 2000:2020, departamento,
+    fill = list(dengue_cases = 0L)) %>%
   mutate(road_status = if_else(
-    distrito %in% c("IQUITOS", "PUNCHANA", "NAUTA", "SAN JUAN BAUTISTA"), 1L, 0L)) %>% #districts with major paved roads ("YURIMAGUAS", "MANSERICHE")
+    distrito %in% c("IQUITOS", "PUNCHANA", "NAUTA", "SAN JUAN BAUTISTA"),
+    1L, 0L)) %>%
   filter(!distrito %in% c("YURIMAGUAS", "MANSERICHE")) %>%
   rename(district = distrito, year = ano, department = departamento) %>%
   left_join(population_district_data, by = c("district", "year", "department")) %>%
@@ -227,8 +224,8 @@ loreto_raw_trends <- loreto_dengue_district_df %>%
             .groups = "drop")
 
 sfig8c <- ggplot(loreto_raw_trends,
-                  aes(x = year, y = incidence,
-                      color = factor(road_status), group = road_status)) +
+                 aes(x = year, y = incidence,
+                     color = factor(road_status), group = road_status)) +
   geom_line(linewidth = 0.7) +
   scale_color_manual(name = "", 
                      breaks = c("1", "0"),
@@ -283,20 +280,14 @@ sfig8d <- ggplot(loreto_district_results_df) +
   theme_stor
 sfig8d
 
-# SFig 8cd: Loreto panels
-sfig8cd <- (sfig8c | sfig8d) +
-  plot_layout(guides = "collect") &
-  theme(legend.position = "bottom")
-sfig8cd
-
 ###################
 # SFig 8all
 ###################
 
 sfig8combined <- grid.arrange(sfig8a, sfig8c, sfig8b, sfig8d, sfig8_legend,                     
-                               ncol = 2, nrow = 3,
-                               layout_matrix = rbind(c(1,2),c(3, 4), c(5, 5)), 
-                               heights=c(4,4,1))
+                              ncol = 2, nrow = 3,
+                              layout_matrix = rbind(c(1,2),c(3, 4), c(5, 5)), 
+                              heights=c(4,4,1))
 
 sfig8combined <- as_ggplot(sfig8combined) +                                
   draw_plot_label(label = c("A", "B", "C", "D"), size = 14,
