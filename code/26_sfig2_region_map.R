@@ -246,7 +246,7 @@ sfig2 <- ggdraw() +
               geom_sf(data = bolivia_pando, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = brazil_acre, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = mdd_peru, fill='#EEEEEE', color='#a6a6a6', size=.5, show.legend = FALSE) +
-              geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
+              geom_sf(data = peru_outline_noholes, fill=NA, color='black', size=.3, show.legend = FALSE) +
               geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.6, show.legend = "line") +
               geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.6, show.legend = "line") +
               theme_minimal() +
