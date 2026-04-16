@@ -88,7 +88,7 @@ mapview(roads_loreto %>% filter(maxspeed >= 30 | fclass %in% c("trunk", "primary
 # Dengue & population data (district level)
 ###################
 
-dengue_district_data <- read_rds("./data/raw/cdc_district_dengue_data/cdc_district_dengue_data.rds")
+dengue_district_data <- read_rds("./data/raw/cdc_dengue_data/cdc_district_dengue_data.rds")
 population_district_data <- read_csv("./data/raw/environmental_data/peru_population_districts_yearly.csv")
 population_district_data <- population_district_data[,c(6,7,10:30)] %>%
   pivot_longer(

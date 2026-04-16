@@ -64,7 +64,7 @@ peru_population_cusco[nrow(peru_population_cusco) + 1,] <- c(2022,peru_populatio
 peru_population_cusco[nrow(peru_population_cusco) + 1,] <- c(2023,peru_population_cusco[23,2]*peru_population_cusco[23,2]/peru_population_cusco[22,2])
 
 # dengue case data
-peru_district_case_data <- read_rds("data/raw/cdc_district_dengue_data/cdc_district_dengue_data.rds")
+peru_district_case_data <- read_rds("data/raw/cdc_dengue_data/cdc_district_dengue_data.rds")
 cusco_peru_case_data <- peru_district_case_data[which(peru_district_case_data$departamento=="CUSCO"),]
 cusco_peru_case_data_summary <- cusco_peru_case_data %>%
   group_by(ano) %>%
@@ -87,7 +87,7 @@ peru_population_loreto[nrow(peru_population_loreto) + 1,] <- c(2022,peru_populat
 peru_population_loreto[nrow(peru_population_loreto) + 1,] <- c(2023,peru_population_loreto[23,2]*peru_population_loreto[23,2]/peru_population_loreto[22,2])
 
 # dengue case data
-peru_district_case_data <- read_rds("data/raw/cdc_district_dengue_data/cdc_district_dengue_data.rds")
+peru_district_case_data <- read_rds("data/raw/cdc_dengue_data/cdc_district_dengue_data.rds")
 loreto_peru_case_data <- peru_district_case_data[which(peru_district_case_data$departamento=="LORETO"),]
 loreto_peru_case_data_summary <- loreto_peru_case_data %>%
   group_by(ano) %>%
@@ -246,7 +246,7 @@ sfig2 <- ggdraw() +
               geom_sf(data = bolivia_pando, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = brazil_acre, fill='#EEEEEE', color='#a6a6a6', size=.15, show.legend = FALSE) +
               geom_sf(data = mdd_peru, fill='#EEEEEE', color='#a6a6a6', size=.5, show.legend = FALSE) +
-              geom_sf(data = peru_outline, fill=NA, color='black', size=.3, show.legend = FALSE) +
+              geom_sf(data = peru_outline_noholes, fill=NA, color='black', size=.3, show.legend = FALSE) +
               geom_sf(data = highway_final, aes(geometry = geometry), color='red', linewidth=0.6, show.legend = "line") +
               geom_sf(data = brazil_norte_roads_primary_estrada, aes(geometry = geometry), color='red', linewidth=0.6, show.legend = "line") +
               theme_minimal() +

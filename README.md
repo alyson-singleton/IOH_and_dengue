@@ -1,6 +1,6 @@
 > Code for: [*Highway paving increased dengue transmission in the Peruvian Amazon.*](https://www.medrxiv.org/content/10.1101/2024.11.15.24317406v1) Preprint, 2025. Code written by Alyson Singleton and TJ Sipin.
 >
-> Please feel free to send an email with any specific, code-related questions to [asinglet\@stanford.edu](mailto:asinglet@stanford.edu){.email}.
+> Please feel free to send an email with any specific, code-related questions to [asinglet\@stanford.edu](mailto:asinglet@stanford.edu).
 
 # Requirements and timing
 
