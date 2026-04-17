@@ -262,5 +262,5 @@ saveRDS(dengue_yearly_agg_model, "results/supplementary_text_results/stable5_den
 saveRDS(leish_yearly_agg_model, "results/supplementary_text_results/stable5_leish_yearly_agg_model.rds")
 
 # SFigure 10
-saveRDS(dengue_biannual_results_df, "results/supplementary_text_results/sfigure10_dengue_biannual_results.rds")
-saveRDS(leish_biannual_results_df, "results/supplementary_text_results/sfigure10_leish_biannual_results.rds")
+saveRDS(dengue_biannual_results_df, "results/supplementary_text_results/sfigure15_dengue_biannual_results.rds")
+saveRDS(leish_biannual_results_df, "results/supplementary_text_results/sfigure15_leish_biannual_results.rds")

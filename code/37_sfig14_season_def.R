@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S13.
+# Build Supplementary Figure S14.
 #
 # Date created: 8/6/2025
 
@@ -14,9 +14,11 @@ library(ggplot2)
 library(sf)
 library(patchwork)
 library(ggrepel)
+library(tidyverse)
+library(cowplot)
 
 #####################
-## SFig 13a
+## SFig 14a
 #####################
 
 ### precip data
@@ -38,7 +40,7 @@ precip_monthly_all <- precip_monthly_mdd_long %>%
   summarize(sum_precip = sum(sum_precip)) 
 precip_monthly_all$month_wo_year <- format(as.Date(precip_monthly_all$month, format="%Y-%m-%d"),"%m")
 
-sfig13a <- ggplot(precip_monthly_all) +
+sfig14a <- ggplot(precip_monthly_all) +
   geom_line(aes(x=month_wo_year,y=sum_precip,group=year), color="black", alpha=0.7) +
   geom_hline(yintercept=mean(precip_monthly_all$sum_precip), color='red', linetype="dashed") +
   geom_vline(xintercept=04, color='red', linetype="dashed") +
@@ -56,10 +58,10 @@ sfig13a <- ggplot(precip_monthly_all) +
         legend.title=element_text(size=12),
         legend.position = "none",
         strip.text.x = element_text(size = 14))
-sfig13a
+sfig14a
 
 #####################
-## SFig 13b
+## SFig 14b
 #####################
 dengue_monthly <- read.csv("data/intermediate/dengue_monthly_covariate_df.csv")
 dengue_monthly <- dengue_monthly %>%
@@ -69,7 +71,7 @@ dengue_monthly <- dengue_monthly %>%
 dengue_monthly$month_wo_year <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%m")
 dengue_monthly$year_wo_month <- format(as.Date(dengue_monthly$month, format="%Y-%m-%d"),"%Y")
 
-sfig13b <- ggplot(dengue_monthly) +
+sfig14b <- ggplot(dengue_monthly) +
   geom_line(aes(x=month_wo_year,y=sum_cases, group=year), color='black', alpha=0.7) +
   geom_vline(xintercept=04, color='red', linetype="dashed") +
   geom_vline(xintercept=10, color='red', linetype="dashed") +
@@ -102,19 +104,19 @@ sfig13b <- ggplot(dengue_monthly) +
     show.legend = FALSE,
     angle = 0,
     arrow = arrow(length = unit(0.01, "npc")))
-sfig13b
+sfig14b
 
 #####################
-## SFig 13all
+## SFig 14all
 #####################
-sfig13all <- grid.arrange(sfig13a, sfig13b,
+sfig14all <- grid.arrange(sfig14a, sfig14b,
                          ncol = 1, nrow = 2,
                          layout_matrix = rbind(c(1),c(2)), 
                          heights=c(1,1))
 
-sfig13all <- as_ggplot(sfig13all) +                                
+sfig14all <- as_ggplot(sfig14all) +                                
   draw_plot_label(label = c("A", "B"), size = 14,
                   x = c(0.11, 0.135), y = c(0.99, 0.49)) 
-sfig13all
+sfig14all
 
-ggsave("sfig13.pdf", plot=sfig13all, path="figures/", width = 8, height = 8, units="in", device = "pdf")
+ggsave("sfig14.pdf", plot=sfig14all, path="figures/", width = 8, height = 8, units="in", device = "pdf")
