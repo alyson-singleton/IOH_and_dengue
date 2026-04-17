@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S15.
+# Build Supplementary Figure S9.
 #
 # Date created: 4/14/2026
 
@@ -42,7 +42,7 @@ dengue_raw_plotting <- dengue_yearly$connected_buffered %>%
   mutate(year = as.integer(substr(as.character(year), 1, 4)),
          fivekm = as.character(fivekm)) %>%
   group_by(fivekm, year) %>%
-  summarize(mean_incidence = mean(incidence, na.rm = TRUE),
+  dplyr::summarize(mean_incidence = mean(incidence, na.rm = TRUE),
             .groups = "drop")
 
 # National dengue case data (publicly available: https://www.datosabiertos.gob.pe/dataset/vigilancia-epidemiol%C3%B3gica-de-dengue)
@@ -115,10 +115,10 @@ dept_facet_data <- peru_dengue_inc_depts %>%
       labels = c("Madre de Dios", "Tumbes", "Piura", "Loreto", "Ucayali")))
 
 #####################
-## SFig 15a
+## SFig 9a
 #####################
 
-sfig15a <- ggplot() +
+sfig9a <- ggplot() +
   geom_ribbon(
     data = peru_dept_summary,
     aes(x = year, ymin = p10, ymax = p90),
@@ -146,10 +146,10 @@ sfig15a <- ggplot() +
   theme_stor
 
 #####################
-## SFig 15b
+## SFig 9b
 #####################
 
-sfig15b <- ggplot(dept_facet_data, aes(x = year, y = dengue_incidence)) +
+sfig9b <- ggplot(dept_facet_data, aes(x = year, y = dengue_incidence)) +
   geom_line(color = "grey40", linewidth = 0.8) +
   geom_vline(xintercept = 2008, linetype = "dashed", color = "black") +
   facet_wrap(~department, ncol = 3) +
@@ -162,12 +162,12 @@ sfig15b <- ggplot(dept_facet_data, aes(x = year, y = dengue_incidence)) +
         strip.text = element_text(size = 11, face = "bold"))
 
 #####################
-## SFig 15all
+## SFig 9all
 #####################
 
-sfig15all <- sfig15a / sfig15b +
+sfig9all <- sfig9a / sfig9b +
   plot_annotation(tag_levels = "A") &
   theme(plot.tag = element_text(face = "bold", size = 13))
-sfig15all
+sfig9all
 
-ggsave("sfig15.pdf", plot=sfig15all, path="figures/", width = 8, height = 8, units="in", device = "pdf")
+ggsave("sfig9.pdf", plot=sfig9all, path="figures/", width = 8, height = 8, units="in", device = "pdf")

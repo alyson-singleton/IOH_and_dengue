@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S9.
+# Build Supplementary Figure S10.
 #
 # Date created: 8/6/2025
 
@@ -12,13 +12,14 @@ library(ggpubr)
 library(readr)
 library(ggplot2)
 library(scales)
+library(cowplot)
 
 # Load data
 dengue_yearly <- read_rds("data/clean/dengue_yearly_panels.rds")
 vert_line_date <- as.Date("2008-01-01")
 
 #####################
-## SFig 9a
+## SFig 10a
 #####################
 #population
 dengue_df_yearly_pop <- bind_rows(
@@ -40,7 +41,7 @@ dengue_df_yearly_pop <- bind_rows(
       "Exposed (<5km)", "Exposed wo PM (<5km)", "Unexposed (>10km)")),
     year = as.Date(year))
 
-sfig9a <- ggplot(dengue_df_yearly_pop) +
+sfig10a <- ggplot(dengue_df_yearly_pop) +
   geom_line(aes(x=year, y=pop_sum, color=fivekm_group)) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   ggtitle("Population") +
@@ -60,10 +61,10 @@ sfig9a <- ggplot(dengue_df_yearly_pop) +
         legend.title=element_text(size=10),
         legend.position = "none",
         strip.text.x = element_text(size = 10))
-sfig9a
+sfig10a
 
 #####################
-## SFig 9b
+## SFig 10b
 #####################
 #urban area
 dengue_df_yearly_urban <- bind_rows(
@@ -85,7 +86,7 @@ dengue_df_yearly_urban <- bind_rows(
       "Exposed (<5km)", "Exposed wo PM (<5km)", "Unexposed (>10km)")),
     year = as.Date(year))
 
-sfig9b <- ggplot(dengue_df_yearly_urban) +
+sfig10b <- ggplot(dengue_df_yearly_urban) +
   geom_line(aes(x = year, y = urban_sum, color = fivekm_group)) +
   geom_vline(xintercept = vert_line_date, linetype = 'dashed') +
   ggtitle("Urban Area (m²)") +
@@ -105,10 +106,10 @@ sfig9b <- ggplot(dengue_df_yearly_urban) +
     legend.title = element_blank(),
     legend.position = "none",
     strip.text.x = element_text(size = 10))
-sfig9b
+sfig10b
 
 #####################
-## SFig 9c
+## SFig 10c
 #####################
 #agricultural area
 dengue_df_yearly_ag <- bind_rows(
@@ -130,7 +131,7 @@ dengue_df_yearly_ag <- bind_rows(
       "Exposed (<5km)", "Exposed wo PM (<5km)", "Unexposed (>10km)")),
     year = as.Date(year))
 
-sfig9c <- ggplot(dengue_df_yearly_ag) +
+sfig10c <- ggplot(dengue_df_yearly_ag) +
   geom_line(aes(x = year, y = ag_sum, color = fivekm_group)) +
   geom_vline(xintercept = vert_line_date, linetype = 'dashed') +
   ggtitle("Agricultural Area (m²)") +
@@ -155,28 +156,28 @@ sfig9c <- ggplot(dengue_df_yearly_ag) +
     legend.box.margin = margin(t = -5),
     legend.spacing.x = unit(0.4, "cm"),
     strip.text.x = element_text(size = 10))
-sfig9c
-sfig9_legend <- get_legend(sfig9c)
-sfig9c <- sfig9c + theme(legend.position = "none")
+sfig10c
+sfig10_legend <- get_legend(sfig10c)
+sfig10c <- sfig10c + theme(legend.position = "none")
 
 #####################
-## SFig 9all
+## SFig 10all
 #####################
 
-sfig9all <- grid.arrange(sfig9a, sfig9b, sfig9c, sfig9_legend,
+sfig10all <- grid.arrange(sfig10a, sfig10b, sfig10c, sfig10_legend,
                          ncol = 1, nrow = 4,
                          layout_matrix = rbind(c(1),c(2),c(3),c(4)), 
                          heights=c(4,4,4,1))
 
-sfig9all <- grid.arrange(
-  sfig9a, sfig9b, sfig9c, sfig9_legend,
+sfig10all <- grid.arrange(
+  sfig10a, sfig10b, sfig10c, sfig10_legend,
   ncol = 3,
   layout_matrix = rbind(c(1,1,1), c(2,2,2), c(3,3,3), c(NA,4,NA)), 
   heights = c(4, 4, 4, 1))
 
-sfig9all <- as_ggplot(sfig9all) +                                
+sfig10all <- as_ggplot(sfig10all) +                                
   draw_plot_label(label = c("A)", "B)", "C)"), size = 14,
                   x = c(0.02, 0.02, 0.02), y = c(1, 0.692, 0.385)) 
-sfig9all
+sfig10all
 
-ggsave("sfig9.pdf", plot=sfig9all, path="figures/", width = 6, height = 10, units="in", device = "pdf")
+ggsave("sfig10.pdf", plot=sfig10all, path="figures/", width = 6, height = 10, units="in", device = "pdf")
