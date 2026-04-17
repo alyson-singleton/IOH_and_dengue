@@ -86,8 +86,9 @@ All analyses were run in the R (version 4.4.2) programming language or in Python
     -   30_sfig6_mdd_loreto_exposure.R
     -   31_sfig7_traffic_vols.R
     -   32_sfig8_district_did.R
-    -   33_sfig9_time_trends.R
-    -   34_sfig10_cluster_map.R
-    -   35_sfig11_sfig12_diagnostics.R
-    -   36_sfig13_season_def.R
-    -   37_sfig14_biannual.R
+    -   33_sfig9_national_trends.R
+    -   34_sfig10_covariate_trends.R
+    -   35_sfig11_cluster_map.R
+    -   36_sfig12_sfig13_diagnostics.R
+    -   37_sfig14_season_def.R
+    -   38_sfig15_biannual.R
