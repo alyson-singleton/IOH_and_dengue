@@ -2,7 +2,7 @@
 # Alyson Singleton, asinglet@stanford.edu
 #
 # Script description: 
-# Build Supplementary Figure S10.
+# Build Supplementary Figure S11.
 #
 # Date created: 8/6/2025
 
@@ -17,6 +17,7 @@ library(ggspatial)
 
 # Load spatial data
 linked_ids_codes <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
+dengue_yearly <- readRDS("data/clean/dengue_yearly_panels.rds")
 
 center_lat_long <- dengue_yearly$full %>%
   dplyr::select(key, clust, all_cutoffs, key_connected, key_w_dengue) %>%
@@ -86,12 +87,19 @@ center_lat_long <- center_lat_long %>%
 single_points <- center_lat_long %>% filter(clust_indicator == 0)
 clusters <- center_lat_long %>% filter(clust_indicator == 1)
 
+# Coordinates for labeling
+cluster_coords <- st_coordinates(center_lat_long %>% filter(clust == 1))
+arrow_x <- cluster_coords[1, "X"] + 0.15
+arrow_y <- cluster_coords[1, "Y"] - 0.05
+label_x <- arrow_x + 0.1
+label_y <- arrow_y - 0.05
+
 #####################
-## SFig 10
+## SFig 11
 #####################
 
 # Panel A: Full region
-sfig10a <- ggplot() +
+sfig11a <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
@@ -120,14 +128,14 @@ sfig10a <- ggplot() +
            x = label_x, y = label_y, 
            label = "PM", 
            size = 3.4, fontface = "bold", hjust = 0, color = "black")
-sfig10a
+sfig11a
 
 # Panel B: PM zoom
 buffer_circles_smaller <- centroid_proj %>%
   st_buffer(dist = 4700) %>%
   st_transform(crs = 4326)
 
-sfig10b <- ggplot() +
+sfig11b <- ggplot() +
   geom_sf(data = mdd_region, fill='#ffffff', color='#a6a6a6', size=.15, show.legend = FALSE) +
   geom_sf(data = rivers, aes(geometry = geometry, color='lightblue'), fill='lightblue', linewidth=0.2, show.legend = "line") +
   geom_sf(data = roads_mdd, aes(geometry = geometry, color='#a6a6a6'), linewidth=0.5, show.legend = "line") +
@@ -148,21 +156,21 @@ sfig10b <- ggplot() +
 xlim_pm <- c(-69.30, -69.07)
 ylim_pm <- c(-12.83, -12.45)
 
-sfig10b_pm <- sfig10b +
+sfig11b_pm <- sfig11b +
   coord_sf(xlim = xlim_pm, ylim = ylim_pm, expand = FALSE) +
   theme(legend.text = element_text(size=12),
         legend.title = element_text(size=14),
         legend.position = 'none')+
   annotation_scale(location = "br",height = unit(0.1, "cm"))
-sfig10b_pm
+sfig11b_pm
 
-sfig10all <- sfig10a + plot_spacer() + sfig10b_pm +
+sfig11all <- sfig11a + plot_spacer() + sfig11b_pm +
   plot_layout(ncol = 3, widths = c(2.5, 0.05, 0.8)) + 
   plot_annotation(
     tag_levels = 'A',
     tag_prefix = '', tag_suffix = '',
     theme = theme(plot.tag = element_text(size = 18, face = "bold", hjust = -0.1, vjust = 1.2)))
 
-sfig10all
+sfig11all
 
-ggsave("sfig10.pdf", plot=sfig10all, "figures/", width = 8, height = 5, units = c("in"), device="pdf")
+ggsave("sfig11.pdf", plot=sfig11all, "figures/", width = 8, height = 5, units = c("in"), device="pdf")
