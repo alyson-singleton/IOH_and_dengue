@@ -58,7 +58,7 @@ all_departments <- unique(peru_population$department)
 all_years <- seq(2000,2024)
 
 peru_national_dengue_depts_complete <- peru_national_dengue_depts %>%
-  complete(departamento = all_departments,
+  complete(departamento = departamento,
            ano = all_years,
            fill = list(dengue_cases = 0))
 
@@ -140,8 +140,8 @@ sfig9a <- ggplot() +
   scale_x_continuous(breaks = seq(2000, 2020, by = 4)) +
   annotate("text", x = 2011, y = 23,
            label = "Madre de Dios", color = "maroon", hjust = 0, size = 5) +
-  annotate("text", x = 2010, y = 4,
-           label = "Median", color = "grey40", hjust = 0, size = 5) +
+  annotate("text", x = 2009.8, y = 4,
+           label = "National", color = "grey40", hjust = 0, size = 5) +
   theme_minimal() +
   theme_stor
 
@@ -149,17 +149,64 @@ sfig9a <- ggplot() +
 ## SFig 9b
 #####################
 
-sfig9b <- ggplot(dept_facet_data, aes(x = year, y = dengue_incidence)) +
-  geom_line(color = "grey40", linewidth = 0.8) +
-  geom_vline(xintercept = 2008, linetype = "dashed", color = "black") +
-  facet_wrap(~department, ncol = 3) +
-  labs(x = "Year",
-       y = "Dengue\nincidence\nper 1,000") +
-  scale_x_continuous(breaks = c(2000,2008,2016)) +
+comparison_depts <- c("TUMBES", "PIURA", "LORETO", "UCAYALI")
+
+mdd_reference <- peru_dengue_inc_depts %>%
+  filter(department == "MADRE DE DIOS") %>%
+  select(year, mdd_incidence = dengue_incidence)
+
+dept_facet_data_compare <- peru_dengue_inc_depts %>%
+  filter(department %in% comparison_depts) %>%
+  mutate(
+    department = factor(
+      department,
+      levels = c("TUMBES", "PIURA", "LORETO", "UCAYALI"),
+      labels = c("Tumbes", "Piura", "Loreto", "Ucayali")
+    )
+  ) %>%
+  left_join(mdd_reference, by = "year")
+
+sfig9b <- ggplot(dept_facet_data_compare, aes(x = year)) +
+  geom_line(
+    aes(y = mdd_incidence),
+    color = "maroon",
+    linewidth = 0.7,
+    alpha = 0.5
+  ) +
+  geom_line(
+    aes(y = dengue_incidence),
+    color = "grey40",
+    linewidth = 0.7
+  ) +
+  geom_vline(
+    xintercept = 2008,
+    linetype = "dashed",
+    color = "black"
+  ) +
+  facet_wrap(~department, ncol = 2, scales = "free_y") +
+  labs(
+    x = "Year",
+    y = "Dengue\nincidence\nper 1,000"
+  ) +
+  scale_x_continuous(breaks = c(2000, 2008, 2016)) +
   theme_minimal() +
   theme_stor +
-  theme(legend.position = "none",
-        strip.text = element_text(size = 11, face = "bold"))
+  theme(
+    legend.position = "none",
+    strip.text = element_text(size = 11, face = "bold"),
+    
+    # 🔧 Force visible axes on ALL panels
+    axis.line.x = element_line(color = "black", linewidth = 0.4),
+    axis.ticks.x = element_line(color = "black", linewidth = 0.3),
+    axis.text.x = element_text(size = 11),
+    
+    axis.line.y = element_line(color = "black", linewidth = 0.3),
+    panel.border = element_rect(
+      color = "black",
+      fill = NA,
+      linewidth = 0.35
+    )
+  )
 
 #####################
 ## SFig 9all
