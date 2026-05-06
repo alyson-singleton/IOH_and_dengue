@@ -12,6 +12,7 @@ library(gridExtra)
 library(ggpubr)
 library(readr)
 library(ggplot2)
+library(cowplot)
 
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -29,7 +30,8 @@ leish_biannual_agg_df <- read_rds("results/main_text_results/fig2_leish_biannual
 leish_yearly_agg_df <- read_rds("results/main_text_results/fig2_leish_yearly_ld_results.rds")
 
 # Create standard figure theme
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),
@@ -72,9 +74,8 @@ fig2a <- ggplot(dengue_yearly_df) +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims,
                      breaks = c(-5, 0, 10, 20, 40)) +
-  scale_x_date(date_breaks = "2 year",
-               date_labels = "%Y",
-               breaks = seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by = "2 years")) +
+  scale_x_date(date_labels = "%Y",
+               breaks = seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by = "4 years")) +
   theme_stor
 
 fig2a
@@ -135,9 +136,8 @@ fig2c <- ggplot(leish_yearly_df) +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims,
                      breaks = c(-5, 0, 10, 20, 40)) +
-  scale_x_date(date_breaks = "2 year",
-               date_labels = "%Y",
-               breaks = seq(as.Date("2008-01-01"), as.Date("2022-01-01"), by = "2 years")) +
+  scale_x_date(date_labels = "%Y",
+               breaks = seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by = "4 years")) +
   theme_stor
 fig2c
 
@@ -183,3 +183,4 @@ fig2combined <- grid.arrange(fig2ab, fig2cd,
 
 fig2combined
 ggsave("fig2.pdf", plot=fig2combined, path="figures/", width = 9, height = 8, units="in", device = "pdf")
+

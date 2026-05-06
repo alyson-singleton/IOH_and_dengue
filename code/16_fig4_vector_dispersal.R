@@ -270,7 +270,7 @@ lm_sum <- summary(lm_fit)
 r2_val <- lm_sum$r.squared
 p_val  <- lm_sum$coefficients["year_paved", "Pr(>|t|)"]
 
-set.seed(42)
+set.seed(53)
 fig4b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
   geom_point(size = 3, color=blues[7], alpha = 0.7,
              position = position_jitter(width  = 0, height = 0.15)) +
@@ -287,13 +287,15 @@ fig4b <- ggplot(hfs_lat_long_aedes, aes(x = year_paved, y = year)) +
     floor(min(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
     ceiling(max(hfs_lat_long_aedes$year_paved, na.rm = TRUE)),
     by = 1)) +
-  scale_y_continuous(breaks = c(2005,2007,2009,2011)) +
+  scale_y_continuous(breaks = c(2006,2008,2010)) +
   coord_cartesian(ylim = c(2005, 2011)) +
   theme_minimal() +
   theme(axis.text.x  = element_text(size = 11),
         axis.text.y  = element_text(size = 11),
         axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12, vjust = 0.5))
+        axis.title.y = element_text(size = 12, vjust = 0.5),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 fig4b
 
 #####################
@@ -374,7 +376,7 @@ fig4c <- ggplot(df_plot, aes(x = year)) +
     minor_breaks = NULL,
     sec.axis = sec_axis(
       trans = to_right,
-      name = "passenger traffic",
+      name = "Passenger traffic",
       breaks = right_breaks,
       labels = function(x) paste0(signif(x, digits = 2), "k"))) +
   scale_x_continuous(breaks = c(2000,2006,2010,2018)) +

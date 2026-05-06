@@ -25,7 +25,8 @@ get_legend<-function(myggplot){
 dengue_distance_het_df <- read_rds("results/main_text_results/fig3_dengue_distance_het_results_df.rds")
 
 # Create standard figure theme
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),
@@ -112,7 +113,7 @@ center_lat_long_fig4 <- center_lat_long %>%
   arrange(if_else(clust == 1, 1, 0))
 
 # Coordinates for labeling
-cluster1_coords <- st_coordinates(center_lat_long_fig1 %>% filter(clust == 1))
+cluster1_coords <- st_coordinates(center_lat_long_fig4 %>% filter(clust == 1))
 arrow_x <- cluster1_coords[1, "X"] + 0.15
 arrow_y <- cluster1_coords[1, "Y"] - 0.05
 label_x <- arrow_x + 0.1

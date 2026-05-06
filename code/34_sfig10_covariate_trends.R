@@ -42,7 +42,7 @@ dengue_df_yearly_pop <- bind_rows(
     year = as.Date(year))
 
 sfig10a <- ggplot(dengue_df_yearly_pop) +
-  geom_line(aes(x=year, y=pop_sum, color=fivekm_group)) +
+  geom_line(aes(x=year, y=pop_sum, color=fivekm_group), linewidth = 1) +
   geom_vline(xintercept=vert_line_date,linetype='dashed') +
   ggtitle("Population") +
   xlab("Year") + ylab("") + 
@@ -87,9 +87,9 @@ dengue_df_yearly_urban <- bind_rows(
     year = as.Date(year))
 
 sfig10b <- ggplot(dengue_df_yearly_urban) +
-  geom_line(aes(x = year, y = urban_sum, color = fivekm_group)) +
+  geom_line(aes(x = year, y = urban_sum, color = fivekm_group), linewidth = 1) +
   geom_vline(xintercept = vert_line_date, linetype = 'dashed') +
-  ggtitle("Urban Area (m²)") +
+  ggtitle("Urban Area (km²)") +
   xlab("Year") + ylab("") + 
   scale_color_manual(values = c("#E04490", "#FFD218","#648FFF")) +
   theme_bw() +
@@ -132,9 +132,9 @@ dengue_df_yearly_ag <- bind_rows(
     year = as.Date(year))
 
 sfig10c <- ggplot(dengue_df_yearly_ag) +
-  geom_line(aes(x = year, y = ag_sum, color = fivekm_group)) +
+  geom_line(aes(x = year, y = ag_sum, color = fivekm_group), linewidth = 1) +
   geom_vline(xintercept = vert_line_date, linetype = 'dashed') +
-  ggtitle("Agricultural Area (m²)") +
+  ggtitle("Agricultural Area (km²)") +
   xlab("Year") + ylab("") + 
   scale_color_manual(values = c("#E04490", "#FFD218","#648FFF"),
                      guide = guide_legend(nrow = 2)) +

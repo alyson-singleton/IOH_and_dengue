@@ -140,21 +140,21 @@ fig1_legend <- get_legend(mdd_map)
 mdd_map <- mdd_map + theme(legend.position = "none")
 
 fig1a <- ggdraw() + 
+  draw_plot(mdd_map,
+            0, 0, 1, 1) +
   draw_plot(ggplot() +
               geom_sf(data = peru_outline, fill=NA, color='#3b3b3b', 
-                      size=.001, show.legend = FALSE) +
+                      linewidth=.1, show.legend = FALSE) +
               geom_sf(data = peru_depts, fill=NA, color='#3b3b3b', 
-                      size=.001, show.legend = FALSE) +
+                      linewidth=.1, show.legend = FALSE) +
               geom_sf(data = mdd_region, fill='#cfcfcf', color='#3b3b3b', 
-                      size=.001, show.legend = FALSE) +
+                      linewidth=.1, show.legend = FALSE) +
               theme_minimal() +
               no_axis +
               theme(legend.text=element_text(size=12),
                     legend.title=element_text(size=14),
                     legend.position = "none"),
-            0.65, 0.65, 0.3, 0.3) + 
-  draw_plot(mdd_map,
-            0, 0, 1, 1)
+            0.65, 0.65, 0.3, 0.3)
 fig1a
 
 #####################
@@ -174,9 +174,8 @@ fig1b <- ggplot(dengue_raw_plotting) +
   ggtitle("Dengue incidence per 1,000") +
   xlab("Year") + ylab("") + 
   scale_color_manual(name = "", values=c("#648FFF","#E04490"), labels=c('Unexposed (>10km)', 'Exposed (<5km)'),) +
-  scale_x_date(
-    date_breaks = "4 years",
-    date_labels = "%Y") +
+  scale_x_date(date_labels = "%Y",
+               breaks = seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by = "4 years")) +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      breaks = c(0, 10, 20, 30)) +
   theme_bw()+
@@ -191,7 +190,9 @@ fig1b <- ggplot(dengue_raw_plotting) +
         legend.text=element_text(size=10),
         legend.title=element_text(size=10),
         legend.position = "none",
-        strip.text.x = element_text(size = 10))
+        strip.text.x = element_text(size = 10),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 fig1b
 
 #####################
@@ -212,9 +213,8 @@ fig1c <- ggplot(leish_raw_plotting) +
   ggtitle("Leishmaniasis incidence per 1,000") +
   xlab("Year") + ylab("") + 
   scale_color_manual(name = "Exposure", values=c("#648FFF","#E04490"), labels=c('Far (>10km)', 'Near (<5km)'),) +
-  scale_x_date(
-    date_breaks = "4 years",
-    date_labels = "%Y") +
+  scale_x_date(date_labels = "%Y",
+               breaks = seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by = "4 years")) +
   theme_bw()+
   theme(plot.title = element_text(size=12, face="bold"),
         plot.subtitle = element_text(hjust=0.5, size=22),
@@ -227,7 +227,9 @@ fig1c <- ggplot(leish_raw_plotting) +
         legend.text=element_text(size=10),
         legend.title=element_text(size=10),
         legend.position = "none",
-        strip.text.x = element_text(size = 10))
+        strip.text.x = element_text(size = 10),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 fig1c
 
 #####################

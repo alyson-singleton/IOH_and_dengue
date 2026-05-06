@@ -185,10 +185,10 @@ sfig9b <- ggplot(dept_facet_data_compare, aes(x = year)) +
   ) +
   facet_wrap(~department, ncol = 2, scales = "free_y") +
   labs(
-    x = "Year",
+    x = "",
     y = "Dengue\nincidence\nper 1,000"
   ) +
-  scale_x_continuous(breaks = c(2000, 2008, 2016)) +
+  scale_x_continuous(breaks = c(2000, 2004, 2008, 2012, 2016, 2020)) +
   theme_minimal() +
   theme_stor +
   theme(
@@ -199,7 +199,8 @@ sfig9b <- ggplot(dept_facet_data_compare, aes(x = year)) +
     axis.line.x = element_line(color = "black", linewidth = 0.4),
     axis.ticks.x = element_line(color = "black", linewidth = 0.3),
     axis.text.x = element_text(size = 11),
-    
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
     axis.line.y = element_line(color = "black", linewidth = 0.3),
     panel.border = element_rect(
       color = "black",
