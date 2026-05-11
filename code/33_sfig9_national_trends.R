@@ -17,7 +17,8 @@ library(ggrepel)
 library(tidyverse)
 
 # Create standard figure theme
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),
@@ -53,14 +54,6 @@ peru_national_dengue_depts <- peru_national_dengue %>%
   group_by(departamento, ano) %>%
   dplyr::summarize(dengue_cases = n(), .groups = "drop") %>%
   ungroup()
-
-all_departments <- unique(peru_population$department)
-all_years <- seq(2000,2024)
-
-peru_national_dengue_depts_complete <- peru_national_dengue_depts %>%
-  complete(departamento = departamento,
-           ano = all_years,
-           fill = list(dengue_cases = 0))
 
 # Population data (WorldPop)
 peru_population <- read.csv("data/raw/environmental_data/peru_population_departments_yearly.csv")
@@ -161,9 +154,7 @@ dept_facet_data_compare <- peru_dengue_inc_depts %>%
     department = factor(
       department,
       levels = c("TUMBES", "PIURA", "LORETO", "UCAYALI"),
-      labels = c("Tumbes", "Piura", "Loreto", "Ucayali")
-    )
-  ) %>%
+      labels = c("Tumbes", "Piura", "Loreto", "Ucayali"))) %>%
   left_join(mdd_reference, by = "year")
 
 sfig9b <- ggplot(dept_facet_data_compare, aes(x = year)) +
@@ -194,8 +185,6 @@ sfig9b <- ggplot(dept_facet_data_compare, aes(x = year)) +
   theme(
     legend.position = "none",
     strip.text = element_text(size = 11, face = "bold"),
-    
-    # 🔧 Force visible axes on ALL panels
     axis.line.x = element_line(color = "black", linewidth = 0.4),
     axis.ticks.x = element_line(color = "black", linewidth = 0.3),
     axis.text.x = element_text(size = 11),
@@ -205,9 +194,7 @@ sfig9b <- ggplot(dept_facet_data_compare, aes(x = year)) +
     panel.border = element_rect(
       color = "black",
       fill = NA,
-      linewidth = 0.35
-    )
-  )
+      linewidth = 0.35))
 
 #####################
 ## SFig 9all

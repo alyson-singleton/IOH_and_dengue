@@ -16,7 +16,8 @@ library(patchwork)
 library(readxl)
 library(tidyr)
 
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),

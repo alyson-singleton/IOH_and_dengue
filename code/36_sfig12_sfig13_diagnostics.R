@@ -65,7 +65,9 @@ sfig12a <- ggplot(dengue_yearly_df_diag, aes(x = fitted, y = resid)) +
        y = "Residuals",
        title = "Dengue yearly model (Eq. 1)") +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig12a
 
 # Residual distribution
@@ -74,7 +76,9 @@ sfig12b <- ggplot(dengue_yearly_df_diag, aes(x = resid)) +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
-  theme_minimal()
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig12b
 
 #########################
@@ -125,7 +129,9 @@ sfig12c <- ggplot(dengue_agg_df_diag, aes(x = fitted, y = resid)) +
        y = "Residuals",
        title = "Dengue aggregated model (Eq. 2)") +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig12c
 
 # Residual distribution
@@ -134,7 +140,9 @@ sfig12d <- ggplot(dengue_agg_df_diag, aes(x = resid)) +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
-  theme_minimal() 
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig12d
 
 #########################
@@ -181,7 +189,9 @@ sfig13a <- ggplot(leish_yearly_df_diag, aes(x = fitted, y = resid)) +
        y = "Residuals",
        title = "Leish yearly model (Eq. 1)") +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig13a
 
 # Residual distribution
@@ -190,7 +200,9 @@ sfig13b <- ggplot(leish_yearly_df_diag, aes(x = resid)) +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
-  theme_minimal()
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig13b
 
 #########################
@@ -241,7 +253,9 @@ sfig13c <- ggplot(leish_agg_df_diag, aes(x = fitted, y = resid)) +
        y = "Residuals",
        title = "Leish aggregated model (Eq. 2)") +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig13c
 
 # Residual distribution
@@ -250,7 +264,9 @@ sfig13d <- ggplot(leish_agg_df_diag, aes(x = resid)) +
   labs(x = "Residuals",
        y = "Count",
        title = "") +
-  theme_minimal()
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig13d
 
 #########################

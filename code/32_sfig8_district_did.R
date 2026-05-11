@@ -30,7 +30,8 @@ get_legend<-function(myggplot){
 }
 
 # Create standard figure theme
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),
@@ -196,7 +197,7 @@ sfig8b
 # Loreto district data
 ###################
 
-loreto_dengue_district_df <- peru_district_year %>%
+loreto_dengue_district_df <- dengue_district_data %>%
   filter(departamento == "LORETO") %>%
   mutate(dengue_cases = dengue_total) %>%
   select(ano, distrito, departamento, dengue_cases) %>%
@@ -295,3 +296,4 @@ sfig8combined <- as_ggplot(sfig8combined) +
 
 sfig8combined
 ggsave("sfig8.pdf", plot=sfig8combined, path="figures/", width = 9.5, height = 6.5, units="in", device = "pdf")
+

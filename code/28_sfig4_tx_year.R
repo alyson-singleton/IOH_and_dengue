@@ -13,7 +13,8 @@ library(readr)
 library(ggplot2)
 
 # Create standard figure theme
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),
@@ -98,13 +99,13 @@ sfig4 <- ggplot(sfig4_df, aes(x = year, y = estimate)) +
   ylab("change in\ndengue\nincidence\nper 1,000\nrelative to\npaving year") +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = c(-10, 48)) +
-  scale_x_date(date_breaks = "2 year", date_labels = "%Y") +
+  scale_x_date(date_labels = "%Y",
+               breaks = seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by = "4 years")) +
   theme_minimal() +
   theme_stor +
   theme(strip.text = element_text(size = 12, face = "bold", hjust = 0),
         axis.title.y = element_text(size = 10),
-        panel.grid.minor = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 11))
+        axis.text.x = element_text(size = 10))
 sfig4
 
 ggsave("sfig4.pdf", plot=sfig4, "figures/", width = 8, height = 6, units = c("in"), device="pdf")

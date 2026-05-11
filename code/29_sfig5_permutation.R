@@ -37,7 +37,9 @@ sfig5a <- ggplot() +
         legend.text=element_text(size=12),
         legend.title=element_text(size=12),
         legend.position = "none",
-        strip.text.x = element_text(size = 14))
+        strip.text.x = element_text(size = 14),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig5a
 
 
@@ -61,7 +63,9 @@ sfig5b <- ggplot() +
         legend.text=element_text(size=12),
         legend.title=element_text(size=12),
         legend.position = "none",
-        strip.text.x = element_text(size = 14))
+        strip.text.x = element_text(size = 14),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig5b
 
 
@@ -85,7 +89,9 @@ sfig5c <- ggplot() +
         legend.text=element_text(size=12),
         legend.title=element_text(size=12),
         legend.position = "none",
-        strip.text.x = element_text(size = 14))
+        strip.text.x = element_text(size = 14),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig5c
 
 #####################
@@ -97,7 +103,7 @@ sfig5all <- grid.arrange(sfig5a, sfig5b, sfig5c,
 
 sfig5all <- as_ggplot(sfig5all) +                                
   draw_plot_label(label = c("A", "B","C"), size = 13,
-                  x = c(0.038, 0.371, 0.705), y = c(0.98, 0.98, 0.98)) 
+                  x = c(0.03, 0.363, 0.697), y = c(0.98, 0.98, 0.98)) 
 sfig5all
 
 ggsave("sfig5.pdf", plot=sfig5all, path="figures/", width = 12, height = 5, units="in", device = "pdf")

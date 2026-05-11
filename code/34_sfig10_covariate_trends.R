@@ -60,7 +60,9 @@ sfig10a <- ggplot(dengue_df_yearly_pop) +
         legend.text=element_text(size=10),
         legend.title=element_text(size=10),
         legend.position = "none",
-        strip.text.x = element_text(size = 10))
+        strip.text.x = element_text(size = 10),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig10a
 
 #####################
@@ -105,7 +107,9 @@ sfig10b <- ggplot(dengue_df_yearly_urban) +
     legend.text = element_text(size = 10),
     legend.title = element_blank(),
     legend.position = "none",
-    strip.text.x = element_text(size = 10))
+    strip.text.x = element_text(size = 10),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank())
 sfig10b
 
 #####################
@@ -155,7 +159,9 @@ sfig10c <- ggplot(dengue_df_yearly_ag) +
     legend.margin = margin(t = -5, b = -5),
     legend.box.margin = margin(t = -5),
     legend.spacing.x = unit(0.4, "cm"),
-    strip.text.x = element_text(size = 10))
+    strip.text.x = element_text(size = 10),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank())
 sfig10c
 sfig10_legend <- get_legend(sfig10c)
 sfig10c <- sfig10c + theme(legend.position = "none")

@@ -57,7 +57,9 @@ sfig14a <- ggplot(precip_monthly_all) +
         legend.text=element_text(size=12),
         legend.title=element_text(size=12),
         legend.position = "none",
-        strip.text.x = element_text(size = 14))
+        strip.text.x = element_text(size = 14),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig14a
 
 #####################
@@ -87,7 +89,9 @@ sfig14b <- ggplot(dengue_monthly) +
         legend.text=element_text(size=12),
         legend.title=element_text(size=12),
         legend.position = "none",
-        strip.text.x = element_text(size = 14)) +
+        strip.text.x = element_text(size = 14),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()) +
   geom_text_repel(
     data = subset(dengue_monthly, (month_wo_year == 12 & year_wo_month %in% c('2019','2022','2010','2020','2012','2009','2013','2015'))),
     aes(x = month_wo_year, y = sum_cases, label = year_wo_month), 

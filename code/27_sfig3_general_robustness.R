@@ -20,7 +20,8 @@ get_legend<-function(myggplot){
 }
 
 # Create standard figure theme
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),
@@ -85,6 +86,8 @@ sfig3 <- ggplot(facet_df, aes(x = year, y = estimate, group = Model)) +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4), 
                      limits = c(-15, 70),
                      breaks = c(-10, 0, 10, 20, 40)) +
+  scale_x_date(date_labels = "%Y",
+               breaks = seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by = "4 years")) +
   xlab("Year") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") +
   theme_minimal() +
   theme_stor +

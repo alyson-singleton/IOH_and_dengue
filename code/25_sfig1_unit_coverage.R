@@ -40,18 +40,21 @@ sfig1a <- ggplot(dengue_coverage_yearly) +
   scale_fill_manual(name = "", values=c('#648FFF', '#E04490'), labels=c('>5km', '<5km'),) +
   geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
   xlab("") + ylab("# units w/\ndengue\ncase") + 
+  scale_x_discrete(breaks = c("2000", "2004", "2008", "2012", "2016", "2020")) +
   theme_bw()+
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title.y=element_text(size=12,angle=0, vjust=.5, hjust=0.5),
         axis.text.y=element_text(size=10),
         axis.title.x=element_text(size=10),
-        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text.x=element_text(size=10),
         axis.text = element_text(size=16),
         legend.text=element_text(size=12),
         legend.title=element_text(size=12),
         legend.position = "bottom",
-        strip.text.x = element_text(size = 14))
+        strip.text.x = element_text(size = 14),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig1a
 sfig1_legend <- get_legend(sfig1a)
 sfig1a <- sfig1a + theme(legend.position = "none")
@@ -72,18 +75,21 @@ sfig1b <- ggplot(leish_coverage_yearly) +
   scale_fill_manual(name = "Treatment", values=c('#648FFF', '#E04490'), labels=c('>5km', '<5km'),) +
   geom_vline(aes(xintercept=("2008")), linetype='dashed', size=0.4) +
   xlab("Year") + ylab("# units w/\nleish\ncase") + 
+  scale_x_discrete(breaks = c("2000", "2004", "2008", "2012", "2016", "2020")) +
   theme_bw() +
   theme(plot.title = element_text(hjust=0.5, size=26, face="italic"),
         plot.subtitle = element_text(hjust=0.5, size=22),
         axis.title.y=element_text(size=12, angle=0, vjust=.5, hjust=0.5),
         axis.text.y=element_text(size=10),
         axis.title.x=element_text(size=12),
-        axis.text.x=element_text(size=10, angle=45, vjust=0.45),
+        axis.text.x=element_text(size=10),
         axis.text = element_text(size=16),
         legend.text=element_text(size=14),
         legend.title=element_text(size=14),
         legend.position = "none",
-        strip.text.x = element_text(size = 14))
+        strip.text.x = element_text(size = 14),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
 sfig1b
 
 #####################

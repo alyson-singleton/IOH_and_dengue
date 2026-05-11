@@ -20,7 +20,8 @@ dengue_biannual_results_df <- read_rds("results/supplementary_text_results/sfigu
 leish_biannual_results_df <- read_rds("results/supplementary_text_results/sfigure15_leish_biannual_results.rds")
 
 # Create standard figure theme
-theme_stor <- theme(panel.grid.minor.x = element_line(linewidth = 0.3),
+theme_stor <- theme(panel.grid.minor.x = element_blank(),
+                    panel.grid.minor.y = element_blank(),
                     panel.grid.major.x = element_line(linewidth = 0.3),
                     panel.grid.major.y = element_line(linewidth = 0.3),
                     axis.line.x = element_line(color = "black", linewidth = 0.3),
@@ -45,18 +46,19 @@ y_lims_biannual <- c(-7,50)
 ## SFig 15a
 #####################
 sfig15a <- ggplot(dengue_biannual_results_df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_hline(aes(yintercept=0), colour='black', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
   geom_point(aes(biannual_date, estimate, fill=rainy), size=3, shape=21) +
   scale_fill_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
-  xlab("Biannual time period") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
+  xlab("") + ylab("change in\ndengue\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal()+
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims_biannual,
                      breaks = c(-5, 0, 10, 20, 40)) +
+  scale_x_continuous(breaks = seq(2000, 2020, by = 4)) +
   theme_stor +
   theme(legend.position = "bottom")
 sfig15a
@@ -67,7 +69,7 @@ sfig15a <- sfig15a + theme(legend.position = "none")
 ## SFig 15b
 #####################
 sfig15b <- ggplot(leish_biannual_results_df) +
-  geom_hline(aes(yintercept=0), colour='red', size=.4) +
+  geom_hline(aes(yintercept=0), colour='black', size=.4) +
   geom_errorbar(aes(x=biannual_date, ymax=upper, ymin=lower, colour=rainy), width=0, size=0.5) +
   geom_vline(aes(xintercept=as.Date("2008-04-01")), linetype='dashed', size=0.4) +
   geom_point(aes(x=as.Date("2008-04-01"), y=0), size=3, shape=21, fill='white') +
@@ -76,6 +78,8 @@ sfig15b <- ggplot(leish_biannual_results_df) +
   scale_colour_manual(name="Season", values=c('#DC267F', '#648FFF'), labels=c('Dry', 'Rainy')) + 
   xlab("Biannual time period") + ylab("change in\nleish\nincidence\nper 1,000\nrelative\nto 2008") + 
   theme_minimal()+
+  scale_x_date(date_labels = "%Y",
+               breaks = seq(as.Date("2000-01-01"), as.Date("2020-01-01"), by = "4 years")) +
   scale_y_continuous(trans = scales::pseudo_log_trans(sigma = 4),
                      limits = y_lims_biannual,
                      breaks = c(-5, 0, 10, 20, 40)) +
@@ -96,4 +100,4 @@ sfig15all <- as_ggplot(sfig15all) +
                   x = c(0.14, 0.14), y = c(0.99, 0.535)) 
 sfig15all
 
-ggsave("sfig15.pdf", plot=sfig15all, path="figures/", width = 8, height = 11, units="in", device = "pdf")
+ggsave("sfig15.pdf", plot=sfig15all, path="figures/", width = 8, height = 8, units="in", device = "pdf")
