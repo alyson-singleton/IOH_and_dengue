@@ -36,6 +36,8 @@ dengue_case_data <- dengue_case_data %>%
 
 ## load e_salud, key, and cluster information
 diresa_esalud_coordinates_key <- read.csv("data/raw/spatial_data/diresa_esalud_coordinates_key.csv")
+key_cluster_match <- read.csv("data/intermediate/clustering_data/key_cluster_match.csv")
+linked_ids_codes <- left_join(diresa_esalud_coordinates_key, key_cluster_match, by = 'key')
 
 ## link to dengue data, only retain e_salud codes that are in MdD and have lat/lon info
 dengue_data_linked <- left_join(linked_ids_codes, dengue_case_data, by = 'e_salud') %>%
